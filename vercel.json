@@ -27,6 +27,5 @@
   "rewrites": [
     { "source": "/resume", "destination": "/pages/resume.html" },
     { "source": "/portfolio", "destination": "/pages/portfolio.html" }
-  ],
-  "public": "."
+  ]
 }
