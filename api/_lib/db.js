@@ -201,6 +201,19 @@ async function getRecentAuthEvents(limit = 100) {
     LIMIT ${safeLimit};
   `;
   return rows;
+async function deleteUserAccount(userId) {
+  await ensureSchema();
+  const sql = getSql();
+  const user = await getUserById(userId);
+  if (!user) return false;
+  if (user.email.toLowerCase() === OWNER_EMAIL.toLowerCase()) {
+    throw new Error('Cannot delete platform owner account.');
+  }
+
+  await sql`
+    DELETE FROM users WHERE id = ${userId};
+  `;
+  return true;
 }
 
 module.exports = {
@@ -214,4 +227,5 @@ module.exports = {
   upsertUserStateByKey,
   logAuthEvent,
   getRecentAuthEvents,
+  deleteUserAccount,
 };

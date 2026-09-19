@@ -4,25 +4,103 @@
 
 'use strict';
 
-import { isOwner } from './auth-engine.js';
+import { isOwner, getCurrentUser } from './auth-engine.js?v=7';
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 // ── DASHBOARD ─────────────────────────────────────────────────
 export function renderDashboard() {
   const resume   = window._state?.resumeData;
   const skills   = window._state?.skillsData;
   const jobs     = window._state?.jobsData || [];
+  const user     = getCurrentUser();
 
-  const atsScore = window.calcATSScore ? window.calcATSScore(resume, skills) : 71;
+  const isOwnerUser = isOwner() || sessionStorage.getItem('careerEngine_showcase_active') === 'true';
+  const displayName = resume?.contact?.name 
+    ? resume.contact.name.split(' ')[0] 
+    : (user?.name && user.name !== 'Guest' ? user.name.split(' ')[0] : 'Engineer');
+
+  const currComp = resume?.meta?.currentComp || 120000;
+  const targetComp = resume?.meta?.targetComp || 180000;
+  const compDiff = Math.max(0, targetComp - currComp);
+  const compPercent = Math.min(100, Math.max(10, Math.round((currComp / targetComp) * 100)));
+  const compCurrentRole = resume?.experience?.[0]?.company ? resume.experience[0].company : 'Current Compensation';
+  const compTargetRole = resume?.meta?.targetTitle ? `Target: ${resume.meta.targetTitle}` : 'Target: Senior/Lead';
+
+  const formatK = val => `$${Math.round(val / 1000)}k`;
+
+  // Priority Action Calculation
+  let priorityTitle = '';
+  let priorityDesc = '';
+  let priorityActionText = 'Open Resume Studio →';
+  let priorityActionPage = 'resume';
+
+  const atsScore = window.calcATSScore ? window.calcATSScore(resume, skills) : (resume?.meta?.atsScore || 71);
   const liScore  = window.calcLinkedInScore ? window.calcLinkedInScore() : { score: 40 };
 
-  const confirmedSkills = skills?.categories?.flatMap(c => c.skills.filter(s => s.status === 'confirmed')).length || 42;
-  const gapSkills       = skills?.categories?.flatMap(c => c.skills.filter(s => s.status === 'gap' || s.status === 'cert-gap')).length || 14;
+  if (isOwnerUser) {
+    priorityTitle = 'Fix Your Resume PDF — Your Name is Being Mangled by ATS Systems';
+    priorityDesc = 'Your current PDF has a font encoding bug that renders your name as "J E III / OSEPH REXSON" to ATS parsers like Workday, Greenhouse, and Taleo. Head to <strong style="color:var(--gold)">Resume Studio</strong> → click <strong style="color:var(--gold)">Print Clean Resume</strong> to export a pixel-perfect, ATS-safe PDF that correctly shows your name, AWS/GCP skills, and team leadership scope.';
+  } else if (!resume?.contact?.linkedin || !resume?.contact?.github) {
+    priorityTitle = 'Connect Your Public Profiles to Boost ATS Indexing';
+    priorityDesc = 'ATS parsers and recruiters prioritize applicants with verified technical presence. Add your LinkedIn profile URL and GitHub link in Resume Studio to gain +15 points on your readiness benchmark.';
+  } else if (atsScore < 80) {
+    priorityTitle = `Align Key Technical Skills for ${resume?.meta?.targetTitle || 'Target Roles'}`;
+    priorityDesc = `Your resume readiness score is currently at ${atsScore}%. Review your keyword density in <strong style="color:var(--gold)">Resume Studio</strong> to match high-demand enterprise benchmarks.`;
+  } else {
+    priorityTitle = `Accelerate Application Pipeline for ${formatK(targetComp)}+ Opportunities`;
+    priorityDesc = 'Your resume profile is well-aligned with top compensation standards. Track active submissions in the Job Tracker and leverage customized cover letters to maximize conversion.';
+    priorityActionText = 'Open Job Tracker →';
+    priorityActionPage = 'jobs';
+  }
+
+  // Issue rows
+  let issuesHtml = '';
+  if (isOwnerUser) {
+    issuesHtml = `
+      ${issueRow('🔴', 'CRITICAL', 'PDF font encoding breaks your name', 'Print from Resume Studio → ATS-safe HTML/CSS', true)}
+      ${issueRow('🔴', 'HIGH', 'Title reads "Network Engineer IV" not "DevOps Lead"', 'Clean resume uses correct title')}
+      ${issueRow('🔴', 'HIGH', 'Leading 10+ engineers not mentioned', 'Added to BofA role bullets')}
+      ${issueRow('🔴', 'HIGH', 'AWS (EC2/S3/IAM/EKS/VPC/Route53) missing', 'Added to skills + experience')}
+      ${issueRow('🟠', 'MEDIUM', 'GCP (GKE, Cloud Run) missing', 'Added to skills section')}
+      ${issueRow('🟠', 'MEDIUM', 'No LinkedIn or GitHub URL on resume', 'Added to clean resume header')}
+      ${issueRow('🟠', 'MEDIUM', 'No Projects section (Unity Recovery, Mythralis)', 'Added in clean resume')}
+      ${issueRow('🟡', 'LOW', 'Date typo "01//2019" double slash', 'Fixed in clean version')}
+    `;
+  } else {
+    const issues = [];
+    if (!resume?.contact?.linkedin) {
+      issues.push(issueRow('🟠', 'MEDIUM', 'No LinkedIn profile URL listed', 'Add your LinkedIn to the contact header'));
+    }
+    if (!resume?.contact?.github) {
+      issues.push(issueRow('🟠', 'MEDIUM', 'No GitHub profile URL listed', 'Add GitHub to showcase technical repositories'));
+    }
+    if ((resume?.skills?.length || 0) < 8) {
+      issues.push(issueRow('🔴', 'HIGH', 'Skill density below top ATS benchmark', 'Add core technologies to your skills in Resume Studio'));
+    }
+    if (!resume?.certifications || resume.certifications.length === 0) {
+      issues.push(issueRow('🟡', 'LOW', 'No industry certifications on file', 'Add relevant certifications to accelerate recruiter vetting'));
+    }
+    issues.push(issueRow('🟢', 'RESOLVED', 'ATS-safe semantic structure created', 'Print clean PDF directly from Resume Studio', true));
+    issuesHtml = issues.join('');
+  }
+
+  const confirmedSkills = skills?.categories?.flatMap(c => c.skills.filter(s => s.status === 'confirmed')).length || (resume?.skills?.length || 18);
+  const gapSkills       = skills?.categories?.flatMap(c => c.skills.filter(s => s.status === 'gap' || s.status === 'cert-gap')).length || 10;
 
   const content = document.getElementById('page-content');
   content.innerHTML = `
     <div class="page-header">
       <div class="page-title">⚡ Career Command Center</div>
-      <div class="page-subtitle">Welcome back, Joseph. Here is your career readiness snapshot.</div>
+      <div class="page-subtitle">Welcome back, ${displayName}. Here is your career readiness snapshot.</div>
     </div>
 
     ${(isOwner() && !localStorage.getItem('careerEngine_google_client_id')) ? `
@@ -41,13 +119,12 @@ export function renderDashboard() {
     <!-- Action Priority -->
     <div class="action-card mb-24">
       <div class="priority-label">🎯 Today's Top Priority</div>
-      <div class="priority-title">Fix Your Resume PDF — Your Name is Being Mangled by ATS Systems</div>
+      <div class="priority-title">${priorityTitle}</div>
       <div class="priority-desc">
-        Your current PDF has a font encoding bug that renders your name as "J E III / OSEPH REXSON" to ATS parsers like Workday, Greenhouse, and Taleo. 
-        Head to <strong style="color:var(--gold)">Resume Studio</strong> → click <strong style="color:var(--gold)">Print Clean Resume</strong> to export a pixel-perfect, ATS-safe PDF that correctly shows your name, AWS/GCP skills, and team leadership scope.
+        ${priorityDesc}
       </div>
       <div class="flex gap-8 mt-16">
-        <button class="btn btn-gold" onclick="navigate('resume')">Open Resume Studio →</button>
+        <button class="btn btn-gold" onclick="navigate('${priorityActionPage}')">${priorityActionText}</button>
         <button class="btn btn-ghost" onclick="navigate('linkedin')">LinkedIn Optimizer →</button>
       </div>
     </div>
@@ -89,8 +166,8 @@ export function renderDashboard() {
           </div>
         </div>
         <div class="mt-16" style="font-size:12px;color:var(--text-dim);line-height:1.8;border-top:1px solid var(--border);padding-top:12px;">
-          <div>🟡 <strong style="color:var(--text-secondary)">ATS:</strong> Add AWS cert, GitHub URL, team size → push to 88+</div>
-          <div>🔵 <strong style="color:var(--text-secondary)">LinkedIn:</strong> Update headline, About section, open to work (hidden) → push to 90+</div>
+          <div>🟡 <strong style="color:var(--text-secondary)">ATS:</strong> Boost score with target role keywords and verified project URLs</div>
+          <div>🔵 <strong style="color:var(--text-secondary)">LinkedIn:</strong> Optimize headline, summary, and recruiter visibility to reach 90+</div>
         </div>
       </div>
 
@@ -106,21 +183,21 @@ export function renderDashboard() {
           </div>
           <div class="comp-gap-values">
             <div>
-              <div class="comp-current">$145k</div>
-              <div class="text-sm text-dim">BofA / TekSystems</div>
+              <div class="comp-current">${formatK(currComp)}</div>
+              <div class="text-sm text-dim">${compCurrentRole}</div>
             </div>
             <div style="text-align:right">
-              <div class="comp-target">$200k+</div>
-              <div class="text-sm text-dim">Target: Remote Senior/Lead</div>
+              <div class="comp-target">${formatK(targetComp)}+</div>
+              <div class="text-sm text-dim">${compTargetRole}</div>
             </div>
           </div>
-          <div class="comp-diff mt-8">📈 $55k+ gap — achievable with title re-framing, AWS cert & new role</div>
+          <div class="comp-diff mt-8">📈 ${formatK(compDiff)}+ gap — achievable with target role positioning & skill mastery</div>
         </div>
         <div style="border-top:1px solid var(--border);padding-top:16px;margin-top:16px;">
           <div style="font-size:12px;color:var(--text-dim);margin-bottom:8px;">Market Range for Your Profile</div>
           <div class="flex gap-8">
-            <div class="chip gold">DevOps Lead: $175k–$220k</div>
-            <div class="chip blue">Platform Eng: $185k–$230k</div>
+            <div class="chip gold">${resume?.meta?.targetTitle || 'Engineer'}: ${formatK(currComp)}–${formatK(targetComp)}</div>
+            <div class="chip blue">Lead / Architect: ${formatK(targetComp)}–${formatK(targetComp * 1.2)}</div>
           </div>
         </div>
       </div>
@@ -129,25 +206,26 @@ export function renderDashboard() {
     <!-- Quick Actions -->
     <div class="section-title">Quick Actions</div>
     <div class="grid-3 gap-16 mb-24">
-      ${quickAction('📄', 'Export Clean Resume PDF', 'Fix encoding, add AWS/GCP, print as PDF', 'resume', 'btn-gold')}
-      ${quickAction('🔗', 'Update LinkedIn Headline', 'Copy the optimized 220-char headline', 'linkedin', 'btn-outline')}
-      ${quickAction('💼', 'Find $180k+ Remote Jobs', 'Browse curated role-specific job boards', 'jobs', 'btn-ghost')}
-      ${quickAction('🧠', 'View Skill Gaps', 'See what\'s blocking your $200k target', 'skills', 'btn-ghost')}
-      ${quickAction('🚀', 'Project Showcase', 'Review your portfolio presentation', 'projects', 'btn-ghost')}
+      ${quickAction('📄', 'Export Clean Resume PDF', 'ATS-safe layout, print as PDF', 'resume', 'btn-gold')}
+      ${quickAction('🔗', 'Update LinkedIn Headline', 'Generate optimized professional headline', 'linkedin', 'btn-outline')}
+      ${quickAction('💼', 'Find High-Impact Jobs', 'Browse curated role-specific job boards', 'jobs', 'btn-ghost')}
+      ${quickAction('🧠', 'View Skill Gaps', 'Identify benchmark skills for target comp', 'skills', 'btn-ghost')}
+      ${quickAction('🚀', 'Project Showcase', 'Review technical presentation', 'projects', 'btn-ghost')}
       ${quickAction('🎯', 'Write Cover Letter', 'Paste a JD — get a tailored letter', 'cover', 'btn-ghost')}
+      ${!isOwner() ? `
+        <div class="card" style="cursor:pointer;border:1px dashed rgba(239,68,68,0.35);background:rgba(239,68,68,0.04);" onclick="window.openDeleteAccountModal?.()">
+          <div style="font-size:28px;margin-bottom:12px;">🗑️</div>
+          <div style="font-size:14px;font-weight:700;margin-bottom:4px;color:#fca5a5;">Delete Profile & Reset</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">Purge your imported data and start over with a fresh resume.</div>
+          <button class="btn btn-secondary btn-sm" style="color:#ef4444;border-color:rgba(239,68,68,0.45);font-weight:700;" onclick="event.stopPropagation();window.openDeleteAccountModal?.()">Delete & Start Over →</button>
+        </div>
+      ` : ''}
     </div>
 
     <!-- Resume Issues Banner -->
-    <div class="section-title">🔴 Critical Resume Issues — Fix These Now</div>
+    <div class="section-title">🔴 Resume Diagnostics & ATS Optimization</div>
     <div class="card">
-      ${issueRow('🔴', 'CRITICAL', 'PDF font encoding breaks your name', 'Print from Resume Studio → ATS-safe HTML/CSS', true)}
-      ${issueRow('🔴', 'HIGH', 'Title reads "Network Engineer IV" not "DevOps Lead"', 'Clean resume uses correct title')}
-      ${issueRow('🔴', 'HIGH', 'Leading 10+ engineers not mentioned', 'Added to BofA role bullets')}
-      ${issueRow('🔴', 'HIGH', 'AWS (EC2/S3/IAM/EKS/VPC/Route53) missing', 'Added to skills + experience')}
-      ${issueRow('🟠', 'MEDIUM', 'GCP (GKE, Cloud Run) missing', 'Added to skills section')}
-      ${issueRow('🟠', 'MEDIUM', 'No LinkedIn or GitHub URL on resume', 'Added to clean resume header')}
-      ${issueRow('🟠', 'MEDIUM', 'No Projects section (Unity Recovery, Mythralis)', 'Added in clean resume')}
-      ${issueRow('🟡', 'LOW', 'Date typo "01//2019" double slash', 'Fixed in clean version')}
+      ${issuesHtml}
     </div>
   `;
 
@@ -158,7 +236,7 @@ export function renderDashboard() {
   animateRing('li-ring', liScore.score);
   setTimeout(() => {
     const bar = document.getElementById('comp-bar');
-    if (bar) bar.style.width = '72.5%';
+    if (bar) bar.style.width = `${compPercent}%`;
   }, 300);
 }
 
@@ -189,9 +267,16 @@ function issueRow(emoji, severity, issue, fix, fixed = false) {
 export function renderResumeStudio() {
   const content = document.getElementById('page-content');
   content.innerHTML = `
-    <div class="page-header">
-      <div class="page-title">📄 Resume Studio</div>
-      <div class="page-subtitle">ATS-optimized resume with live keyword analysis. Print as a clean, encoding-safe PDF.</div>
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+      <div>
+        <div class="page-title">📄 Resume Studio</div>
+        <div class="page-subtitle">ATS-optimized resume with live keyword analysis. Print as a clean, encoding-safe PDF.</div>
+      </div>
+      ${!isOwner() ? `
+        <button class="btn btn-secondary btn-sm" id="btn-studio-header-delete" onclick="window.openDeleteAccountModal?.()" style="color:#f87171;border-color:rgba(239,68,68,0.4);font-size:12px;font-weight:700;padding:8px 14px;display:flex;align-items:center;gap:6px;" title="Permanently delete profile and start over with a fresh resume">
+          <span>🗑️</span> <span>Delete Profile & Start Over</span>
+        </button>
+      ` : ''}
     </div>
 
     <div class="tab-bar">
@@ -215,147 +300,97 @@ window.switchResumeTab = function(tab) {
 };
 
 window.printResume = function() {
+  const profile = window._state?.resumeData;
+  if (profile) {
+    localStorage.setItem('careerEngine_active_profile', JSON.stringify(profile));
+  }
   window.open('./pages/resume.html', '_blank');
   window.toast('Opening print-optimized resume in new tab. Use Ctrl+P to save as PDF.', 'green');
 };
 
 function optimizedResumeHTML() {
+  const resume = window._state?.resumeData || {};
+  const contact = resume.contact || {};
+  const skills = Array.isArray(resume.skills) ? resume.skills : [];
+  const experience = Array.isArray(resume.experience) ? resume.experience : [];
+  const education = Array.isArray(resume.education) ? resume.education : [];
+  const certs = Array.isArray(resume.certifications) ? resume.certifications : [];
+
   return `
     <div class="flex justify-between items-center mb-16">
       <div>
         <div class="chip green">✅ ATS-Safe Encoding</div>
-        <span style="margin-left:8px;font-size:12px;color:var(--text-dim);">Name, contact, and skills will parse correctly in Workday, Greenhouse, Taleo, Lever</span>
+        <span style="margin-left:8px;font-size:12px;color:var(--text-dim);">Formatted for automated ingestion by Workday, Greenhouse, Taleo, and Lever</span>
       </div>
-      <div class="flex gap-8">
+      <div class="flex gap-8" style="align-items:center;flex-wrap:wrap;">
+        ${!isOwner() ? `
+          <button class="btn btn-secondary btn-sm" id="btn-resume-delete-profile" onclick="window.openDeleteAccountModal?.()" style="color:#f87171;border-color:rgba(239,68,68,0.35);font-size:12px;font-weight:600;" title="Permanently delete profile and start over with a fresh resume">
+            🗑️ Delete Profile / Start Over
+          </button>
+        ` : ''}
         <button class="btn btn-ghost btn-sm" onclick="copyToClipboard(document.getElementById('resume-text').innerText, this)">📋 Copy Plain Text</button>
         <button class="btn btn-gold" onclick="printResume()">🖨️ Print / Export PDF</button>
       </div>
     </div>
 
     <div class="resume-preview" id="resume-text">
-      <h1>Joseph Erexson III</h1>
+      <h1>${escapeHtml(contact.name || 'Your Name')}</h1>
       <div class="resume-contact">
-        <span>📍 New London, NC (100% Remote)</span>
-        <span>📞 980-447-7049</span>
-        <span>✉️ <a href="mailto:jerexson3@gmail.com">jerexson3@gmail.com</a></span>
-        <span>🔗 <a href="https://www.linkedin.com/in/joseph-erexson-iii-46bb6285/" target="_blank">LinkedIn</a></span>
-        <span>💻 <a href="https://github.com/CipherPole" target="_blank">github.com/CipherPole</a></span>
+        ${contact.location ? `<span>📍 ${escapeHtml(contact.location)}</span>` : ''}
+        ${contact.phone ? `<span>📞 ${escapeHtml(contact.phone)}</span>` : ''}
+        ${contact.email ? `<span>✉️ <a href="mailto:${escapeHtml(contact.email)}">${escapeHtml(contact.email)}</a></span>` : ''}
+        ${contact.linkedin ? `<span>🔗 <a href="${escapeHtml(contact.linkedin)}" target="_blank">LinkedIn</a></span>` : ''}
+        ${contact.github ? `<span>💻 <a href="${escapeHtml(contact.github)}" target="_blank">GitHub</a></span>` : ''}
       </div>
       <hr>
 
       <h2>Professional Summary</h2>
-      <p style="font-size:12.5px;color:#333;line-height:1.6;">Senior DevOps Lead and QA Automation Engineer with 10+ years of enterprise experience across financial, healthcare, education, and legal sectors. Currently embedded at Bank of America leading a cross-functional team of 10+ engineers, driving DevSecOps strategy, CI/CD pipeline modernization, cloud infrastructure automation (AWS & GCP), and enterprise-scale container orchestration with Kubernetes and Docker. Founder of Unity Recovery (live SaaS) and AI/IT consulting firm Mythralis under Fortico Holdings. Delivers measurable outcomes: 80% reduction in CI/CD provisioning time, 70% improvement in system scalability, and 500+ endpoint API test coverage.</p>
+      <p style="font-size:12.5px;color:#333;line-height:1.6;">${escapeHtml(resume.summary || 'Experienced engineering professional with high-impact system automation and delivery background.')}</p>
       <hr>
 
       <h2>Core Competencies & Skills</h2>
       <div class="skills-grid">
-        <div>• AWS: EC2, S3, IAM, EKS, VPC, Route53</div>
-        <div>• GCP: GKE, Cloud Run</div>
-        <div>• Kubernetes, Docker, OpenShift</div>
-        <div>• Terraform (IaC), Ansible, CloudFormation</div>
-        <div>• Jenkins, XLRelease / Digital.ai, Bitbucket</div>
-        <div>• Playwright, Postman (500+ endpoints), qTest</div>
-        <div>• Python, PowerShell, Bash, JavaScript</div>
-        <div>• DevSecOps, CI/CD, SDLC Automation</div>
-        <div>• Agile / Scrum Master, Cross-Team Leadership</div>
-        <div>• Azure AD, Azure VM, Azure Networking</div>
-        <div>• GitHub Copilot, Replit AI, O365 Copilot</div>
-        <div>• SCCM, Tanium Patching, JIRA</div>
-        <div>• AD, DNS, DHCP, GPO, VPN, TCP/IP</div>
-        <div>• SonicWall, WatchGuard, Meraki, Unifi</div>
-        <div>• Veeam, Datto, StorageCraft (Disaster Recovery)</div>
+        ${skills.map(sk => `<div>• ${escapeHtml(sk)}</div>`).join('')}
       </div>
       <hr>
 
       <h2>Professional Experience</h2>
-
-      <h3>DevOps Lead / QA Automation Lead</h3>
-      <div class="job-meta">Bank of America (via TekSystems) &nbsp;|&nbsp; Charlotte, NC (Remote) &nbsp;|&nbsp; March 2019 – Present &nbsp;|&nbsp; Team: 10+ Engineers</div>
-      <ul>
-        <li>Lead a cross-functional team of 10+ engineers across DevSecOps, QA automation, and platform reliability for one of the largest financial institutions in the US.</li>
-        <li>Architected and scaled CI/CD pipelines using Jenkins, OpenShift, Docker, and Kubernetes — improving deployment throughput by <strong>80%</strong> and cutting infrastructure provisioning time by <strong>80%</strong> through Terraform IaC automation.</li>
-        <li>Designed and deployed advanced container orchestration systems using Docker and Kubernetes, achieving a <strong>70% improvement</strong> in system scalability and reliability.</li>
-        <li>Built and own a Postman API collection covering <strong>500+ endpoints</strong> for enterprise-scale functional and regression testing, integrated as CI/CD quality gates.</li>
-        <li>Leveraged AWS services (EC2, S3, IAM, EKS, VPC, Route53) and GCP (GKE, Cloud Run) to architect and automate cloud infrastructure at enterprise scale.</li>
-        <li>Spearheaded DevSecOps strategy integration across Agile squads — embedding security controls, compliance checkpoints, and automated policy enforcement into the SDLC.</li>
-        <li>Drove XLRelease / Digital.ai release orchestration and Tanium-based patch automation across Windows Server 2016–2022 enterprise environments.</li>
-        <li>Integrated Ansible orchestration for configuration management and automated deployment workflows across hybrid cloud environments.</li>
-        <li>Implemented AI-assisted development workflows using GitHub Copilot, Replit AI, and O365 Copilot to accelerate team delivery velocity.</li>
-      </ul>
-
-      <h3>Network Engineer / System Administrator</h3>
-      <div class="job-meta">Bytes of Knowledge &nbsp;|&nbsp; Nashville, TN &nbsp;|&nbsp; July 2018 – January 2019</div>
-      <ul>
-        <li>Designed and developed automated testing suites for test plans, scenarios, scripts, and procedures.</li>
-        <li>Used Kaseya VSA to deploy patches after review of expected results, removing <strong>50% overhead</strong> on failure management.</li>
-        <li>Executed maintenance procedures: system upgrades, security updates, and disaster recovery testing.</li>
-        <li>Configured and supported Veeam, Datto, and IDrive backup products for offsite replication and disaster recovery.</li>
-      </ul>
-
-      <h3>Technology Consultant</h3>
-      <div class="job-meta">LogicForce Consulting &nbsp;|&nbsp; Nashville, TN &nbsp;|&nbsp; July 2017 – July 2018</div>
-      <ul>
-        <li>Designed and developed automated testing tools, test plans, scenarios, and procedures for legal sector clients.</li>
-        <li>Supported Opentext, NetDocuments, iManage, and Worldox document management systems for legal practice management.</li>
-        <li>Managed Autotask, Continuum & N-Central endpoint management services across multiple client environments.</li>
-      </ul>
-
-      <h3>Senior Technology Support Specialist</h3>
-      <div class="job-meta">Vanderbilt University (via Apex Systems) &nbsp;|&nbsp; Nashville, TN &nbsp;|&nbsp; February 2014 – December 2016</div>
-      <ul>
-        <li>Managed client networks, system backups, security updates, hardware, VOIP systems, and custom applications at university scale.</li>
-        <li>Developed automation via Batch file scripting and MS Excel VBA for application software deployment workflows.</li>
-      </ul>
+      ${experience.map(exp => `
+        <h3>${escapeHtml(exp.title || 'Role')}</h3>
+        <div class="job-meta">${escapeHtml(exp.company || 'Company')} &nbsp;|&nbsp; ${escapeHtml(exp.duration || '')} ${exp.teamSize ? `&nbsp;|&nbsp; Team: ${escapeHtml(exp.teamSize)}` : ''}</div>
+        <ul>
+          ${(exp.highlights || []).map(h => `<li>${escapeHtml(h)}</li>`).join('')}
+        </ul>
+      `).join('')}
       <hr>
 
-      <h2>Entrepreneurial Ventures</h2>
-      <h3>Founder — Unity Recovery</h3>
-      <div class="job-meta">Fortico Holdings &nbsp;|&nbsp; 2023 – Present</div>
-      <ul>
-        <li>Built and operate a live SaaS platform for addiction recovery organizations — client management, peer support coordination, and compliance tooling.</li>
-        <li>Architected the entire cloud infrastructure, backend, and automation pipeline as a solo founder.</li>
-      </ul>
-
-      <h3>Founder / Principal Consultant — Mythralis (AI & IT Consulting)</h3>
-      <div class="job-meta">Fortico Holdings &nbsp;|&nbsp; 2024 – Present</div>
-      <ul>
-        <li>AI and IT consulting firm providing DevOps, cloud infrastructure, and automation strategy to clients leveraging enterprise-grade practices.</li>
-      </ul>
-      <hr>
-
-      <h2>Certifications</h2>
-      <ul>
-        <li>Kaseya Certified Technician</li>
-        <li>ConnectWise Certified Administrator</li>
-      </ul>
-      <hr>
+      ${certs.length > 0 ? `
+        <h2>Certifications</h2>
+        <ul>
+          ${certs.map(c => `<li>${escapeHtml(typeof c === 'string' ? c : c.name)}</li>`).join('')}
+        </ul>
+        <hr>
+      ` : ''}
 
       <h2>Education</h2>
       <ul>
-        <li><strong>Bachelor of Science — Information Systems / Cyber Security</strong> &nbsp;|&nbsp; ITT Technical Institute, Nashville, TN</li>
-        <li><strong>Associate of Science — Networking & System Administration</strong> &nbsp;|&nbsp; ITT Technical Institute, Nashville, TN</li>
+        ${education.map(edu => `
+          <li><strong>${escapeHtml(edu.degree || 'Degree')}</strong> &nbsp;|&nbsp; ${escapeHtml(edu.institution || 'University')}${edu.year ? ' (' + escapeHtml(edu.year) + ')' : ''}</li>
+        `).join('')}
       </ul>
     </div>
   `;
 }
 
 function atsAnalyzerHTML() {
+  const resumeText = JSON.stringify(window._state?.resumeData || {}).toLowerCase();
   const targetKeywords = [
-    { kw: 'DevOps', found: true }, { kw: 'DevSecOps', found: true },
-    { kw: 'Kubernetes', found: true }, { kw: 'Docker', found: true },
-    { kw: 'Terraform', found: true }, { kw: 'Ansible', found: true },
-    { kw: 'Jenkins', found: true }, { kw: 'AWS', found: true },
-    { kw: 'GCP', found: true }, { kw: 'CI/CD', found: true },
-    { kw: 'Platform Engineer', found: false }, { kw: 'Python', found: true },
-    { kw: 'Team Lead', found: true }, { kw: 'Agile', found: true },
-    { kw: 'Scrum', found: true }, { kw: 'IaC', found: false },
-    { kw: 'GitHub Actions', found: false }, { kw: 'FinOps', found: false },
-    { kw: 'Observability', found: false }, { kw: 'Datadog', found: false },
-    { kw: 'Prometheus', found: false }, { kw: 'Grafana', found: false },
-    { kw: 'ArgoCD', found: false }, { kw: 'Helm', found: false },
-    { kw: 'OpenShift', found: true }, { kw: 'Azure', found: true },
-    { kw: 'PowerShell', found: true }, { kw: 'Playwright', found: true },
-  ];
+    'DevOps', 'DevSecOps', 'Kubernetes', 'Docker', 'Terraform', 'Ansible',
+    'Jenkins', 'AWS', 'GCP', 'CI/CD', 'Platform', 'Python', 'Team Lead',
+    'Agile', 'Scrum', 'IaC', 'GitHub Actions', 'FinOps', 'Observability',
+    'Datadog', 'Prometheus', 'Grafana', 'ArgoCD', 'Helm', 'OpenShift',
+    'Azure', 'PowerShell', 'Playwright'
+  ].map(kw => ({ kw, found: resumeText.includes(kw.toLowerCase()) }));
 
   const found = targetKeywords.filter(k => k.found).length;
   const pct = Math.round((found / targetKeywords.length) * 100);
@@ -367,7 +402,7 @@ function atsAnalyzerHTML() {
         <div style="font-size:48px;font-weight:800;color:var(--gold);">${pct}%</div>
         <div>
           <div style="font-size:14px;color:var(--text-primary);font-weight:600;">${found} of ${targetKeywords.length} high-demand keywords found</div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Missing keywords represent skills Joseph has but hasn't added to the optimized resume yet (e.g., IaC, GitOps). These are fast wins.</div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Evaluates keyword presence against leading cloud and infrastructure benchmarks. Add missing skills to elevate your profile ATS readiness.</div>
         </div>
       </div>
     </div>

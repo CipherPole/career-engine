@@ -17,7 +17,7 @@ import {
   downloadLogsJson,
   LOG_LEVELS,
   LOG_CATEGORIES,
-} from './telemetry-engine.js?v=6';
+} from './telemetry-engine.js?v=7';
 
 export const OWNER_EMAIL = 'jerexson3@gmail.com';
 const SESSION_STORAGE_KEY = 'careerEngine_session_v2';
@@ -244,7 +244,8 @@ export async function hydrateSessionFromServer() {
     const res = await fetch('/api/me', { credentials: 'include' });
     if (!res.ok) {
       const local = getActiveSession();
-      if (local?.isLoggedIn) {
+      // Only revoke server-bound sessions if server explicitly responds with 401 Unauthorized
+      if (local?.isLoggedIn && local.sub?.startsWith('srv-') && res.status === 401) {
         revokeSession();
       }
       return false;
@@ -497,6 +498,8 @@ export function signOut() {
   fetch('/api/auth-session', { method: 'DELETE' }).catch(() => {});
   revokeSession();
   sessionStorage.removeItem('careerEngine_showcase_active');
+  localStorage.removeItem('careerEngine_active_profile');
+  sessionStorage.removeItem('careerEngine_active_profile');
   window.toast?.('Signed out successfully.', 'gold');
   renderAuthPill();
   window.updateSidebarPermissions?.();
@@ -657,6 +660,24 @@ export function openAuthModal() {
             </button>
           </div>
 
+          <!-- Prominent Danger Zone: Delete Profile & Start Over (for non-admin users) -->
+          ${!admin ? `
+            <div style="margin-top:16px;background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.28);border-radius:var(--radius-md);padding:14px;text-align:left;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px;">
+                <div style="font-weight:700;font-size:13px;color:#fca5a5;display:flex;align-items:center;gap:6px;">
+                  <span>🗑️</span> Delete Profile & Start Over
+                </div>
+                <span class="chip red" style="font-size:9px;padding:2px 6px;">Irreversible</span>
+              </div>
+              <p style="font-size:11px;color:var(--text-secondary);margin:0 0 12px;line-height:1.4;">
+                Need to start fresh or import a different resume? Permanently delete your user profile, uploaded resume, and job tracking data.
+              </p>
+              <button class="btn w-full" id="btn-trigger-delete-account" style="background:rgba(239,68,68,0.16);border:1px solid rgba(239,68,68,0.45);color:#f87171;font-weight:700;font-size:12px;padding:10px;justify-content:center;cursor:pointer;border-radius:var(--radius-md);transition:all 0.2s ease;">
+                ⚠️ Delete Profile & Reset Account
+              </button>
+            </div>
+          ` : ''}
+
           <!-- Legal & Compliance Links (Always Accessible to Users) -->
           <div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--border);display:flex;align-items:center;justify-content:center;gap:10px;font-size:11px;color:var(--text-dim);">
             <a href="#terms" id="btn-modal-to-terms" style="color:var(--text-secondary);text-decoration:underline;cursor:pointer;">Terms of Service</a>
@@ -665,14 +686,19 @@ export function openAuthModal() {
           </div>
         ` : `
           <div style="text-align:center;padding:16px 0;">
-            <div style="font-size:36px;margin-bottom:12px;">🔒</div>
-            <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Sign in to Career Engine</div>
-            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;">
-              Authenticate with your Google account to unlock your personalized skills dashboard.
+            <div style="font-size:36px;margin-bottom:12px;">👤</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Guest / Showcase Workspace</div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;line-height:1.5;">
+              You are currently viewing in Guest / Showcase mode. To create your own isolated workspace and track your personal career data, import your resume or sign in.
             </p>
-            <button class="btn btn-gold w-full" onclick="document.getElementById('auth-modal')?.classList.remove('open');window.navigate?.('signin')" style="justify-content:center;padding:12px;font-weight:700;">
-              ⚡ Go to Sign-In Screen
-            </button>
+            <div style="display:flex;flex-direction:column;gap:10px;">
+              <button class="btn btn-gold w-full" onclick="document.getElementById('auth-modal')?.classList.remove('open');window.navigate?.('signin')" style="justify-content:center;padding:12px;font-weight:700;">
+                ⚡ Go to Sign-In / Drop Resume Screen
+              </button>
+              <button class="btn btn-secondary w-full" id="btn-guest-clear-profile" style="justify-content:center;color:#f87171;border-color:rgba(239,68,68,0.35);font-size:12px;padding:10px;font-weight:600;">
+                🗑️ Clear Workspace & Start Over Fresh
+              </button>
+            </div>
             <div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--border);display:flex;align-items:center;justify-content:center;gap:10px;font-size:11px;color:var(--text-dim);">
               <a href="#terms" id="btn-modal-guest-terms" style="color:var(--text-secondary);text-decoration:underline;cursor:pointer;">Terms of Service</a>
               <span>•</span>
@@ -711,6 +737,16 @@ export function openAuthModal() {
     signOut();
   });
 
+  document.getElementById('btn-trigger-delete-account')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    openDeleteAccountModal();
+  });
+
+  document.getElementById('btn-guest-clear-profile')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    clearLocalProfileAndStartOver();
+  });
+
   document.getElementById('btn-modal-to-terms')?.addEventListener('click', (e) => {
     e.preventDefault();
     modal.classList.remove('open');
@@ -735,6 +771,224 @@ export function openAuthModal() {
     window.navigate?.('agreement');
   });
 }
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+/**
+ * ── Delete Account Confirmation Modal ─────────────────────────
+ * Requires continuous 3-second hover/hold to unlock the delete action,
+ * preventing accidental clicks before permanent deletion.
+ */
+export function openDeleteAccountModal() {
+  let modal = document.getElementById('delete-account-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'delete-account-modal';
+    modal.className = 'modal-overlay';
+    document.body.appendChild(modal);
+  }
+
+  const session = getActiveSession();
+  const userEmail = (session.user?.email || '').toLowerCase();
+  const userName = session.user?.name || 'User';
+
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:440px;background:var(--bg-card);border:1px solid rgba(239,68,68,0.45);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 25px 65px rgba(0,0,0,0.9);">
+      
+      <!-- Modal Header -->
+      <div style="padding:16px 20px;border-bottom:1px solid rgba(239,68,68,0.25);display:flex;align-items:center;justify-content:space-between;background:rgba(239,68,68,0.08);">
+        <div style="font-weight:800;font-size:15px;color:#fca5a5;display:flex;align-items:center;gap:8px;">
+          <span>⚠️</span> Delete Account & Erase All Data
+        </div>
+        <button id="btn-close-delete-modal" style="background:transparent;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;">✕</button>
+      </div>
+
+      <div style="padding:22px;display:flex;flex-direction:column;gap:16px;">
+        <div style="font-size:13px;color:var(--text-primary);line-height:1.6;">
+          Are you sure you want to permanently delete your account (<strong>${escapeHtml(userEmail || userName)}</strong>)?
+        </div>
+
+        <div style="background:rgba(239,68,68,0.1);border:1px dashed rgba(239,68,68,0.35);border-radius:var(--radius-md);padding:12px;font-size:11px;color:#fca5a5;line-height:1.5;">
+          <strong>Irreversible Action:</strong> Once confirmed, your resume profile, skills matrix, ATS benchmarks, and job tracking history will be permanently deleted and cannot be recovered.
+        </div>
+
+        <div style="font-size:11px;color:var(--text-secondary);text-align:center;">
+          To prevent accidental deletion, <strong>hover over (or hold) the button below for 3 seconds</strong> to unlock confirmation:
+        </div>
+
+        <!-- Hover Confirm Button -->
+        <div id="btn-hover-delete-confirm" class="hover-confirm-btn" style="height:48px;">
+          <div id="hover-confirm-fill" class="hover-confirm-fill"></div>
+          <div id="hover-confirm-label" class="hover-confirm-label">
+            <span>⏳</span> <span>Hover to Unlock Delete (3s)</span>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+          <button class="btn btn-secondary btn-sm" id="btn-cancel-delete" style="padding:6px 16px;">
+            Cancel
+          </button>
+          <span style="font-size:11px;color:var(--text-dim);" id="delete-status-hint">
+            Button locked
+          </span>
+        </div>
+      </div>
+    </div>
+  `;
+
+  modal.classList.add('open');
+
+  const btnConfirm = document.getElementById('btn-hover-delete-confirm');
+  const fill = document.getElementById('hover-confirm-fill');
+  const label = document.getElementById('hover-confirm-label');
+  const hint = document.getElementById('delete-status-hint');
+
+  let hoverTimer = null;
+  let startTime = null;
+  let isUnlocked = false;
+  const REQUIRED_HOLD_MS = 3000;
+
+  function resetHover() {
+    if (isUnlocked) return; // Keep unlocked once completed
+    if (hoverTimer) {
+      clearInterval(hoverTimer);
+      hoverTimer = null;
+    }
+    startTime = null;
+    if (fill) fill.style.width = '0%';
+    if (label) label.innerHTML = `<span>⏳</span> <span>Hover to Unlock Delete (3s)</span>`;
+    if (hint) {
+      hint.textContent = 'Button locked';
+      hint.style.color = 'var(--text-dim)';
+      hint.style.fontWeight = 'normal';
+    }
+  }
+
+  function startHover() {
+    if (isUnlocked) return;
+    startTime = Date.now();
+    if (hint) {
+      hint.textContent = 'Hold steady...';
+      hint.style.color = 'var(--gold-light)';
+    }
+
+    hoverTimer = setInterval(() => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(100, Math.round((elapsed / REQUIRED_HOLD_MS) * 100));
+      if (fill) fill.style.width = `${progress}%`;
+      
+      const secondsLeft = Math.max(1, Math.ceil((REQUIRED_HOLD_MS - elapsed) / 1000));
+      if (label) label.innerHTML = `<span>⏳</span> <span>Unlocking in ${secondsLeft}s...</span>`;
+
+      if (elapsed >= REQUIRED_HOLD_MS) {
+        clearInterval(hoverTimer);
+        hoverTimer = null;
+        isUnlocked = true;
+        btnConfirm.classList.add('unlocked');
+        if (label) label.innerHTML = `<span>⚠️</span> <span>Click to Permanently Delete</span>`;
+        if (hint) {
+          hint.textContent = 'Unlocked — Click to confirm';
+          hint.style.color = '#ef4444';
+          hint.style.fontWeight = '700';
+        }
+      }
+    }, 50);
+  }
+
+  btnConfirm.addEventListener('mouseenter', startHover);
+  btnConfirm.addEventListener('mouseleave', resetHover);
+  btnConfirm.addEventListener('touchstart', (e) => { e.preventDefault(); startHover(); }, { passive: false });
+  btnConfirm.addEventListener('touchend', resetHover);
+
+  btnConfirm.addEventListener('click', async () => {
+    if (!isUnlocked) {
+      window.toast?.('Please hover over the button for 3 seconds to unlock it.', 'gold');
+      return;
+    }
+
+    btnConfirm.disabled = true;
+    if (label) label.innerHTML = `<span>🗑️</span> <span>Deleting account & purging data...</span>`;
+
+    // 1. Purge server database if online/authenticated
+    try {
+      await fetch('/api/profile', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+    } catch {}
+
+    // 2. Purge all local user storage keys
+    const emailKey = userEmail;
+    if (emailKey) {
+      localStorage.removeItem(`careerEngine_profile_${emailKey}`);
+      localStorage.removeItem(`career_jobs_${emailKey}`);
+      localStorage.removeItem(`careerEngine_training_${emailKey}`);
+    }
+    localStorage.removeItem('careerEngine_active_profile');
+    localStorage.removeItem('career_jobs_v1');
+    localStorage.removeItem('careerEngine_training_v1');
+    localStorage.removeItem('careerEngine_last_user');
+
+    // 3. Clear session and reload
+    revokeSession();
+    modal.classList.remove('open');
+    window.toast?.('Your account and all associated data have been permanently deleted.', 'green');
+
+    setTimeout(() => {
+      window.location.hash = '#signin';
+      window.location.reload();
+    }, 500);
+  });
+
+  document.getElementById('btn-close-delete-modal')?.addEventListener('click', () => {
+    resetHover();
+    modal.classList.remove('open');
+  });
+
+  document.getElementById('btn-cancel-delete')?.addEventListener('click', () => {
+    resetHover();
+    modal.classList.remove('open');
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      resetHover();
+      modal.classList.remove('open');
+    }
+  });
+}
+
+export function clearLocalProfileAndStartOver() {
+  localStorage.removeItem('careerEngine_active_profile');
+  sessionStorage.removeItem('careerEngine_active_profile');
+  sessionStorage.removeItem('careerEngine_showcase_active');
+  const user = getCurrentUser();
+  if (user?.email) {
+    const emailKey = user.email.toLowerCase();
+    localStorage.removeItem(`careerEngine_profile_${emailKey}`);
+    localStorage.removeItem(`career_jobs_${emailKey}`);
+    localStorage.removeItem(`careerEngine_training_${emailKey}`);
+  }
+  revokeSession();
+  window.toast?.('Saved profile data cleared. Starting fresh on sign-in screen.', 'green');
+  setTimeout(() => {
+    window.location.hash = '#signin';
+    window.location.reload();
+  }, 400);
+}
+
+// Global window bindings for cross-module & inline access
+window.openAuthModal = openAuthModal;
+window.openDeleteAccountModal = openDeleteAccountModal;
+window.clearLocalProfileAndStartOver = clearLocalProfileAndStartOver;
 
 // ── Dedicated Settings & Google Auth Page ─────────────────────
 export function renderSettingsPage() {

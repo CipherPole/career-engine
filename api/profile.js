@@ -1,7 +1,7 @@
 'use strict';
 
-const { getProfileByUserId, upsertProfileByUserId, getUserById } = require('./_lib/db');
-const { getSessionFromRequest } = require('./_lib/session');
+const { getProfileByUserId, upsertProfileByUserId, getUserById, deleteUserAccount, logAuthEvent } = require('./_lib/db');
+const { getSessionFromRequest, clearCookieHeader } = require('./_lib/session');
 const { json, methodNotAllowed, readJsonBody } = require('./_lib/http');
 
 async function requireUser(req, res) {
@@ -22,8 +22,8 @@ async function requireUser(req, res) {
 
 module.exports = async (req, res) => {
   try {
-    if (req.method !== 'GET' && req.method !== 'PUT') {
-      return methodNotAllowed(res, ['GET', 'PUT']);
+    if (req.method !== 'GET' && req.method !== 'PUT' && req.method !== 'DELETE') {
+      return methodNotAllowed(res, ['GET', 'PUT', 'DELETE']);
     }
 
     const user = await requireUser(req, res);
@@ -32,6 +32,21 @@ module.exports = async (req, res) => {
     if (req.method === 'GET') {
       const profile = await getProfileByUserId(user.id);
       return json(res, 200, { ok: true, profile });
+    }
+
+    if (req.method === 'DELETE') {
+      await logAuthEvent({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        eventType: 'USER_DELETED',
+        isNewUser: false,
+        metadata: { source: 'user_initiated_delete' },
+      });
+
+      await deleteUserAccount(user.id);
+      res.setHeader('Set-Cookie', clearCookieHeader());
+      return json(res, 200, { ok: true, deleted: true });
     }
 
     const body = await readJsonBody(req);

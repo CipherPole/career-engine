@@ -4,8 +4,8 @@
 
 'use strict';
 
-import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig, IDLE_TIMEOUT_MS, signOut, hydrateSessionFromServer } from './auth-engine.js?v=6';
-import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=6';
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig, IDLE_TIMEOUT_MS, signOut, hydrateSessionFromServer } from './auth-engine.js?v=7';
+import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=7';
 
 // ── Global State ─────────────────────────────────────────────
 const State = {
@@ -38,19 +38,19 @@ const ROUTE_PERMISSIONS = {
 
 // ── Router ────────────────────────────────────────────────────
 const PAGES = {
-  signin:     () => import('./signin-engine.js?v=6').then(m => m.renderSignInPage()),
-  terms:      () => import('./legal-engine.js?v=6').then(m => m.renderLegalPage('terms')),
-  agreement:  () => import('./legal-engine.js?v=6').then(m => m.renderLegalPage('agreement')),
-  dashboard:  () => import('./resume-engine.js?v=6').then(m => m.renderDashboard()),
-  resume:     () => import('./resume-engine.js?v=6').then(m => m.renderResumeStudio()),
-  linkedin:   () => import('./linkedin-engine.js?v=6').then(m => m.renderLinkedInOptimizer()),
-  jobs:       () => import('./tracker-engine.js?v=6').then(m => m.renderJobTracker()),
-  skills:     () => import('./resume-engine.js?v=6').then(m => m.renderSkillGap()),
-  training:   () => import('./training-engine.js?v=6').then(m => m.renderTrainingHub()),
-  certs:      () => import('./cert-engine.js?v=6').then(m => m.renderCertifications()),
-  projects:   () => import('./project-showcase.js?v=6').then(m => m.renderProjects()),
-  implementation: () => import('./implementation-engine.js?v=6').then(m => m.renderImplementationLab()),
-  settings:   () => import('./auth-engine.js?v=6').then(m => m.renderSettingsPage()),
+  signin:     () => import('./signin-engine.js?v=7').then(m => m.renderSignInPage()),
+  terms:      () => import('./legal-engine.js?v=7').then(m => m.renderLegalPage('terms')),
+  agreement:  () => import('./legal-engine.js?v=7').then(m => m.renderLegalPage('agreement')),
+  dashboard:  () => import('./resume-engine.js?v=7').then(m => m.renderDashboard()),
+  resume:     () => import('./resume-engine.js?v=7').then(m => m.renderResumeStudio()),
+  linkedin:   () => import('./linkedin-engine.js?v=7').then(m => m.renderLinkedInOptimizer()),
+  jobs:       () => import('./tracker-engine.js?v=7').then(m => m.renderJobTracker()),
+  skills:     () => import('./resume-engine.js?v=7').then(m => m.renderSkillGap()),
+  training:   () => import('./training-engine.js?v=7').then(m => m.renderTrainingHub()),
+  certs:      () => import('./cert-engine.js?v=7').then(m => m.renderCertifications()),
+  projects:   () => import('./project-showcase.js?v=7').then(m => m.renderProjects()),
+  implementation: () => import('./implementation-engine.js?v=7').then(m => m.renderImplementationLab()),
+  settings:   () => import('./auth-engine.js?v=7').then(m => m.renderSettingsPage()),
   cover:      () => renderCoverLetterPage(),
 };
 
@@ -126,7 +126,9 @@ async function loadData() {
     ]);
 
     const user = getCurrentUser();
-    if (isOwner()) {
+    const showcaseActive = sessionStorage.getItem('careerEngine_showcase_active') === 'true';
+
+    if (isOwner() || showcaseActive) {
       State.resumeData = resume;
     } else {
       let serverProfile = null;
@@ -134,22 +136,60 @@ async function loadData() {
         const profileRes = await fetch('/api/profile', { credentials: 'include' });
         if (profileRes.ok) {
           const body = await profileRes.json();
-          if (body?.profile && typeof body.profile === 'object') {
+          if (body?.profile && typeof body.profile === 'object' && body.profile.contact?.name) {
             serverProfile = body.profile;
           }
         }
       } catch {}
 
-      const customProfile = serverProfile ? JSON.stringify(serverProfile) : localStorage.getItem(`careerEngine_profile_${user.email}`);
-      if (customProfile) {
+      const emailKey = (user.email || '').toLowerCase();
+      const localProfileStr = localStorage.getItem(`careerEngine_profile_${emailKey}`) || localStorage.getItem('careerEngine_active_profile');
+      
+      let effectiveProfile = serverProfile;
+      if (!effectiveProfile && localProfileStr) {
         try {
-          const parsed = JSON.parse(customProfile);
-          State.resumeData = { ...resume, ...parsed };
-        } catch {
-          State.resumeData = resume;
-        }
+          effectiveProfile = JSON.parse(localProfileStr);
+        } catch {}
+      }
+
+      if (effectiveProfile && effectiveProfile.contact?.name) {
+        // Use user's own profile without contaminating with Joseph's history
+        State.resumeData = effectiveProfile;
       } else {
-        State.resumeData = resume;
+        // Clean initial starter profile for new user
+        State.resumeData = {
+          meta: {
+            lastUpdated: new Date().toISOString().slice(0, 10),
+            targetTitle: 'Software & DevOps Engineer',
+            targetComp: 175000,
+            currentComp: 120000,
+            atsScore: 65,
+          },
+          contact: {
+            name: user.name || 'Candidate',
+            email: user.email || '',
+            phone: '',
+            location: 'Remote / United States',
+            linkedin: '',
+            github: '',
+          },
+          summary: 'Driven engineering professional focused on high-reliability cloud systems and continuous automation.',
+          leadership: { teamSize: '1–5 Engineers', scale: 'Individual Contributor / Lead' },
+          experience: [
+            {
+              id: 'exp-1',
+              title: 'Software & DevOps Engineer',
+              company: 'Current Organization',
+              duration: 'Present',
+              teamSize: '1–5',
+              highlights: ['Architected and delivered reliable software workflows and automated pipelines.']
+            }
+          ],
+          skills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD', 'Python', 'Linux'],
+          certifications: [],
+          education: [{ degree: 'B.S. in Computer Science / Engineering', institution: 'University', year: 'Completed' }],
+          accomplishments: ['Streamlined delivery workflows and elevated deployment predictability.']
+        };
       }
     }
 
@@ -158,9 +198,30 @@ async function loadData() {
     State.jobsData             = jobs;
     State.trainingProjectsData = trainingProjects;
     State.certsData            = certs;
+
+    updateSidebarMetrics();
   } catch (e) {
     console.warn('Data load error:', e);
   }
+}
+
+function updateSidebarMetrics() {
+  const profile = State.resumeData;
+  if (!profile) return;
+  const curr = profile.meta?.currentComp || 120000;
+  const target = profile.meta?.targetComp || 180000;
+  const gap = Math.max(0, target - curr);
+  const percent = Math.min(100, Math.round((curr / target) * 100));
+
+  const formatK = val => `$${Math.round(val / 1000)}k`;
+  
+  const compLabel = document.querySelector('.sidebar-footer div:nth-child(1)');
+  const gapLabel = document.querySelector('.sidebar-footer div:nth-child(2)');
+  const fill = document.getElementById('sidebar-comp-bar');
+
+  if (compLabel) compLabel.textContent = `${formatK(curr)} → ${formatK(target)}`;
+  if (gapLabel) gapLabel.textContent = `Compensation Gap: ${formatK(gap)}`;
+  if (fill) fill.style.width = `${percent}%`;
 }
 
 // ── Toast Notifications ───────────────────────────────────────
@@ -310,30 +371,36 @@ function generateCoverLetter() {
   const jd = document.getElementById('jd-input')?.value?.trim();
   if (!jd) { toast('Please paste a job description first', 'red'); return; }
 
-  // Extract key terms from JD (simple keyword scanning)
+  const profile = State.resumeData || {};
+  const name = profile.contact?.name || 'Applicant';
+  const email = profile.contact?.email || '';
+  const phone = profile.contact?.phone || '';
+  const linkedin = profile.contact?.linkedin || '';
+  const github = profile.contact?.github || '';
+  const targetTitle = profile.meta?.targetTitle || 'Software & DevOps Engineer';
+  const targetComp = profile.meta?.targetComp ? `$${Math.round(profile.meta.targetComp / 1000)}k+` : '$175k+';
+  const topCompany = profile.experience?.[0]?.company || 'Enterprise Teams';
+  const highlights = profile.experience?.[0]?.highlights?.[0] || 'architecting and scaling robust cloud and automation infrastructure';
+  const userSkills = profile.skills?.length ? profile.skills.slice(0, 5).join(', ') : 'Kubernetes, Terraform, AWS, Docker, and CI/CD';
+
+  // Extract key terms from JD
   const jdLower = jd.toLowerCase();
   const roleMatch = jd.match(/(?:seeking|looking for|we need|role:|position:?)\s*(?:a|an)?\s*([^\n.]+)/i);
-  const roleGuess = roleMatch ? roleMatch[1].trim() : 'this role';
-
-  const keywords = ['kubernetes','terraform','ansible','jenkins','aws','gcp','docker','devops','devsecops','platform','python','ci/cd','automation','cloud'];
-  const found = keywords.filter(k => jdLower.includes(k));
+  const roleGuess = roleMatch ? roleMatch[1].trim() : targetTitle;
 
   const letter = `Dear Hiring Manager,
 
-I am writing to express my strong interest in ${roleGuess}. With over 10 years of enterprise DevOps and platform engineering experience — including 7+ years embedded at Bank of America leading a cross-functional team of 10+ engineers — I am confident I can deliver immediate and measurable impact in this role.
+I am writing to express my strong interest in the ${roleGuess} position. With verified hands-on engineering experience — including driving technical delivery at ${topCompany} — I am confident I can make an immediate and measurable impact on your platform and delivery velocity.
 
-At Bank of America, I have spearheaded the design and execution of CI/CD pipelines using Jenkins, OpenShift, Docker, and Kubernetes, improving deployment throughput by 80% and reducing manual infrastructure provisioning by 80% through Terraform IaC automation. I designed and own a Postman API collection spanning 500+ endpoints and embedded DevSecOps practices across our entire SDLC.
+Throughout my career, I have focused on ${highlights}. I specialize in building reliable, scalable systems utilizing ${userSkills}, directly aligning with the core requirements outlined in your job description.
 
-My hands-on expertise spans ${found.length > 0 ? found.slice(0, 5).join(', ') : 'Kubernetes, Terraform, AWS, Docker, and CI/CD'} — directly matching the requirements outlined in your posting. Beyond my technical skills, I bring a proven track record of leading large engineering teams, aligning platform strategy with business continuity goals, and driving measurable ROI through automation.
-
-I am currently targeting 100% remote senior leadership roles in the $200k+ compensation range. I would welcome the opportunity to discuss how my experience can benefit your team.
+Beyond hands-on implementation, I bring a structured approach to engineering excellence, operational stability, and accelerating release cycles. I am currently targeting opportunities in the ${targetComp} range and would welcome the opportunity to discuss how my skill set aligns with your team's objectives.
 
 Thank you for your consideration.
 
-Joseph Erexson III
-jerexson3@gmail.com | 980-447-7049
-linkedin.com/in/joseph-erexson-iii-46bb6285/
-github.com/CipherPole`;
+${name}
+${email ? email : ''}${phone ? ' | ' + phone : ''}
+${linkedin ? linkedin : ''}${github ? ' | ' + github : ''}`.trim();
 
   const out = document.getElementById('cover-output');
   out.innerHTML = `
@@ -350,13 +417,20 @@ github.com/CipherPole`;
 
 function generateRecruiterDM() {
   const jd = document.getElementById('jd-input')?.value?.trim();
+  const profile = State.resumeData || {};
+  const name = profile.contact?.name || 'Engineer';
+  const email = profile.contact?.email || '';
+  const targetTitle = profile.meta?.targetTitle || 'Senior DevOps Engineer';
+  const targetComp = profile.meta?.targetComp ? `$${Math.round(profile.meta.targetComp / 1000)}k+` : '$175k+';
+  const userSkills = profile.skills?.length ? profile.skills.slice(0, 4).join(', ') : 'Kubernetes, Terraform, AWS, CI/CD';
+
   const dm = `Hi [Recruiter Name],
 
-I came across the ${jd ? 'open' : ''} role at your company and wanted to reach out directly. I'm a DevOps Lead with 7+ years at Bank of America leading 10+ engineers on Kubernetes, Terraform, AWS/GCP, CI/CD automation, and DevSecOps at enterprise scale.
+I noticed the ${jd ? 'open' : ''} ${targetTitle} opportunity at your organization and wanted to connect directly. I have extensive hands-on experience scaling platforms and automated delivery pipelines with ${userSkills}.
 
-I'm actively exploring senior remote opportunities in the $200k+ range. Would love to connect and learn more about the role.
+I'm actively exploring senior opportunities in the ${targetComp} range. Would love to connect and learn more about what your team is building.
 
-— Joseph Erexson III | jerexson3@gmail.com`;
+— ${name}${email ? ' | ' + email : ''}`;
 
   const out = document.getElementById('cover-output');
   out.innerHTML = `

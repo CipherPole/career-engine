@@ -4,6 +4,8 @@
 
 'use strict';
 
+import { getCurrentUser } from './auth-engine.js?v=7';
+
 const JOB_BOARDS = [
   {
     category: '🎯 Role-Specific Deep Links',
@@ -123,9 +125,16 @@ const STAGE_COLORS = { Saved:'var(--text-dim)', Applied:'var(--blue)', Screening
 
 let jobsData = [];
 
+function getJobStorageKey() {
+  const user = getCurrentUser();
+  const email = (user?.email || 'guest').toLowerCase();
+  return `career_jobs_${email}`;
+}
+
 async function loadJobs() {
+  const key = getJobStorageKey();
   try {
-    const stored = localStorage.getItem('career_jobs_v1');
+    const stored = localStorage.getItem(key);
     if (stored) jobsData = JSON.parse(stored);
   } catch { jobsData = []; }
 
@@ -135,14 +144,15 @@ async function loadJobs() {
       const body = await res.json();
       if (Array.isArray(body?.state)) {
         jobsData = body.state;
-        localStorage.setItem('career_jobs_v1', JSON.stringify(jobsData));
+        localStorage.setItem(key, JSON.stringify(jobsData));
       }
     }
   } catch {}
 }
 
 function saveJobs() {
-  localStorage.setItem('career_jobs_v1', JSON.stringify(jobsData));
+  const key = getJobStorageKey();
+  localStorage.setItem(key, JSON.stringify(jobsData));
   fetch('/api/state?key=jobs', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },

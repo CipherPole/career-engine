@@ -4,7 +4,8 @@
 
 'use strict';
 
-const STORAGE_KEY = 'careerEngine_training_v1';
+import { getCurrentUser } from './auth-engine.js?v=7';
+
 let radarChartInstance = null;
 
 const DEFAULT_TRAINING_STATE = {
@@ -12,10 +13,17 @@ const DEFAULT_TRAINING_STATE = {
   projectStates: {}, // [projectId]: { status: 'available'|'in-progress'|'conquered', repoUrl: '', completedAt: null }
 };
 
+function getTrainingStorageKey() {
+  const user = getCurrentUser();
+  const email = (user?.email || 'guest').toLowerCase();
+  return `careerEngine_training_${email}`;
+}
+
 // Default storage state helper
 function getTrainingStateFromLocal() {
+  const key = getTrainingStorageKey();
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(key);
     if (raw) return JSON.parse(raw);
   } catch (e) {
     console.warn('Failed reading training state:', e);
@@ -24,13 +32,14 @@ function getTrainingStateFromLocal() {
 }
 
 async function getTrainingState() {
+  const key = getTrainingStorageKey();
   const localState = getTrainingStateFromLocal();
   try {
     const res = await fetch('/api/state?key=training', { credentials: 'include' });
     if (res.ok) {
       const body = await res.json();
       if (body?.state && typeof body.state === 'object' && !Array.isArray(body.state)) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(body.state));
+        localStorage.setItem(key, JSON.stringify(body.state));
         return body.state;
       }
     }
@@ -39,8 +48,9 @@ async function getTrainingState() {
 }
 
 function saveTrainingState(state) {
+  const key = getTrainingStorageKey();
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    localStorage.setItem(key, JSON.stringify(state));
   } catch (e) {
     console.warn('Failed saving training state:', e);
   }
