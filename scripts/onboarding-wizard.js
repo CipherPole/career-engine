@@ -15,8 +15,12 @@ import { setCurrentUser, getActiveSession } from './auth-engine.js?v=8';
 export function openResumeReviewModal(parsedData = {}) {
   const profile = parsedData.profile || {};
   const missing = parsedData.missingFields || [];
-  const recommended = parsedData.recommendedItems || [];
   const diagnostics = parsedData.diagnostics || {};
+
+  // Pull active Google session to pre-fill identity fields if resume didn't detect them
+  const activeSession = getActiveSession();
+  const sessionEmail = activeSession?.user?.email || '';
+  const sessionName  = activeSession?.user?.name  || '';
 
   let modal = document.getElementById('onboarding-modal');
   if (!modal) {
@@ -29,16 +33,19 @@ export function openResumeReviewModal(parsedData = {}) {
   // Current state of skills for editing
   let currentSkills = Array.isArray(profile.skills) ? [...profile.skills] : [];
 
-  const nameVal = profile.contact?.name || '';
-  const emailVal = profile.contact?.email || '';
-  const phoneVal = profile.contact?.phone || '';
-  const titleVal = profile.meta?.targetTitle || 'Software & DevOps Engineer';
-  const currCompVal = profile.meta?.currentComp || 120000;
-  const targetCompVal = profile.meta?.targetComp || 175000;
-  const linkedinVal = profile.contact?.linkedin || '';
-  const githubVal = profile.contact?.github || '';
-  const summaryVal = profile.summary || '';
-  const atsScore = diagnostics.initialAtsScore || profile.meta?.atsScore || 70;
+  // Identity — prefer what was extracted from resume, fall back to Google session
+  const nameVal       = profile.contact?.name    || sessionName;
+  const emailVal      = profile.contact?.email   || sessionEmail;
+  const phoneVal      = profile.contact?.phone   || '';
+  const titleVal      = profile.meta?.targetTitle || '';
+  const currCompVal   = profile.meta?.currentComp != null ? profile.meta.currentComp : '';
+  const targetCompVal = profile.meta?.targetComp  != null ? profile.meta.targetComp  : '';
+  const linkedinVal   = profile.contact?.linkedin || '';
+  const githubVal     = profile.contact?.github   || '';
+  const summaryVal    = profile.summary || '';
+  const atsScore      = diagnostics.initialAtsScore || profile.meta?.atsScore || 0;
+  // Email from Google auth is authoritative — mark as verified
+  const isEmailFromGoogle = !!sessionEmail && emailVal.toLowerCase() === sessionEmail.toLowerCase();
 
   modal.innerHTML = `
     <div class="modal-box" style="max-width:720px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;padding:0;">
@@ -60,7 +67,7 @@ export function openResumeReviewModal(parsedData = {}) {
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <div class="chip gold" style="font-size:11px;font-weight:700;">
-            🎯 Initial ATS Score: ${atsScore}/100
+            🎯 Initial ATS Score: ${atsScore > 0 ? atsScore + '/100' : 'Calculating...'}
           </div>
           <button class="btn btn-secondary btn-sm" id="btn-close-review" style="padding:4px 10px;">✕</button>
         </div>
@@ -104,9 +111,9 @@ export function openResumeReviewModal(parsedData = {}) {
             <div>
               <label style="font-size:11px;font-weight:700;color:var(--text-secondary);display:flex;align-items:center;">
                 Email Address *
-                ${emailVal ? '<span class="field-detected-badge">✨ Auto-Detected</span>' : '<span class="field-missing-badge">⚠️ Required</span>'}
+                ${isEmailFromGoogle ? '<span class="field-detected-badge" style="background:rgba(34,197,94,0.15);color:#4ade80;">✅ Google Verified</span>' : (emailVal ? '<span class="field-detected-badge">✨ Auto-Detected</span>' : '<span class="field-missing-badge">⚠️ Required</span>')}
               </label>
-              <input type="email" id="review-email" class="input" value="${escapeHtml(emailVal)}" placeholder="e.g. alex@example.com" style="margin-top:4px;" required />
+              <input type="email" id="review-email" class="input" value="${escapeHtml(emailVal)}" placeholder="e.g. alex@example.com" style="margin-top:4px;" ${isEmailFromGoogle ? 'readonly style="margin-top:4px;background:rgba(34,197,94,0.05);border-color:rgba(34,197,94,0.3);"' : ''} required />
             </div>
           </div>
 
@@ -144,21 +151,21 @@ export function openResumeReviewModal(parsedData = {}) {
             <div>
               <label style="font-size:11px;font-weight:700;color:var(--text-secondary);display:flex;align-items:center;">
                 Target Job Title
-                <span class="field-detected-badge">✨</span>
+                ${titleVal ? '<span class="field-detected-badge">✨ Detected</span>' : '<span class="field-missing-badge">⚠️ Add yours</span>'}
               </label>
-              <input type="text" id="review-title" class="input" value="${escapeHtml(titleVal)}" placeholder="e.g. Senior DevOps Engineer" style="margin-top:4px;" />
+              <input type="text" id="review-title" class="input" value="${escapeHtml(titleVal)}" placeholder="e.g. Senior Software Engineer" style="margin-top:4px;" />
             </div>
             <div>
               <label style="font-size:11px;font-weight:700;color:var(--text-secondary);">
                 Current Comp ($)
               </label>
-              <input type="number" id="review-curr-comp" class="input" value="${currCompVal}" placeholder="120000" style="margin-top:4px;" />
+              <input type="number" id="review-curr-comp" class="input" value="${currCompVal}" placeholder="e.g. 110000" style="margin-top:4px;" />
             </div>
             <div>
               <label style="font-size:11px;font-weight:700;color:var(--text-secondary);">
                 Target Comp ($)
               </label>
-              <input type="number" id="review-target-comp" class="input" value="${targetCompVal}" placeholder="175000" style="margin-top:4px;" />
+              <input type="number" id="review-target-comp" class="input" value="${targetCompVal}" placeholder="e.g. 150000" style="margin-top:4px;" />
             </div>
           </div>
         </div>
@@ -207,14 +214,10 @@ export function openResumeReviewModal(parsedData = {}) {
           </div>
         </div>
 
-        <!-- Showcase banner -->
-        <div style="background:rgba(245, 158, 11, 0.05);border:1px solid rgba(245,158,11,0.2);border-radius:var(--radius-md);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:12px;">
-          <div style="font-size:11px;color:var(--text-secondary);">
-            Just visiting? You can switch to explore Joseph's executive profile anytime.
-          </div>
-          <button class="btn btn-secondary btn-sm" id="btn-review-to-showcase" style="font-size:10px;padding:3px 8px;white-space:nowrap;">
-            Explore Joseph's Profile ↗
-          </button>
+        <!-- Privacy note -->
+        <div style="background:rgba(56,189,248,0.05);border:1px solid rgba(56,189,248,0.18);border-radius:var(--radius-md);padding:10px 14px;">
+          <div style="font-size:11px;color:#7dd3fc;font-weight:600;margin-bottom:3px;">🔒 Your profile is completely private</div>
+          <div style="font-size:11px;color:var(--text-secondary);line-height:1.5;">All data above belongs to <strong style="color:var(--text-primary);">${escapeHtml(nameVal || 'your account')}</strong>. Your workspace is fully isolated and will never show or reference anyone else's data.</div>
         </div>
 
       </div>
@@ -279,35 +282,22 @@ export function openResumeReviewModal(parsedData = {}) {
   document.getElementById('btn-close-review')?.addEventListener('click', () => modal.classList.remove('open'));
   document.getElementById('btn-cancel-review')?.addEventListener('click', () => modal.classList.remove('open'));
 
-  // Switch to Showcase mode
-  document.getElementById('btn-review-to-showcase')?.addEventListener('click', () => {
-    modal.classList.remove('open');
-    sessionStorage.setItem('careerEngine_showcase_active', 'true');
-    setCurrentUser({
-      name: 'Joseph Erexson III',
-      email: 'jerexson3@gmail.com',
-      picture: '',
-      role: 'owner',
-      isLoggedIn: false,
-    });
-    window.location.reload();
-  });
-
   // Create Account Action
   document.getElementById('btn-create-account-final')?.addEventListener('click', async () => {
     const name = document.getElementById('review-name')?.value?.trim();
-    const email = document.getElementById('review-email')?.value?.trim();
-    const title = document.getElementById('review-title')?.value?.trim() || 'Software & DevOps Engineer';
+    // Use Google-verified email first, then fall back to form field
+    const email = sessionEmail || document.getElementById('review-email')?.value?.trim();
+    const title = document.getElementById('review-title')?.value?.trim() || 'Software Engineer';
     const phone = document.getElementById('review-phone')?.value?.trim() || '';
     const linkedin = document.getElementById('review-linkedin')?.value?.trim() || '';
     const github = document.getElementById('review-github')?.value?.trim() || '';
-    const currComp = parseInt(document.getElementById('review-curr-comp')?.value) || 120000;
-    const targetComp = parseInt(document.getElementById('review-target-comp')?.value) || 175000;
+    const currComp = parseInt(document.getElementById('review-curr-comp')?.value) || 0;
+    const targetComp = parseInt(document.getElementById('review-target-comp')?.value) || 0;
     const summary = document.getElementById('review-summary')?.value?.trim() || '';
 
     // Require both Name and Email to establish a true user account
     if (!name) {
-      window.toast?.('Please enter your full name.', 'red');
+      window.toast?.('Please enter your full name to continue.', 'red');
       document.getElementById('review-name')?.focus();
       return;
     }
@@ -317,50 +307,34 @@ export function openResumeReviewModal(parsedData = {}) {
       return;
     }
 
-    // Build the final isolated profile payload
+    // Build the final isolated profile payload — only use what we know about THIS user
+    // Do NOT copy defaults from any example/showcase profile
     const finalProfile = {
       meta: {
         lastUpdated: new Date().toISOString().slice(0, 10),
         targetTitle: title,
-        targetComp: targetComp,
-        currentComp: currComp,
-        atsScore: atsScore,
-        parsedFileName: profile.meta?.parsedFileName || 'Imported Resume',
+        targetComp: targetComp || null,
+        currentComp: currComp || null,
+        atsScore: atsScore || null,
+        parsedFileName: profile.meta?.parsedFileName || null,
+        createdVia: 'resume_import',
       },
       contact: {
         name: name,
         email: email,
-        phone: phone || 'Available upon request',
-        location: profile.contact?.location || 'Remote / United States',
-        linkedin: linkedin,
-        github: github,
+        phone: phone || '',
+        location: profile.contact?.location || '',
+        linkedin: linkedin || '',
+        github: github || '',
       },
-      summary: summary || `Targeting ${title} roles with high-impact engineering automation.`,
-      leadership: profile.leadership || {
-        teamSize: '1–5 Engineers',
-        scale: 'Individual Contributor / Lead',
-      },
-      experience: profile.experience && profile.experience.length > 0 ? profile.experience : [
-        {
-          id: 'exp-1',
-          title: title,
-          company: 'Current Organization',
-          duration: 'Present',
-          teamSize: '1–5',
-          highlights: currentSkills.length > 0
-            ? [`Delivered engineering initiatives utilizing ${currentSkills.slice(0, 4).join(', ')}.`]
-            : ['Delivered scalable software systems and automated workflows.'],
-        }
-      ],
+      summary: summary || '',
+      leadership: profile.leadership || null,
+      // Only include experience if it was extracted from their actual resume
+      experience: (profile.experience && profile.experience.length > 0) ? profile.experience : [],
       skills: currentSkills,
       certifications: profile.certifications || [],
-      education: profile.education || [
-        { degree: 'B.S. in Computer Science / Engineering', institution: 'Accredited University', year: 'Completed' }
-      ],
-      accomplishments: profile.accomplishments || [
-        `Automated core delivery workflows utilizing ${currentSkills.slice(0, 3).join(', ') || 'modern engineering tooling'}.`,
-        'Improved system stability and operational throughput across critical projects.'
-      ]
+      education: profile.education || [],
+      accomplishments: profile.accomplishments || [],
     };
 
     // Save profile to user-scoped localStorage and mark active
@@ -380,17 +354,8 @@ export function openResumeReviewModal(parsedData = {}) {
       });
     } catch {}
 
-    // Register active user session
-    setCurrentUser({
-      name: name,
-      email: email,
-      picture: '',
-      role: 'user',
-      isLoggedIn: true,
-    });
-
     modal.classList.remove('open');
-    window.toast?.(`🎉 Account created for ${name}! Loading your personal dashboard...`, 'green');
+    window.toast?.(`🎉 Profile created for ${name}! Loading your personal dashboard...`, 'green');
     
     // Smooth reload so router and data hydration initialize with new user's isolated profile
     setTimeout(() => {
