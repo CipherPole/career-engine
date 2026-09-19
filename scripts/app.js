@@ -29,6 +29,7 @@ const PAGES = {
   training:   () => import('./training-engine.js').then(m => m.renderTrainingHub()),
   certs:      () => import('./cert-engine.js').then(m => m.renderCertifications()),
   projects:   () => import('./project-showcase.js').then(m => m.renderProjects()),
+  settings:   () => import('./auth-engine.js').then(m => m.renderSettingsPage()),
   cover:      () => renderCoverLetterPage(),
 };
 

@@ -316,3 +316,175 @@ export function openAuthModal() {
 
   modal.classList.add('open');
 }
+
+// ── Dedicated Settings & Google Auth Page ─────────────────────
+export function renderSettingsPage() {
+  const content = document.getElementById('page-content');
+  if (!content) return;
+
+  const user = getCurrentUser();
+  const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || '';
+  const currentOrigin = window.location.origin;
+
+  content.innerHTML = `
+    <div class="page-header">
+      <div class="page-title" style="display:flex;align-items:center;gap:10px;">
+        <span>⚙️</span> System Settings & Google Authentication
+      </div>
+      <div class="page-subtitle">Configure Google OAuth, manage active user session, and switch workspace modes.</div>
+    </div>
+
+    <!-- Main Settings Grid -->
+    <div class="grid-2" style="gap:24px;margin-bottom:32px;">
+      <!-- Google OAuth Card -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div style="font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;">
+              <span>🔑</span> Google OAuth 2.0 Client ID
+            </div>
+            <span class="chip ${clientId ? 'green' : 'gold'}" style="font-size:11px;">
+              ${clientId ? '✓ Configured & Active' : '⚠️ Not Configured'}
+            </span>
+          </div>
+
+          <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:16px;">
+            Paste your Google Cloud OAuth Client ID below. This enables official <strong>Sign in with Google</strong> for your site at <code style="color:var(--gold-light);">${currentOrigin}</code>.
+          </p>
+
+          <div style="margin-bottom:14px;">
+            <label style="font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;">
+              Google Client ID:
+            </label>
+            <input type="text" id="page-google-client-id" class="input" 
+              placeholder="e.g. 123456789-abcdef.apps.googleusercontent.com" 
+              value="${clientId}" 
+              style="margin-top:6px;font-family:'JetBrains Mono',monospace;font-size:12px;width:100%;" />
+          </div>
+
+          <div style="background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:var(--radius-md);padding:12px;font-size:11px;color:var(--text-secondary);line-height:1.5;margin-bottom:16px;">
+            <strong style="color:var(--text-primary);">Google Cloud Console Checklist:</strong>
+            <ul style="padding-left:18px;margin-top:4px;display:flex;flex-direction:column;gap:3px;">
+              <li>Authorized JavaScript origin: <code style="color:var(--gold-light);">${currentOrigin}</code></li>
+              <li>Authorized redirect URI: <code style="color:var(--gold-light);">${currentOrigin}</code></li>
+            </ul>
+          </div>
+        </div>
+
+        <div>
+          <button class="btn btn-gold w-full" id="btn-save-page-client-id" style="justify-content:center;padding:12px;font-weight:700;">
+            💾 Save Client ID & Activate Google Sign-In
+          </button>
+        </div>
+      </div>
+
+      <!-- User Account & Mode Switcher -->
+      <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <div style="font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;">
+              <span>👤</span> Active Workspace Session
+            </div>
+            <span class="chip ${isOwner() ? 'gold' : 'blue'}" style="font-size:11px;">
+              ${isOwner() ? '⭐ Owner Mode' : '👤 Personal Workspace'}
+            </span>
+          </div>
+
+          <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+            <div style="width:44px;height:44px;border-radius:50%;background:var(--gold);color:#000;font-weight:700;font-size:18px;display:flex;align-items:center;justify-content:center;">
+              ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />` : (user.name ? user.name[0] : '👤')}
+            </div>
+            <div style="flex:1;">
+              <div style="font-weight:700;font-size:14px;color:var(--text-primary);">${user.name}</div>
+              <div style="font-size:12px;color:var(--text-dim);">${user.email}</div>
+            </div>
+          </div>
+
+          <div style="font-size:12px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin-bottom:8px;">
+            Switch Workspace Experience:
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;">
+            <button class="btn btn-secondary w-full" id="btn-page-switch-owner" style="justify-content:flex-start;padding:10px 14px;gap:10px;">
+              <span>⭐</span>
+              <div style="text-align:left;">
+                <div style="font-weight:700;font-size:12px;color:var(--gold-light);">Joseph Erexson III (Owner Profile)</div>
+                <div style="font-size:10px;color:var(--text-dim);">Load Joseph's pre-configured DevOps & Platform Lead data.</div>
+              </div>
+            </button>
+
+            <button class="btn btn-secondary w-full" id="btn-page-switch-visitor" style="justify-content:flex-start;padding:10px 14px;gap:10px;">
+              <span>🚀</span>
+              <div style="text-align:left;">
+                <div style="font-weight:700;font-size:12px;color:var(--text-primary);">Fresh Workspace (Visitor Onboarding)</div>
+                <div style="font-size:10px;color:var(--text-dim);">Upload a different resume, set custom targets, and test as a visitor.</div>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;">
+          <div id="page-google-btn-container" style="flex:1;"></div>
+          ${user.isLoggedIn ? `
+            <button class="btn btn-secondary btn-sm" id="btn-page-sign-out" style="font-size:11px;">
+              Sign Out
+            </button>
+          ` : ''}
+        </div>
+      </div>
+    </div>
+  `;
+
+  // Attach Save Client ID
+  document.getElementById('btn-save-page-client-id')?.addEventListener('click', () => {
+    const val = document.getElementById('page-google-client-id')?.value.trim();
+    if (val) {
+      localStorage.setItem(CONFIG_STORAGE_KEY, val);
+      GOOGLE_CLIENT_ID = val;
+      window.toast?.('Google Client ID saved! Re-initializing auth...', 'green');
+      setTimeout(() => window.location.reload(), 500);
+    } else {
+      window.toast?.('Please paste a valid Google Client ID.', 'red');
+    }
+  });
+
+  // Switch to Owner
+  document.getElementById('btn-page-switch-owner')?.addEventListener('click', () => {
+    setCurrentUser({
+      name: 'Joseph Erexson III',
+      email: OWNER_EMAIL,
+      picture: '',
+      role: 'owner',
+      isLoggedIn: true,
+    });
+    window.toast?.('Loaded Joseph Erexson III Executive Profile!', 'gold');
+    setTimeout(() => window.location.reload(), 400);
+  });
+
+  // Switch to Visitor Onboarding
+  document.getElementById('btn-page-switch-visitor')?.addEventListener('click', () => {
+    import('./onboarding-wizard.js').then(m => m.openOnboardingWizard());
+  });
+
+  // Sign out
+  document.getElementById('btn-page-sign-out')?.addEventListener('click', () => {
+    localStorage.removeItem(AUTH_STORAGE_KEY);
+    window.toast?.('Signed out. Switched to Showcase Mode.', 'gold');
+    setTimeout(() => window.location.reload(), 400);
+  });
+
+  // Render Google button if GIS is available
+  if (window.google?.accounts?.id && clientId) {
+    try {
+      window.google.accounts.id.renderButton(document.getElementById('page-google-btn-container'), {
+        theme: 'filled_black',
+        size: 'large',
+        shape: 'pill',
+        text: 'signin_with',
+      });
+    } catch (e) {
+      console.warn('GIS page button render warning:', e);
+    }
+  }
+}
+

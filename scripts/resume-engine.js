@@ -23,6 +23,19 @@ export function renderDashboard() {
       <div class="page-subtitle">Welcome back, Joseph. Here is your career readiness snapshot.</div>
     </div>
 
+    ${!localStorage.getItem('careerEngine_google_client_id') ? `
+      <div style="background:rgba(245, 158, 11, 0.08);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:24px;">🔑</span>
+          <div>
+            <div style="font-weight:700;font-size:14px;color:var(--gold-light);">Complete Google Sign-In Setup</div>
+            <div style="font-size:12px;color:var(--text-secondary);">Click below to paste your Google OAuth Client ID and activate 1-click Google Sign-In.</div>
+          </div>
+        </div>
+        <button class="btn btn-gold btn-sm" onclick="navigate('settings')">⚙️ Open Google Auth Settings →</button>
+      </div>
+    ` : ''}
+
     <!-- Action Priority -->
     <div class="action-card mb-24">
       <div class="priority-label">🎯 Today's Top Priority</div>
