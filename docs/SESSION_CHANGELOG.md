@@ -1,0 +1,75 @@
+# Career Engine — Development Session Changelog
+
+> **Purpose:** Detailed chronological record of development iterations, architectural decisions, and bug resolutions. Maintained for future AI agents and engineering sessions to ensure continuous alignment and seamless context preservation.
+
+---
+
+## Session Log: September 19, 2026
+
+### Milestone 1: Zero-Credential Git Hygiene & Vercel Serverless Integration
+- **Context:** The project was open-sourced to public GitHub (`CipherPole/career-engine`). Google OAuth credentials could not be stored in client-side code or Git repository files.
+- **Implementation:**
+  - Implemented **Option A Architecture**: Serverless credential resolution.
+  - Built `api/auth-config.js` to serve `GOOGLE_CLIENT_ID` from Vercel Project Environment Variables (`process.env.GOOGLE_CLIENT_ID`).
+  - Added dynamic fallback to `localStorage` for offline / development environments.
+  - Implemented `scripts/security-audit.js` pre-commit hook enforcing zero secrets, API keys, or tokens in Git commits.
+  - Verified live deployment at `https://career-engine-five.vercel.app/api/auth-config` returning HTTP 200.
+
+### Milestone 2: Brand Identity Evolution
+- **User Directive:** Transition the platform from a personal portfolio for Joseph Erexson III to a universal platform: *"Personal AI Career Engine to help others improve and understand their own skills better"*.
+- **Implementation:**
+  - Updated `index.html` title to: `Career Engine — Personal AI Career & Skill Intelligence Platform`.
+  - Updated meta descriptions, badges, and landing page headlines to universal skill intelligence messaging.
+  - Reserved administrative privileges exclusively for verified owner email `jerexson3@gmail.com`.
+  - Implemented isolated, private workspace creation for new visitors (`careerEngine_profile_<email>`).
+
+### Milestone 3: Motion Aurora & Interactive Constellation Gateway
+- **Context:** Replaced the static sign-in screen with a high-conversion, dynamic landing experience.
+- **Implementation:**
+  - Built full-screen CSS aurora motion layers (`signin-motion-bg`) with multi-color radial gradient orbs.
+  - Built interactive canvas constellation network (`signin-constellation-canvas`) connecting nodes and tracking mouse movement with elastic physics.
+  - Enforced full-screen viewport coverage (`100dvw` / `100dvh`, `position: fixed`).
+  - Applied `pointer-events: none !important; z-index: 0 !important;` to background canvas, and `pointer-events: auto !important; z-index: 100 !important;` to the glassmorphic card to prevent interaction blocking.
+
+### Milestone 4: PC Chrome Google Sign-In & Popup Investigation
+- **Problem Statement:** On PC desktop Chrome, clicking Google Sign-In was perceived as not working, while on mobile Android it worked without issue. Console showed:
+  `POST https://accounts.google.com/gsi/log?...&event=button.popup.clicked.popupNotOpened net::ERR_BLOCKED_BY_CLIENT`
+- **Root Cause Analysis:**
+  1. `net::ERR_BLOCKED_BY_CLIENT`: Desktop Chrome had an ad blocker (e.g. uBlock Origin or AdBlock) active that blocked Google's analytics endpoint (`/gsi/log`). This is harmless for authentication itself.
+  2. `button.popup.clicked.popupNotOpened`: The browser had already opened **3 background Google OAuth popup windows** (`https://accounts.google.com/v3/signin/...`, viewport 508x569). Because an OAuth window was already active, Google Identity Services refused to open a 4th popup.
+  3. The button text `"Sign in as Joseph"` is Google's official personalized button rendered by Google Identity Services when Chrome has an active profile for that user.
+- **Implementation:**
+  - Added Google Identity Services `click_listener` for instantaneous UI feedback.
+  - Added `intermediate_iframe_close_callback` to detect popup dismissal.
+  - Added on-screen desktop notice and a collapsible **"🔧 Desktop Troubleshooter (Popups & Ad Blockers)"** guide on the `#signin` card.
+  - Successfully verified Google OIDC sign-in completion on PC desktop!
+
+### Milestone 5: Action Logs & Diagnostic Trace Route Subsystem
+- **Context:** User requested error handling and trace routing in the admin console so that admin logs can be inspected and exported to diagnose issues during pair programming.
+- **Implementation:**
+  - Created `scripts/telemetry-engine.js`: 150-event persistent ring buffer (`localStorage`).
+  - Implemented event levels (`INFO`, `WARN`, `ERROR`, `SECURITY`) and categories (`AUTH`, `NETWORK`, `ROUTER`, `RBAC`, `SYSTEM`).
+  - Intercepted global `window.onerror` and `window.onunhandledrejection`.
+  - Added **🛰️ Action Logs & Diagnostic Trace Route Console** to the Administrator Console (`#settings`):
+    - Real-time log table with color badges and expandable JSON metadata.
+    - Category and level filters.
+    - **📋 "Copy Diagnostics Report"** button: 1-click clipboard export of full ASCII trace report for agent pair programming.
+    - **⬇️ "Export JSON"** button: Instant telemetry file download.
+    - **🧪 "Test Error Handler"** button: Real-time diagnostic self-test probe.
+    - **🗑️ "Clear Logs"** button: Admin buffer purge.
+
+### Milestone 6: User Profile Component & Sign-Out Navigation
+- **Context:** Following successful sign-in on PC and mobile, the sign-out option was missing from view because the profile modal DOM element had not been initialized.
+- **Implementation:**
+  - Revamped `#user-auth-pill` to be a clickable interactive profile card displaying avatar, user name, and role badge.
+  - Added a direct quick-action **`🚪 Sign Out`** button in the top bar for instant 1-click access on all screens.
+  - Added dynamic creation for `#auth-modal` inside `openAuthModal()`.
+  - Styled a glassmorphic **User Profile Modal** containing:
+    - User avatar, name, verified Google email, and role badge.
+    - Session fingerprint and OIDC verification status.
+    - Navigation shortcuts to Settings / Admin Console and Skills Dashboard.
+    - Prominent red **`🚪 Sign Out of Workspace`** button.
+  - Added mobile navigation support:
+    - **`☰ Menu`** hamburger toggle in the top bar on screens $\le 900\text{px}$ to slide open the navigation sidebar.
+    - Auto-closes mobile sidebar upon page navigation.
+    - Mobile-responsive styles in `styles/main.css`.

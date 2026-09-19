@@ -85,6 +85,9 @@ async function navigate(pageId) {
 
   State.currentPage = pageId;
 
+  // Auto-close mobile sidebar if open
+  document.getElementById('sidebar')?.classList.remove('open');
+
   // Update nav active state
   document.querySelectorAll('.nav-item').forEach(el => {
     el.classList.toggle('active', el.dataset.page === pageId);

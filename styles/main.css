@@ -844,10 +844,20 @@ a:hover { color: var(--gold-light); }
 /* ── Responsive ────────────────────────────────────────────── */
 @media (max-width: 900px) {
   :root { --sidebar-w: 0px; }
-  .sidebar { transform: translateX(-240px); }
-  .sidebar.open { transform: translateX(0); width: 240px; }
-  .main-content { margin-left: 0; max-width: 100%; padding: 20px; }
+  .sidebar { 
+    transform: translateX(-260px); 
+    z-index: 999;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+    transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .sidebar.open { 
+    transform: translateX(0); 
+    width: 260px; 
+  }
+  .main-content { margin-left: 0; max-width: 100%; padding: 16px; }
   .grid-3, .grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .mobile-menu-toggle { display: inline-flex !important; }
+  .quick-signout-text { display: none; }
 }
 @media (max-width: 600px) {
   .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }

@@ -441,26 +441,56 @@ export function renderAuthPill() {
   const session = getActiveSession();
   const user = session.user;
   const admin = session.role === ROLES.ADMIN;
+  const isLoggedIn = session.isLoggedIn;
 
   container.innerHTML = `
-    <div style="display:flex;align-items:center;gap:10px;">
-      <div style="display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid ${admin ? 'var(--gold-border)' : 'var(--border)'};border-radius:24px;padding:4px 12px 4px 6px;">
-        <div style="width:28px;height:28px;border-radius:50%;background:${admin ? 'var(--gold)' : '#3b82f6'};color:#000;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
-          ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
+    <div class="user-pill-wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px;">
+      <!-- Mobile Hamburger Toggle (only displayed on screens <= 900px) -->
+      <button class="mobile-menu-toggle" id="btn-mobile-sidebar-toggle" style="display:none;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);color:var(--text-primary);padding:6px 12px;font-size:15px;cursor:pointer;align-items:center;gap:6px;" title="Toggle Menu">
+        <span>☰</span> <span style="font-size:11px;font-weight:700;">Menu</span>
+      </button>
+
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+        <!-- Clickable Profile Pill (Opens profile modal with Sign Out) -->
+        <div id="btn-user-profile-trigger" style="display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid ${admin ? 'var(--gold-border)' : 'var(--border)'};border-radius:24px;padding:4px 12px 4px 6px;cursor:pointer;user-select:none;transition:all 0.2s ease;" title="Click to view Account & Profile Options">
+          <div style="width:28px;height:28px;border-radius:50%;background:${admin ? 'var(--gold)' : '#3b82f6'};color:#000;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 10px ${admin ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'};">
+            ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
+          </div>
+          <div style="line-height:1.2;text-align:left;">
+            <div style="font-size:12px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:4px;">
+              ${user.name} <span style="font-size:9px;color:var(--text-dim);">▾</span>
+            </div>
+            <div style="font-size:10px;color:var(--text-dim);">${admin ? '⭐ Admin' : (isLoggedIn ? '👤 User' : 'Showcase')}</div>
+          </div>
         </div>
-        <div style="line-height:1.2;">
-          <div style="font-size:12px;font-weight:700;color:var(--text-primary);">${user.name}</div>
-          <div style="font-size:10px;color:var(--text-dim);">${admin ? '⭐ Admin (Owner)' : '👤 User Workspace'}</div>
-        </div>
-        <button class="btn ${admin ? 'btn-gold' : 'btn-secondary'} btn-sm" id="btn-open-auth-modal" style="font-size:10px;padding:3px 10px;margin-left:6px;">
-          ${admin ? '⚙️ Admin' : '👤 Account'}
-        </button>
+
+        ${isLoggedIn ? `
+          <!-- Quick Direct Sign Out Button -->
+          <button class="btn btn-secondary btn-sm" id="btn-header-signout" style="font-size:11px;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:5px;color:var(--red);border-color:rgba(239,68,68,0.3);font-weight:600;" title="Sign out of Career Engine">
+            <span>🚪</span> <span class="quick-signout-text">Sign Out</span>
+          </button>
+        ` : `
+          <button class="btn btn-gold btn-sm" onclick="window.navigate?.('signin')" style="font-size:11px;padding:5px 12px;border-radius:20px;">
+            ⚡ Sign In
+          </button>
+        `}
       </div>
     </div>
   `;
 
-  document.getElementById('btn-open-auth-modal')?.addEventListener('click', () => {
+  document.getElementById('btn-user-profile-trigger')?.addEventListener('click', () => {
     openAuthModal();
+  });
+
+  document.getElementById('btn-header-signout')?.addEventListener('click', () => {
+    signOut();
+  });
+
+  document.getElementById('btn-mobile-sidebar-toggle')?.addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar) {
+      sidebar.classList.toggle('open');
+    }
   });
 }
 
@@ -483,7 +513,7 @@ export function renderAccessDenied(requiredRole = 'admin') {
         <button class="btn btn-primary" onclick="navigate('dashboard')">
           ← Return to Dashboard
         </button>
-        <button class="btn btn-secondary" onclick="document.getElementById('btn-open-auth-modal')?.click()">
+        <button class="btn btn-secondary" onclick="window.openAuthModal?.()">
           Verify Admin Identity
         </button>
       </div>
@@ -493,95 +523,125 @@ export function renderAccessDenied(requiredRole = 'admin') {
 
 // ── Authentication & Identity Modal ───────────────────────────
 export function openAuthModal() {
-  const modal = document.getElementById('auth-modal');
-  if (!modal) return;
+  let modal = document.getElementById('auth-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'auth-modal';
+    modal.className = 'modal-overlay';
+    document.body.appendChild(modal);
+  }
 
   const session = getActiveSession();
   const user = session.user;
   const admin = session.role === ROLES.ADMIN;
   const clientId = getGoogleClientId();
+  const isLoggedIn = session.isLoggedIn;
 
-  const titleEl = document.getElementById('auth-modal-title');
-  if (titleEl) titleEl.textContent = admin ? '⚙️ Admin Console & Identity' : '👤 Your Account & Workspace';
-
-  const bodyEl = document.getElementById('auth-modal-body');
-  if (bodyEl) {
-    if (session.isLoggedIn) {
-      bodyEl.innerHTML = `
-        <div style="text-align:center;margin-bottom:20px;">
-          <div style="width:64px;height:64px;border-radius:50%;background:${admin ? 'var(--gold)' : '#3b82f6'};color:#000;font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;overflow:hidden;border:2px solid var(--border);">
-            ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
-          </div>
-          <div style="font-size:18px;font-weight:700;color:var(--text-primary);">${user.name}</div>
-          <div style="font-size:13px;color:var(--text-dim);margin-top:2px;">${user.email}</div>
-          <div style="margin-top:8px;">
-            <span class="chip ${admin ? 'gold' : 'blue'}" style="font-size:11px;">
-              ${admin ? '⭐ Verified Administrator (Owner)' : '👤 Personal Workspace'}
-            </span>
-          </div>
+  modal.innerHTML = `
+    <div class="modal-box" style="max-width:460px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-xl);overflow:hidden;box-shadow:0 25px 60px rgba(0,0,0,0.8);">
+      
+      <!-- Modal Header -->
+      <div style="padding:18px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.02);">
+        <div style="font-weight:800;font-size:15px;display:flex;align-items:center;gap:8px;">
+          <span>${admin ? '⚙️' : '👤'}</span> ${admin ? 'Administrator Profile & Identity' : 'Your Account & Workspace'}
         </div>
+        <button id="btn-close-auth-modal" style="background:transparent;border:none;color:var(--text-dim);font-size:18px;cursor:pointer;padding:4px 8px;border-radius:6px;">✕</button>
+      </div>
 
-        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;margin-bottom:18px;font-size:12px;line-height:1.6;">
-          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;">
-            <span style="color:var(--text-dim);">Role Level:</span>
-            <strong style="color:var(--text-primary);">${session.role.toUpperCase()}</strong>
+      <div style="padding:22px;">
+        ${isLoggedIn ? `
+          <!-- User Profile Avatar Card -->
+          <div style="text-align:center;margin-bottom:20px;">
+            <div style="width:72px;height:72px;border-radius:50%;background:${admin ? 'var(--gold)' : '#3b82f6'};color:#000;font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;overflow:hidden;border:2px solid var(--border);box-shadow:0 0 25px ${admin ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'};">
+              ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
+            </div>
+            <div style="font-size:19px;font-weight:800;color:var(--text-primary);">${user.name}</div>
+            <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${user.email}</div>
+            <div style="margin-top:8px;">
+              <span class="chip ${admin ? 'gold' : 'blue'}" style="font-size:11px;padding:3px 10px;">
+                ${admin ? '⭐ Verified Administrator (Owner)' : '👤 Isolated Personal Workspace'}
+              </span>
+            </div>
           </div>
-          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;">
-            <span style="color:var(--text-dim);">Session Fingerprint:</span>
-            <code style="color:var(--gold-light);font-size:11px;">${session.fingerprint || 'none'}</code>
-          </div>
-          <div style="display:flex;justify-content:space-between;">
-            <span style="color:var(--text-dim);">Google Auth Status:</span>
-            <span style="color:${clientId ? 'var(--green)' : 'var(--gold)'};font-weight:600;">
-              ${clientId ? '✓ Connected' : '⚠️ Client ID Missing'}
-            </span>
-          </div>
-        </div>
 
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          ${admin ? `
-            <button class="btn btn-gold w-full" id="btn-modal-open-settings" style="justify-content:center;padding:10px;">
-              ⚙️ Open Administrator Console & Action Logs
+          <!-- Session Diagnostics Details -->
+          <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;margin-bottom:18px;font-size:12px;line-height:1.6;">
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;">
+              <span style="color:var(--text-dim);">Role Level:</span>
+              <strong style="color:var(--text-primary);">${session.role.toUpperCase()}</strong>
+            </div>
+            <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;">
+              <span style="color:var(--text-dim);">Session Fingerprint:</span>
+              <code style="color:var(--gold-light);font-size:11px;">${session.fingerprint || 'none'}</code>
+            </div>
+            <div style="display:flex;justify-content:space-between;">
+              <span style="color:var(--text-dim);">Google Auth Status:</span>
+              <span style="color:${clientId ? 'var(--green)' : 'var(--gold)'};font-weight:600;">
+                ${clientId ? '✓ OIDC Verified' : '⚠️ Offline/Mock'}
+              </span>
+            </div>
+          </div>
+
+          <!-- Action Links -->
+          <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
+            ${admin ? `
+              <button class="btn btn-gold w-full" id="btn-modal-open-settings" style="justify-content:center;padding:10px;font-weight:700;">
+                ⚙️ Open Administrator Console & Action Logs
+              </button>
+            ` : ''}
+            <button class="btn btn-secondary w-full" id="btn-modal-open-dashboard" style="justify-content:center;padding:10px;">
+              🏠 My Skills Dashboard & Radar
             </button>
-          ` : ''}
-          <button class="btn btn-secondary w-full" id="btn-modal-signout" style="justify-content:center;padding:10px;color:var(--red);">
-            🚪 Sign Out of Workspace
-          </button>
-        </div>
-      `;
+          </div>
 
-      document.getElementById('btn-modal-open-settings')?.addEventListener('click', () => {
-        modal.classList.remove('open');
-        window.navigate?.('settings');
-      });
-
-      document.getElementById('btn-modal-signout')?.addEventListener('click', () => {
-        modal.classList.remove('open');
-        signOut();
-      });
-    } else {
-      bodyEl.innerHTML = `
-        <div style="text-align:center;padding:12px 0;">
-          <div style="font-size:36px;margin-bottom:12px;">🔒</div>
-          <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Sign in to Career Engine</div>
-          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;">
-            Authenticate with your Google account to unlock your personalized career dashboard.
-          </p>
-          <div id="modal-google-btn-container" style="display:flex;justify-content:center;min-height:44px;"></div>
-        </div>
-      `;
-
-      setTimeout(() => {
-        renderGoogleSignInButton('modal-google-btn-container', () => {
-          modal.classList.remove('open');
-          renderAuthPill();
-          window.location.reload();
-        });
-      }, 50);
-    }
-  }
+          <!-- Prominent Sign Out Button -->
+          <div style="border-top:1px solid var(--border);padding-top:14px;">
+            <button class="btn btn-secondary w-full" id="btn-modal-signout" style="justify-content:center;padding:12px;color:var(--red);border-color:rgba(239,68,68,0.35);font-weight:700;font-size:13px;">
+              🚪 Sign Out of Workspace
+            </button>
+          </div>
+        ` : `
+          <div style="text-align:center;padding:16px 0;">
+            <div style="font-size:36px;margin-bottom:12px;">🔒</div>
+            <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Sign in to Career Engine</div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;">
+              Authenticate with your Google account to unlock your personalized skills dashboard.
+            </p>
+            <button class="btn btn-gold w-full" onclick="document.getElementById('auth-modal')?.classList.remove('open');window.navigate?.('signin')" style="justify-content:center;padding:12px;font-weight:700;">
+              ⚡ Go to Sign-In Screen
+            </button>
+          </div>
+        `}
+      </div>
+    </div>
+  `;
 
   modal.classList.add('open');
+
+  document.getElementById('btn-close-auth-modal')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+  });
+
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) {
+      modal.classList.remove('open');
+    }
+  });
+
+  document.getElementById('btn-modal-open-settings')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    window.navigate?.('settings');
+  });
+
+  document.getElementById('btn-modal-open-dashboard')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    window.navigate?.('dashboard');
+  });
+
+  document.getElementById('btn-modal-signout')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    signOut();
+  });
 }
 
 // ── Dedicated Settings & Google Auth Page ─────────────────────
