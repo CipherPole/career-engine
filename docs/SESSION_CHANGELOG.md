@@ -73,3 +73,16 @@
     - **`☰ Menu`** hamburger toggle in the top bar on screens $\le 900\text{px}$ to slide open the navigation sidebar.
     - Auto-closes mobile sidebar upon page navigation.
     - Mobile-responsive styles in `styles/main.css`.
+
+### Milestone 7: Terms of Service, User Agreement & Single Sign-Out Architecture
+- **Context:** Added legal compliance, intellectual property protection, and copyright defense mechanisms, plus streamlined the sign-out UX so that only a single sign-out button exists inside the User Profile Modal.
+- **Implementation:**
+  - Created `scripts/legal-engine.js`:
+    - Renders **Terms of Service & Platform Usage Agreement** with comprehensive IP clauses, anti-scraping provisions, and fair use licensing.
+    - Renders **User Agreement & Zero-Trust Privacy Policy** with ironclad zero-data-brokering guarantees.
+    - Features smart return buttons (`"← Back to Sign In"` for visitors vs `"← Back to Dashboard"` for authenticated users).
+    - Integrated clean tab switcher to toggle between Terms of Service and User Agreement without reloads.
+  - Linked from `#signin` screen beneath the authentication card.
+  - Linked from the **User Profile Modal** so authenticated users can review policies at any time.
+  - Streamlined the header auth pill by removing the duplicate sign-out button, consolidating the single official sign-out action exclusively within the User Profile Modal.
+  - Authored official markdown policy documents: `docs/TERMS_OF_SERVICE.md` and `docs/USER_AGREEMENT.md`.

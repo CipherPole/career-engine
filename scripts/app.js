@@ -23,6 +23,8 @@ window._state = State;
 // ── RBAC Route Permissions ────────────────────────────────────
 const ROUTE_PERMISSIONS = {
   signin:    ROLES.GUEST,
+  terms:     ROLES.GUEST,
+  agreement: ROLES.GUEST,
   dashboard: ROLES.GUEST,
   resume:    ROLES.GUEST,
   linkedin:  ROLES.GUEST,
@@ -37,6 +39,8 @@ const ROUTE_PERMISSIONS = {
 // ── Router ────────────────────────────────────────────────────
 const PAGES = {
   signin:     () => import('./signin-engine.js?v=6').then(m => m.renderSignInPage()),
+  terms:      () => import('./legal-engine.js?v=6').then(m => m.renderLegalPage('terms')),
+  agreement:  () => import('./legal-engine.js?v=6').then(m => m.renderLegalPage('agreement')),
   dashboard:  () => import('./resume-engine.js?v=6').then(m => m.renderDashboard()),
   resume:     () => import('./resume-engine.js?v=6').then(m => m.renderResumeStudio()),
   linkedin:   () => import('./linkedin-engine.js?v=6').then(m => m.renderLinkedInOptimizer()),
@@ -52,10 +56,11 @@ const PAGES = {
 async function navigate(pageId) {
   if (!PAGES[pageId]) return;
 
-  // Manage Full-Screen Sign-In Gateway state
+  // Manage Full-Screen Sign-In & Legal Gateway state
   const sidebar = document.getElementById('sidebar');
   const pill = document.getElementById('user-auth-pill');
-  if (pageId === 'signin') {
+  const isGate = (pageId === 'signin') || ((pageId === 'terms' || pageId === 'agreement') && !getActiveSession().isLoggedIn);
+  if (isGate) {
     document.body.classList.add('is-signin-gate');
     if (sidebar) sidebar.style.display = 'none';
     if (pill) pill.style.display = 'none';

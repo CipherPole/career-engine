@@ -105,12 +105,15 @@ e:\resume/
 │   ├── ARCHITECTURE.md         # This technical architecture manual
 │   ├── SESSION_CHANGELOG.md    # Chronological history of sessions & fixes
 │   ├── ADMIN_GUIDE.md          # Admin operator guide for Google OAuth & telemetry
+│   ├── TERMS_OF_SERVICE.md     # Official platform terms of service & IP policy
+│   ├── USER_AGREEMENT.md       # User agreement & zero-trust privacy policy
 │   └── ...                     # Career intelligence & resume guides
 ├── scripts/
 │   ├── app.js                  # Core router, state manager, navigation
 │   ├── auth-engine.js          # Google OIDC JWT, session management, RBAC, Admin Console
 │   ├── signin-engine.js        # Sign-in gateway, motion aurora, constellation canvas
 │   ├── telemetry-engine.js     # Enterprise ring buffer, error interception, diagnostics
+│   ├── legal-engine.js         # Terms of Service & User Agreement viewer
 │   ├── resume-engine.js        # Dashboard, Resume Studio, Skill Gap engine
 │   ├── tracker-engine.js       # Job search application tracker
 │   ├── training-engine.js      # Training hub & interactive radar chart

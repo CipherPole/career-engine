@@ -452,7 +452,7 @@ export function renderAuthPill() {
 
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
         <!-- Clickable Profile Pill (Opens profile modal with Sign Out) -->
-        <div id="btn-user-profile-trigger" style="display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid ${admin ? 'var(--gold-border)' : 'var(--border)'};border-radius:24px;padding:4px 12px 4px 6px;cursor:pointer;user-select:none;transition:all 0.2s ease;" title="Click to view Account & Profile Options">
+        <div id="btn-user-profile-trigger" style="display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid ${admin ? 'var(--gold-border)' : 'var(--border)'};border-radius:24px;padding:4px 14px 4px 6px;cursor:pointer;user-select:none;transition:all 0.2s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2);" title="Click to view Account, Policies & Sign Out">
           <div style="width:28px;height:28px;border-radius:50%;background:${admin ? 'var(--gold)' : '#3b82f6'};color:#000;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 10px ${admin ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'};">
             ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
           </div>
@@ -464,26 +464,17 @@ export function renderAuthPill() {
           </div>
         </div>
 
-        ${isLoggedIn ? `
-          <!-- Quick Direct Sign Out Button -->
-          <button class="btn btn-secondary btn-sm" id="btn-header-signout" style="font-size:11px;padding:5px 12px;border-radius:20px;display:flex;align-items:center;gap:5px;color:var(--red);border-color:rgba(239,68,68,0.3);font-weight:600;" title="Sign out of Career Engine">
-            <span>🚪</span> <span class="quick-signout-text">Sign Out</span>
-          </button>
-        ` : `
+        ${!isLoggedIn ? `
           <button class="btn btn-gold btn-sm" onclick="window.navigate?.('signin')" style="font-size:11px;padding:5px 12px;border-radius:20px;">
             ⚡ Sign In
           </button>
-        `}
+        ` : ''}
       </div>
     </div>
   `;
 
   document.getElementById('btn-user-profile-trigger')?.addEventListener('click', () => {
     openAuthModal();
-  });
-
-  document.getElementById('btn-header-signout')?.addEventListener('click', () => {
-    signOut();
   });
 
   document.getElementById('btn-mobile-sidebar-toggle')?.addEventListener('click', () => {
@@ -594,11 +585,18 @@ export function openAuthModal() {
             </button>
           </div>
 
-          <!-- Prominent Sign Out Button -->
+          <!-- Prominent Single Sign Out Button -->
           <div style="border-top:1px solid var(--border);padding-top:14px;">
             <button class="btn btn-secondary w-full" id="btn-modal-signout" style="justify-content:center;padding:12px;color:var(--red);border-color:rgba(239,68,68,0.35);font-weight:700;font-size:13px;">
               🚪 Sign Out of Workspace
             </button>
+          </div>
+
+          <!-- Legal & Compliance Links (Always Accessible to Users) -->
+          <div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--border);display:flex;align-items:center;justify-content:center;gap:10px;font-size:11px;color:var(--text-dim);">
+            <a href="#terms" id="btn-modal-to-terms" style="color:var(--text-secondary);text-decoration:underline;cursor:pointer;">Terms of Service</a>
+            <span>•</span>
+            <a href="#agreement" id="btn-modal-to-agreement" style="color:var(--text-secondary);text-decoration:underline;cursor:pointer;">User Agreement & IP Notice</a>
           </div>
         ` : `
           <div style="text-align:center;padding:16px 0;">
@@ -610,6 +608,11 @@ export function openAuthModal() {
             <button class="btn btn-gold w-full" onclick="document.getElementById('auth-modal')?.classList.remove('open');window.navigate?.('signin')" style="justify-content:center;padding:12px;font-weight:700;">
               ⚡ Go to Sign-In Screen
             </button>
+            <div style="margin-top:16px;padding-top:12px;border-top:1px dashed var(--border);display:flex;align-items:center;justify-content:center;gap:10px;font-size:11px;color:var(--text-dim);">
+              <a href="#terms" id="btn-modal-guest-terms" style="color:var(--text-secondary);text-decoration:underline;cursor:pointer;">Terms of Service</a>
+              <span>•</span>
+              <a href="#agreement" id="btn-modal-guest-agreement" style="color:var(--text-secondary);text-decoration:underline;cursor:pointer;">User Agreement</a>
+            </div>
           </div>
         `}
       </div>
@@ -641,6 +644,30 @@ export function openAuthModal() {
   document.getElementById('btn-modal-signout')?.addEventListener('click', () => {
     modal.classList.remove('open');
     signOut();
+  });
+
+  document.getElementById('btn-modal-to-terms')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    modal.classList.remove('open');
+    window.navigate?.('terms');
+  });
+
+  document.getElementById('btn-modal-to-agreement')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    modal.classList.remove('open');
+    window.navigate?.('agreement');
+  });
+
+  document.getElementById('btn-modal-guest-terms')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    modal.classList.remove('open');
+    window.navigate?.('terms');
+  });
+
+  document.getElementById('btn-modal-guest-agreement')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    modal.classList.remove('open');
+    window.navigate?.('agreement');
   });
 }
 

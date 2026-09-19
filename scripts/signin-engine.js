@@ -161,14 +161,36 @@ export async function renderSignInPage() {
           ${isReturning ? 'Automatic workspace restoration & encryption.' : 'Creates an isolated, private workspace. No credit card required.'}
         </div>
 
+        <!-- Terms of Service & User Agreement Notice -->
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,0.06);font-size:11px;color:var(--text-dim);line-height:1.5;">
+          <span>By continuing, you acknowledge and agree to our</span>
+          <div style="margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px;">
+            <a href="#terms" id="link-signin-terms" style="color:var(--gold-light);text-decoration:underline;cursor:pointer;">Terms of Service</a>
+            <span>•</span>
+            <a href="#agreement" id="link-signin-agreement" style="color:var(--gold-light);text-decoration:underline;cursor:pointer;">User Agreement & IP Notice</a>
+          </div>
+        </div>
+
         <!-- Security Pill -->
-        <div style="margin-top:16px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text-dim);">
+        <div style="margin-top:14px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;color:var(--text-dim);">
           <span>🛡️</span>
           <span>Zero-Trust RBAC & Google OIDC Cryptographic JWT</span>
         </div>
       </div>
     </div>
   `;
+
+  // Legal policy click handlers
+  document.getElementById('link-signin-terms')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    cleanupMotionBackground();
+    window.navigate?.('terms');
+  });
+  document.getElementById('link-signin-agreement')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    cleanupMotionBackground();
+    window.navigate?.('agreement');
+  });
 
   // Fallback Google button click handler
   document.getElementById('btn-trigger-google-auth')?.addEventListener('click', async () => {
