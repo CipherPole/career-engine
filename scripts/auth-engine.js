@@ -259,6 +259,16 @@ function handleGoogleCredentialResponse(response, onAuthSuccess) {
   }
 }
 
+// ── Sign Out ──────────────────────────────────────────────────
+export function signOut() {
+  revokeSession();
+  sessionStorage.removeItem('careerEngine_showcase_active');
+  window.toast?.('Signed out successfully.', 'gold');
+  renderAuthPill();
+  window.updateSidebarPermissions?.();
+  window.navigate?.('signin');
+}
+
 // ── Render Top Bar Auth Pill ──────────────────────────────────
 export function renderAuthPill() {
   const container = document.getElementById('user-auth-pill');
@@ -279,13 +289,17 @@ export function renderAuthPill() {
           <div style="font-size:10px;color:var(--text-dim);">${admin ? '⭐ Admin (Owner)' : '👤 User Workspace'}</div>
         </div>
         <button class="btn ${admin ? 'btn-gold' : 'btn-secondary'} btn-sm" id="btn-open-auth-modal" style="font-size:10px;padding:3px 10px;margin-left:6px;">
-          ${admin ? '⚙️ Admin & Account' : '👤 Account'}
+          ${admin ? '⚙️ Admin' : '👤 Account'}
+        </button>
+        <button class="btn btn-secondary btn-sm" id="btn-header-signout" style="font-size:10px;padding:3px 8px;margin-left:4px;" title="Sign out">
+          🚪 Sign Out
         </button>
       </div>
     </div>
   `;
 
   document.getElementById('btn-open-auth-modal')?.addEventListener('click', openAuthModal);
+  document.getElementById('btn-header-signout')?.addEventListener('click', signOut);
 }
 
 // ── Access Denied Security Screen ─────────────────────────────

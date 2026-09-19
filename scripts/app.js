@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, ROLES } from './auth-engine.js';
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES } from './auth-engine.js';
 
 // ── Global State ─────────────────────────────────────────────
 const State = {
@@ -21,6 +21,7 @@ window._state = State;
 
 // ── RBAC Route Permissions ────────────────────────────────────
 const ROUTE_PERMISSIONS = {
+  signin:    ROLES.GUEST,
   dashboard: ROLES.GUEST,
   resume:    ROLES.GUEST,
   linkedin:  ROLES.GUEST,
@@ -34,6 +35,7 @@ const ROUTE_PERMISSIONS = {
 
 // ── Router ────────────────────────────────────────────────────
 const PAGES = {
+  signin:     () => import('./signin-engine.js').then(m => m.renderSignInPage()),
   dashboard:  () => import('./resume-engine.js').then(m => m.renderDashboard()),
   resume:     () => import('./resume-engine.js').then(m => m.renderResumeStudio()),
   linkedin:   () => import('./linkedin-engine.js').then(m => m.renderLinkedInOptimizer()),
@@ -368,8 +370,15 @@ async function init() {
     el.addEventListener('click', () => navigate(el.dataset.page))
   );
 
-  // Navigate to initial page
-  await navigate('dashboard');
+  // Navigate to initial page based on session
+  const session = getActiveSession();
+  const showcaseActive = sessionStorage.getItem('careerEngine_showcase_active') === 'true';
+
+  if (session.isLoggedIn || showcaseActive) {
+    await navigate('dashboard');
+  } else {
+    await navigate('signin');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
