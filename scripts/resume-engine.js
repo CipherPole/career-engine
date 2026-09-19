@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { isOwner, getCurrentUser } from './auth-engine.js?v=7';
+import { isOwner, getCurrentUser } from './auth-engine.js?v=8';
 
 function escapeHtml(str) {
   if (!str) return '';

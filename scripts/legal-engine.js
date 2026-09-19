@@ -5,8 +5,8 @@
 
 'use strict';
 
-import { getActiveSession } from './auth-engine.js?v=7';
-import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=7';
+import { getActiveSession } from './auth-engine.js?v=8';
+import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=8';
 
 export function renderLegalPage(activeTab = 'terms') {
   const content = document.getElementById('page-content');

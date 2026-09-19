@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { getCurrentUser } from './auth-engine.js?v=7';
+import { getCurrentUser } from './auth-engine.js?v=8';
 
 const JOB_BOARDS = [
   {

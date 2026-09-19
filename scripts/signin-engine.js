@@ -11,7 +11,7 @@ import {
   handleGoogleCredentialResponse,
   getGoogleClientId,
   fetchAuthConfig
-} from './auth-engine.js?v=7';
+} from './auth-engine.js?v=8';
 
 import {
   logAuth,
@@ -19,7 +19,7 @@ import {
   logEvent,
   LOG_LEVELS,
   LOG_CATEGORIES,
-} from './telemetry-engine.js?v=7';
+} from './telemetry-engine.js?v=8';
 
 import { extractTextFromFile, analyzeResumeText } from './resume-parser.js';
 import { openResumeReviewModal } from './onboarding-wizard.js';

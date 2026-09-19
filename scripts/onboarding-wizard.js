@@ -6,7 +6,7 @@
 
 'use strict';
 
-import { setCurrentUser, getActiveSession } from './auth-engine.js?v=7';
+import { setCurrentUser, getActiveSession } from './auth-engine.js?v=8';
 
 /**
  * Opens the interactive Review & Account Creation modal after resume import.

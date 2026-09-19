@@ -4,8 +4,8 @@
 
 'use strict';
 
-import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig, IDLE_TIMEOUT_MS, signOut, hydrateSessionFromServer } from './auth-engine.js?v=7';
-import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=7';
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig, IDLE_TIMEOUT_MS, signOut, hydrateSessionFromServer } from './auth-engine.js?v=8';
+import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=8';
 
 // ── Global State ─────────────────────────────────────────────
 const State = {
@@ -38,19 +38,19 @@ const ROUTE_PERMISSIONS = {
 
 // ── Router ────────────────────────────────────────────────────
 const PAGES = {
-  signin:     () => import('./signin-engine.js?v=7').then(m => m.renderSignInPage()),
-  terms:      () => import('./legal-engine.js?v=7').then(m => m.renderLegalPage('terms')),
-  agreement:  () => import('./legal-engine.js?v=7').then(m => m.renderLegalPage('agreement')),
-  dashboard:  () => import('./resume-engine.js?v=7').then(m => m.renderDashboard()),
-  resume:     () => import('./resume-engine.js?v=7').then(m => m.renderResumeStudio()),
-  linkedin:   () => import('./linkedin-engine.js?v=7').then(m => m.renderLinkedInOptimizer()),
-  jobs:       () => import('./tracker-engine.js?v=7').then(m => m.renderJobTracker()),
-  skills:     () => import('./resume-engine.js?v=7').then(m => m.renderSkillGap()),
-  training:   () => import('./training-engine.js?v=7').then(m => m.renderTrainingHub()),
-  certs:      () => import('./cert-engine.js?v=7').then(m => m.renderCertifications()),
-  projects:   () => import('./project-showcase.js?v=7').then(m => m.renderProjects()),
-  implementation: () => import('./implementation-engine.js?v=7').then(m => m.renderImplementationLab()),
-  settings:   () => import('./auth-engine.js?v=7').then(m => m.renderSettingsPage()),
+  signin:     () => import('./signin-engine.js?v=8').then(m => m.renderSignInPage()),
+  terms:      () => import('./legal-engine.js?v=8').then(m => m.renderLegalPage('terms')),
+  agreement:  () => import('./legal-engine.js?v=8').then(m => m.renderLegalPage('agreement')),
+  dashboard:  () => import('./resume-engine.js?v=8').then(m => m.renderDashboard()),
+  resume:     () => import('./resume-engine.js?v=8').then(m => m.renderResumeStudio()),
+  linkedin:   () => import('./linkedin-engine.js?v=8').then(m => m.renderLinkedInOptimizer()),
+  jobs:       () => import('./tracker-engine.js?v=8').then(m => m.renderJobTracker()),
+  skills:     () => import('./resume-engine.js?v=8').then(m => m.renderSkillGap()),
+  training:   () => import('./training-engine.js?v=8').then(m => m.renderTrainingHub()),
+  certs:      () => import('./cert-engine.js?v=8').then(m => m.renderCertifications()),
+  projects:   () => import('./project-showcase.js?v=8').then(m => m.renderProjects()),
+  implementation: () => import('./implementation-engine.js?v=8').then(m => m.renderImplementationLab()),
+  settings:   () => import('./auth-engine.js?v=8').then(m => m.renderSettingsPage()),
   cover:      () => renderCoverLetterPage(),
 };
 

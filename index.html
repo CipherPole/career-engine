@@ -6,7 +6,7 @@
   <title>Career Engine — Personal AI Career & Skill Intelligence Platform</title>
   <meta name="description" content="Personal AI Career Engine to help engineers, developers, and tech professionals improve, benchmark, and understand their own skills better.">
   <meta name="robots" content="noindex"><!-- Private local tool -->
-  <link rel="stylesheet" href="./styles/main.css?v=7">
+  <link rel="stylesheet" href="./styles/main.css?v=8">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -115,7 +115,7 @@
 </div>
 
 <script type="module">
-  import './scripts/app.js?v=7';
+  import './scripts/app.js?v=8';
 
   // Expose State globally so modules can share it
   window._state = window._state || {};
@@ -130,7 +130,7 @@
 
   // Expose navigate globally
   window.navigate = async (pageId) => {
-    const { default: AppModule } = await import('./scripts/app.js').catch(() => ({}));
+    const { default: AppModule } = await import('./scripts/app.js?v=8').catch(() => ({}));
     // Fallback — trigger nav item click
     const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (navItem) navItem.click();

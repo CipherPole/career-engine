@@ -76,25 +76,37 @@ async function upsertUserFromGoogle(identity) {
   const effectiveRole = normalizedEmail === OWNER_EMAIL.toLowerCase() ? 'admin' : 'user';
 
   const existing = await sql`
-    SELECT id FROM users WHERE google_sub = ${identity.sub} LIMIT 1;
+    SELECT id, google_sub, email FROM users WHERE google_sub = ${identity.sub} OR email = ${normalizedEmail} LIMIT 1;
   `;
   const isNewUser = existing.length === 0;
 
-  const rows = await sql`
-    INSERT INTO users (google_sub, email, name, picture, role, updated_at)
-    VALUES (${identity.sub}, ${normalizedEmail}, ${identity.name}, ${identity.picture}, ${effectiveRole}, NOW())
-    ON CONFLICT (google_sub)
-    DO UPDATE SET
-      email = EXCLUDED.email,
-      name = EXCLUDED.name,
-      picture = EXCLUDED.picture,
-      role = EXCLUDED.role,
-      updated_at = NOW()
-    RETURNING id, google_sub, email, name, picture, role;
-  `;
+  let user;
+  if (!isNewUser) {
+    const existingId = existing[0].id;
+    const updated = await sql`
+      UPDATE users
+      SET
+        google_sub = ${identity.sub},
+        email = ${normalizedEmail},
+        name = ${identity.name},
+        picture = ${identity.picture},
+        role = ${effectiveRole},
+        updated_at = NOW()
+      WHERE id = ${existingId}
+      RETURNING id, google_sub, email, name, picture, role;
+    `;
+    user = updated[0];
+  } else {
+    const inserted = await sql`
+      INSERT INTO users (google_sub, email, name, picture, role, updated_at)
+      VALUES (${identity.sub}, ${normalizedEmail}, ${identity.name}, ${identity.picture}, ${effectiveRole}, NOW())
+      RETURNING id, google_sub, email, name, picture, role;
+    `;
+    user = inserted[0];
+  }
 
   return {
-    user: rows[0],
+    user,
     isNewUser,
   };
 }

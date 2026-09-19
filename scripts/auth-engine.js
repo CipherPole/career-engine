@@ -17,7 +17,7 @@ import {
   downloadLogsJson,
   LOG_LEVELS,
   LOG_CATEGORIES,
-} from './telemetry-engine.js?v=7';
+} from './telemetry-engine.js?v=8';
 
 export const OWNER_EMAIL = 'jerexson3@gmail.com';
 const SESSION_STORAGE_KEY = 'careerEngine_session_v2';
