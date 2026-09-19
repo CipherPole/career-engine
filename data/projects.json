@@ -1,0 +1,86 @@
+[
+  {
+    "id": "unity-recovery",
+    "name": "Unity Recovery",
+    "tagline": "SaaS platform for addiction recovery support",
+    "description": "A live SaaS platform supporting addiction recovery organizations with tools for client management, peer support coordination, and compliance tracking. Built to serve treatment centers and recovery programs with enterprise-grade reliability.",
+    "status": "live",
+    "statusLabel": "Live — Early Users",
+    "type": "SaaS Product",
+    "entity": "Fortico Holdings",
+    "techStack": ["Cloud Infrastructure", "AWS", "Automation", "SaaS Architecture"],
+    "highlights": [
+      "Live platform with active early users",
+      "Client management, peer support, and compliance tooling",
+      "Healthcare compliance-aware architecture",
+      "Built and operated as a solo founder"
+    ],
+    "github": null,
+    "demo": null,
+    "icon": "🏥",
+    "color": "#10b981"
+  },
+  {
+    "id": "mythralis",
+    "name": "Mythralis / Fortico Holdings",
+    "tagline": "AI & IT consulting firm",
+    "description": "Mythralis is an AI and IT consulting brand operating under Fortico Holdings. Provides strategic DevOps, cloud infrastructure, and automation consulting services, leveraging the same enterprise skills honed at Bank of America.",
+    "status": "active",
+    "statusLabel": "Active — Building",
+    "type": "Consulting Firm",
+    "entity": "Fortico Holdings",
+    "techStack": ["AWS", "GCP", "Terraform", "Kubernetes", "Docker", "CI/CD", "AI Tooling"],
+    "highlights": [
+      "Full-service AI & IT consulting under Fortico Holdings",
+      "DevOps, cloud architecture, and automation services",
+      "Applies enterprise-grade DevSecOps practices to SMB clients",
+      "Leverages 10+ years of BofA-scale infrastructure experience"
+    ],
+    "github": null,
+    "demo": null,
+    "icon": "🤖",
+    "color": "#f59e0b"
+  },
+  {
+    "id": "robotics-iot",
+    "name": "Home Automation & Robotics Lab",
+    "tagline": "Smart home automation, Raspberry Pi, Arduino & ROS",
+    "description": "A personal robotics and IoT lab combining Raspberry Pi microcomputers, Arduino microcontrollers, home automation systems, and ROS (Robot Operating System) with computer vision capabilities. Exploring modular, AI-driven autonomous systems.",
+    "status": "active",
+    "statusLabel": "Active — Ongoing R&D",
+    "type": "R&D / Open Source",
+    "entity": "CipherPole / Personal",
+    "techStack": ["Raspberry Pi", "Arduino", "Python", "ROS", "OpenCV", "Computer Vision", "IoT", "MQTT", "Home Assistant"],
+    "highlights": [
+      "Smart home automation integration and custom hardware control",
+      "ROS-based robotic system design and simulation",
+      "Computer vision pipelines using OpenCV and Python",
+      "Modular, extensible hardware-software architecture"
+    ],
+    "github": "https://github.com/CipherPole",
+    "demo": null,
+    "icon": "🤖",
+    "color": "#6366f1"
+  },
+  {
+    "id": "game-dev",
+    "name": "Unity Game Development",
+    "tagline": "Modular systems & game mechanics in Unity",
+    "description": "Weekend game development projects built in Unity with C#, focused on modular architecture, reusable systems, and clean engineering patterns. Explores procedural generation, UI systems, and AI-driven NPC behavior.",
+    "status": "wip",
+    "statusLabel": "In Development",
+    "type": "Game Development",
+    "entity": "CipherPole / Personal",
+    "techStack": ["Unity", "C#", "Shader Graph", "Cinemachine", "Unity AI/NavMesh"],
+    "highlights": [
+      "Modular component-driven architecture in Unity",
+      "C# scripting with clean separation of concerns",
+      "Custom UI systems and animation state machines",
+      "AI-driven NPC behavior and NavMesh pathfinding"
+    ],
+    "github": "https://github.com/CipherPole",
+    "demo": null,
+    "icon": "🎮",
+    "color": "#8b5cf6"
+  }
+]

@@ -1,0 +1,158 @@
+{
+  "meta": {
+    "lastUpdated": "2026-09-18",
+    "version": "2.0",
+    "targetTitle": "DevOps Lead | QA Automation Lead | Platform Engineer",
+    "targetComp": 200000,
+    "currentComp": 145000,
+    "location": "New London, NC",
+    "workPreference": "100% Remote (US Nationwide)"
+  },
+  "contact": {
+    "name": "Joseph Erexson III",
+    "phone": "980-447-7049",
+    "email": "jerexson3@gmail.com",
+    "linkedin": "https://www.linkedin.com/in/joseph-erexson-iii-46bb6285/",
+    "github": "https://github.com/CipherPole"
+  },
+  "summary": "Senior DevOps Lead and QA Automation Engineer with 10+ years of enterprise experience across financial, healthcare, education, and legal sectors. Currently embedded at Bank of America leading a cross-functional team of 10+ engineers, driving DevSecOps strategy, CI/CD pipeline modernization, cloud infrastructure automation (AWS & GCP), and enterprise-scale container orchestration. Founder of Unity Recovery (live SaaS) and AI/IT consulting firm Mythralis under Fortico Holdings. Combines deep infrastructure expertise with automation engineering, platform architecture, and AI-assisted development to deliver measurable business outcomes.",
+  "experience": [
+    {
+      "id": "bofa",
+      "title": "DevOps Lead / QA Automation Lead",
+      "company": "Bank of America",
+      "via": "TekSystems",
+      "location": "Charlotte, NC (Remote)",
+      "startDate": "2019-03",
+      "endDate": "present",
+      "duration": "7+ years",
+      "teamSize": "10+",
+      "highlights": [
+        "Lead a cross-functional team of 10+ engineers across DevSecOps, QA automation, and platform reliability at enterprise scale.",
+        "Architected and scaled CI/CD pipelines using Jenkins, OpenShift, Docker, and Kubernetes, improving deployment throughput by 80% and reducing provisioning time with Terraform IaC by 80%.",
+        "Designed and implemented advanced container orchestration systems using Docker and Kubernetes, achieving a 70% improvement in system scalability and reliability.",
+        "Built and owned a Postman API collection of 500+ endpoints for enterprise-scale functional and regression testing across the platform.",
+        "Spearheaded DevSecOps strategy integration across Agile squads, embedding security controls into SDLC pipelines and supporting business continuity compliance.",
+        "Leveraged AWS services (EC2, S3, IAM, EKS, VPC, Route53) and GCP (GKE, Cloud Run) to architect and automate cloud infrastructure at enterprise scale.",
+        "Drove XLRelease / Digital.ai pipeline strategy and Tanium-based patching automation across Windows Server 2016–2022 environments.",
+        "Integrated Ansible orchestration for configuration management and automated deployment workflows across hybrid cloud environments.",
+        "Implemented AI-assisted development workflows using GitHub Copilot, Replit AI, and O365 Copilot, accelerating team delivery velocity.",
+        "Maintained and improved QA automation suites using Playwright and qTest, embedding automated regression testing into CI/CD gates."
+      ],
+      "techStack": ["Jenkins", "Docker", "Kubernetes", "OpenShift", "Terraform", "Ansible", "AWS EC2", "AWS S3", "AWS IAM", "AWS EKS", "AWS VPC", "AWS Route53", "GCP GKE", "GCP Cloud Run", "Azure", "Postman", "Playwright", "qTest", "XLRelease", "Digital.ai", "Tanium", "Bitbucket", "JIRA", "Agile/Scrum"]
+    },
+    {
+      "id": "bytes",
+      "title": "Network Engineer / System Administrator",
+      "company": "Bytes of Knowledge",
+      "location": "Nashville, TN",
+      "startDate": "2018-07",
+      "endDate": "2019-01",
+      "highlights": [
+        "Designed and developed automated testing suites for test plans, scenarios, scripts, and procedures.",
+        "Used Kaseya VSA to push patches after review, removing 50% overhead on failure management.",
+        "Identified, analyzed, and documented software defects in function, output, and content.",
+        "Executed maintenance procedures including system upgrades, security updates, and disaster recovery testing.",
+        "Supported and configured Veeam, Datto, and IDrive backup products for offsite replication and disaster recovery."
+      ],
+      "techStack": ["Kaseya VSA", "Veeam", "Datto", "IDrive", "Windows Server", "Active Directory", "PowerShell"]
+    },
+    {
+      "id": "logicforce",
+      "title": "Technology Consultant",
+      "company": "LogicForce Consulting",
+      "location": "Nashville, TN",
+      "startDate": "2017-07",
+      "endDate": "2018-07",
+      "highlights": [
+        "Designed and developed automated testing tools, test plans, scenarios, scripts, and procedures for legal sector clients.",
+        "Assisted planning of client networks, system backups, security updates, hardware, software, VOIP systems, and document management systems.",
+        "Supported Opentext, NetDocuments, iManage, and Worldox document management systems for legal management.",
+        "Managed Autotask, Continuum & N-Central Endpoint Management services."
+      ],
+      "techStack": ["Autotask", "Continuum", "N-Central", "Opentext", "NetDocuments", "iManage", "VoIP", "AD/GPO", "DNS/DHCP"]
+    },
+    {
+      "id": "vanderbilt",
+      "title": "Senior Technology Support Specialist",
+      "company": "Vanderbilt University",
+      "via": "Apex Systems",
+      "location": "Nashville, TN",
+      "startDate": "2014-02",
+      "endDate": "2016-12",
+      "highlights": [
+        "Managed client networks, system backups, security updates, hardware, software, access points, VOIP systems, and custom applications.",
+        "Applied and enforced security policies with procedures based on departmental standards.",
+        "Managed physical and virtual desktop imaging, planning, and deployment.",
+        "Developed automation via Batch files and MS Excel VBA scripting.",
+        "Led application software deployment across the university environment."
+      ],
+      "techStack": ["SCCM", "VBA", "Active Directory", "VMware", "VOIP", "Meraki", "Windows Server"]
+    },
+    {
+      "id": "dell",
+      "title": "Helpdesk Support Technician",
+      "company": "Dell",
+      "via": "Apex Systems",
+      "location": "Nashville, TN",
+      "startDate": "2013-02",
+      "endDate": "2013-11",
+      "highlights": [
+        "Answered user inquiries regarding computer software and hardware to resolve issues at scale.",
+        "Responded to technical issues related to hardware, software, custom applications, printing, and networking.",
+        "Configured Blackberry and Outlook mail encryption for enterprise clients."
+      ],
+      "techStack": ["Outlook", "Blackberry", "Hardware Troubleshooting", "Networking"]
+    }
+  ],
+  "skills": {
+    "devops_cicd": ["Jenkins", "OpenShift", "XLRelease", "Digital.ai", "GitOps", "GitHub Actions", "Bitbucket Pipelines"],
+    "cloud_aws": ["EC2", "S3", "IAM", "EKS", "VPC", "Route53"],
+    "cloud_gcp": ["GKE", "Cloud Run"],
+    "cloud_azure": ["Azure AD", "Azure VM", "Azure Networking"],
+    "containers_orchestration": ["Docker", "Kubernetes", "OpenShift"],
+    "iac": ["Terraform", "Ansible", "CloudFormation"],
+    "testing_qa": ["Playwright", "Postman", "Insomnia", "qTest", "Selenium (exposure)"],
+    "languages": ["Python", "PowerShell", "Bash/DOS", "VBScript", "JavaScript", "Java"],
+    "monitoring": ["Tanium", "Tableau", "JIRA/Horizon"],
+    "networking": ["AD", "DNS", "DHCP", "GPO", "LAN/WAN", "VPN", "TCP/IP", "SonicWall", "WatchGuard", "Unifi", "Aerohive", "Meraki"],
+    "platforms": ["Windows Server 2008R2–2022", "Linux/UNIX", "SCCM", "Kaseya", "ConnectWise", "AutoTask"],
+    "ai_tools": ["GitHub Copilot", "Replit AI", "O365 Copilot"],
+    "databases": ["MySQL", "PyCharm (ORM)"],
+    "backup_dr": ["Veeam", "Datto", "StorageCraft", "IDrive"],
+    "methodology": ["Agile/Scrum", "DevSecOps", "SDLC", "Project Management", "Documentation & Process Design"]
+  },
+  "accomplishments": [
+    "Developed CI/CD pipeline with Terraform IaC provisioning, cutting manual infrastructure creation time by 80%",
+    "Designed and implemented Postman API Collection covering 500+ endpoints for enterprise platform testing",
+    "Deployed advanced Docker-based container orchestration achieving 70% improvement in system scalability and reliability",
+    "Spearheaded DevSecOps strategy integration across 10+ engineer team at Bank of America",
+    "Led multi-team project planning for platform releases in Agile/Scrum environment",
+    "Established documentation and process design controls for integrated automation workflows",
+    "Built dashboard and assignment tracking system, transitioning team from Excel to Lean Agile",
+    "Removed 50% overhead on failure management via automated Kaseya patching pipelines"
+  ],
+  "education": [
+    {
+      "degree": "Bachelor of Science — Information Systems / Cyber Security",
+      "school": "ITT Technical Institute",
+      "location": "Nashville, TN"
+    },
+    {
+      "degree": "Associate of Science — Networking & System Administration",
+      "school": "ITT Technical Institute",
+      "location": "Nashville, TN"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Kaseya Certified Technician",
+      "status": "active"
+    },
+    {
+      "name": "ConnectWise Certified Administrator",
+      "status": "active"
+    }
+  ],
+  "projects": ["unity-recovery", "mythralis", "robotics-iot", "game-dev"]
+}

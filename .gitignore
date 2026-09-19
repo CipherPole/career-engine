@@ -1,0 +1,48 @@
+# ── Paranoid Security Exclusions ──────────────────────────────
+# Private job tracking data (never commit personal applications/recruiter notes)
+data/jobs.json
+
+# Environment variables & secrets
+.env
+.env.*
+*.env
+*.pem
+*.key
+*.cert
+*.p12
+*.crt
+*.id_rsa
+*.id_ed25519
+
+# Security reports & audit artifacts
+audit-report.json
+security-report.*
+
+# Private notes & scratch
+private/
+notes/
+*.private.*
+scratch/
+
+# OS & Editor temp files
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+*.bak
+*.swp
+
+# Node & dependencies (if ever needed)
+node_modules/
+npm-debug.log*
+
+# Database & binary caches
+*.sqlite
+*.sqlite3
+*.db
+*.exe
+*.dll
+
+# Vercel cache
+.vercel/
+

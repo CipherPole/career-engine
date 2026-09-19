@@ -1,0 +1,424 @@
+[
+  {
+    "id": "cert-aws-saa",
+    "name": "AWS Certified Solutions Architect – Associate (SAA-C03)",
+    "tier": "paid",
+    "cost": "$150 USD",
+    "costNumeric": 150,
+    "provider": "Amazon Web Services / Pearson VUE",
+    "examFormat": "65 Multiple-Choice / Multiple-Response Questions (130 mins)",
+    "studyHours": "35–45 Hours (3–4 Weeks)",
+    "roiScore": 9.8,
+    "roiLabel": "Essential $200k Baseline",
+    "statusDefault": "not-started",
+    "icon": "☁️",
+    "color": "#f59e0b",
+    "whereToTakeUrl": "https://aws.amazon.com/certification/certified-solutions-architect-associate/",
+    "voucherTip": "Look for AWS 50% discount challenge vouchers periodically offered via AWS Get Certified challenge or after passing any prior AWS exam.",
+    "summary": "Validates overall architecture design knowledge across AWS compute, networking, storage, databases, security, and cost optimization. The standard foundational credential recruiters filter for in high-paying cloud roles.",
+    "youtubeCourse": {
+      "title": "AWS Certified Solutions Architect Associate (SAA-C03) – Full Course (14+ Hours)",
+      "creator": "Andrew Brown (ExamPro / freeCodeCamp)",
+      "duration": "14h 22m",
+      "url": "https://www.youtube.com/watch?v=Ia-UEYYR44s",
+      "highlights": "Covers IAM, VPC, EC2, S3, RDS, DynamoDB, Route53, and architectural best practices with hands-on console walk-throughs."
+    },
+    "pairedProjectId": "terraform-aws-multiregion",
+    "pairedProjectTitle": "Production AWS Multi-Region VPC & EKS with Terraform",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "AWS Toolkit for VS Code / Antigravity",
+        "HashiCorp Terraform",
+        "CloudFormation Linter"
+      ],
+      "setupCommands": [
+        "# Install AWS CLI v2 and configure test credentials",
+        "aws configure",
+        "# Verify AWS connection",
+        "aws sts get-caller-identity",
+        "# Use LocalStack in Docker for $0 local AWS API simulation",
+        "docker run -d -p 4566:4566 -p 4510-4559:4510-4559 localstack/localstack"
+      ],
+      "labNotes": "You do not need to spend money on live AWS resources. Use LocalStack running locally inside Docker in your IDE terminal to test S3 buckets, Lambdas, and DynamoDB tables for free."
+    }
+  },
+  {
+    "id": "cert-cka",
+    "name": "Certified Kubernetes Administrator (CKA)",
+    "tier": "paid",
+    "cost": "$395 USD",
+    "costNumeric": 395,
+    "provider": "Cloud Native Computing Foundation (CNCF) & Linux Foundation",
+    "examFormat": "100% Hands-on Performance CLI Exam (17 Questions, 2 Hours, PSI Proctor)",
+    "studyHours": "40–50 Hours (4 Weeks)",
+    "roiScore": 9.9,
+    "roiLabel": "Gold Standard Platform Lead",
+    "statusDefault": "not-started",
+    "icon": "☸️",
+    "color": "#3b82f6",
+    "whereToTakeUrl": "https://www.cncf.io/certification/cka/",
+    "voucherTip": "The Linux Foundation offers 40% to 50% discount codes during Cyber Monday, Black Friday, and KubeCon events (saves ~$160-$200). Includes 2 exam attempts.",
+    "summary": "The premier industry-recognized hands-on Kubernetes certification. Testing involves troubleshooting live clusters, configuring RBAC, upgrading kubeadm, etcd backups, and persistent volumes directly in the terminal.",
+    "youtubeCourse": {
+      "title": "Certified Kubernetes Administrator (CKA) Full Course",
+      "creator": "TechWorld with Nana & KodeKloud / freeCodeCamp",
+      "duration": "10h 30m",
+      "url": "https://www.youtube.com/watch?v=d6WC5n9G_sM",
+      "highlights": "Architecture, etcd backup/restore, kubeadm upgrades, multi-container pods, network policies, ingress controllers, and cluster troubleshooting."
+    },
+    "pairedProjectId": "gitops-argocd-eks",
+    "pairedProjectTitle": "GitOps Continuous Delivery with ArgoCD & EKS",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "Kubernetes (ms-kubernetes-tools)",
+        "YAML (Red Hat)",
+        "Docker"
+      ],
+      "setupCommands": [
+        "# Install kind (Kubernetes in Docker) or minikube",
+        "curl -Lo ./kind https://kind.sigs.k8s.io/dl/v0.22.0/kind-windows-amd64.exe",
+        "# Spin up a local multi-node cluster right in your terminal",
+        "kind create cluster --name cka-prep --config cluster-config.yaml",
+        "# Practice imperative kubectl commands",
+        "kubectl run test-pod --image=nginx --port=80 --dry-run=client -o yaml > pod.yaml"
+      ],
+      "labNotes": "Practice imperative kubectl generation (`--dry-run=client -o yaml`) and vim / bash shortcuts in your IDE integrated terminal. CKA speed comes from fast CLI commands."
+    }
+  },
+  {
+    "id": "cert-terraform-associate",
+    "name": "HashiCorp Certified: Terraform Associate (003)",
+    "tier": "paid",
+    "cost": "$70.50 USD",
+    "costNumeric": 70.5,
+    "provider": "HashiCorp / Webassessor",
+    "examFormat": "57 Multiple-Choice, Multiple-Response, & True/False Questions (60 mins)",
+    "studyHours": "15–25 Hours (2 Weeks)",
+    "roiScore": 9.4,
+    "roiLabel": "High ROI Quick Win",
+    "statusDefault": "not-started",
+    "icon": "🏗️",
+    "color": "#10b981",
+    "whereToTakeUrl": "https://www.hashicorp.com/certification/terraform-associate",
+    "voucherTip": "At $70.50, this is one of the most affordable enterprise certifications in tech with immediate recruiting visibility.",
+    "summary": "Validates core infrastructure as code concepts: Terraform state management, modules, providers, input/output variables, remote backends, and Terraform Cloud basics.",
+    "youtubeCourse": {
+      "title": "HashiCorp Terraform Associate Certification (003) Full Course",
+      "creator": "Andrew Brown (freeCodeCamp / ExamPro)",
+      "duration": "9h 30m",
+      "url": "https://www.youtube.com/watch?v=V4wakeLKWD4",
+      "highlights": "Terraform syntax (HCL), state locking, workspace isolation, module registry, built-in functions, and exam practice questions."
+    },
+    "pairedProjectId": "terraform-aws-multiregion",
+    "pairedProjectTitle": "Production AWS Multi-Region VPC & EKS with Terraform",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "HashiCorp Terraform (official)",
+        "Terraform doc snippets"
+      ],
+      "setupCommands": [
+        "# Install Terraform CLI",
+        "winget install Hashicorp.Terraform",
+        "# Format and validate locally in terminal",
+        "terraform fmt -check",
+        "terraform validate",
+        "# Inspect state without cloud costs using local backend",
+        "terraform plan -out=tfplan"
+      ],
+      "labNotes": "Build reusable modules inside your workspace. Use `terraform console` to test expressions and built-in functions interactively in your IDE terminal."
+    }
+  },
+  {
+    "id": "cert-aws-devops-pro",
+    "name": "AWS Certified DevOps Engineer – Professional (DOP-C02)",
+    "tier": "paid",
+    "cost": "$300 USD",
+    "costNumeric": 300,
+    "provider": "Amazon Web Services / Pearson VUE",
+    "examFormat": "75 Complex Scenario Questions (180 mins)",
+    "studyHours": "50–70 Hours (6–8 Weeks)",
+    "roiScore": 9.9,
+    "roiLabel": "Elite $200k Multiplier",
+    "statusDefault": "not-started",
+    "icon": "⚡",
+    "color": "#f59e0b",
+    "whereToTakeUrl": "https://aws.amazon.com/certification/certified-devops-engineer-professional/",
+    "voucherTip": "Passing the AWS SAA-C03 exam grants a 50% discount voucher in your AWS Certification account, cutting this exam cost from $300 down to $150!",
+    "summary": "The pinnacle AWS certification for DevOps leads. Tests complex multi-account deployment pipelines, cross-region disaster recovery, automated incident remediation, blue/green and canary strategies, and security automation.",
+    "youtubeCourse": {
+      "title": "AWS DevOps Engineer Professional Exam Preparation Guide & Walkthrough",
+      "creator": "Stephane Maarek & freeCodeCamp Community",
+      "duration": "8h 15m",
+      "url": "https://www.youtube.com/watch?v=hsm4C4Wn2iA",
+      "highlights": "Deep-dives into CodePipeline, CodeBuild, CloudFormation custom resources, Service Catalog, Config rules, and multi-account AWS Organizations."
+    },
+    "pairedProjectId": "gitops-argocd-eks",
+    "pairedProjectTitle": "GitOps Continuous Delivery with ArgoCD & EKS",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "AWS Toolkit",
+        "GitHub Actions extension"
+      ],
+      "setupCommands": [
+        "# Test AWS CloudFormation template validation via AWS CLI",
+        "aws cloudformation validate-template --template-body file://pipeline.yaml",
+        "# Run cfn-nag security linter locally",
+        "docker run -v ${PWD}:/work -w /work stelligent/cfn_nag /work/pipeline.yaml"
+      ],
+      "labNotes": "Focus on understanding cross-account IAM roles, KMS key policies for pipeline artifacts, and automated rollback triggers using CloudWatch alarms."
+    }
+  },
+  {
+    "id": "cert-github-actions-badge",
+    "name": "GitHub Actions & Automated CI/CD (GitHub Certified)",
+    "tier": "free",
+    "cost": "$0 FREE",
+    "costNumeric": 0,
+    "provider": "GitHub Skills / Microsoft Learn",
+    "examFormat": "Interactive Hands-on Labs & Knowledge Verification Badges",
+    "studyHours": "8–12 Hours (1 Week)",
+    "roiScore": 9.2,
+    "roiLabel": "Immediate High-Impact Free Badge",
+    "statusDefault": "not-started",
+    "icon": "🐙",
+    "color": "#a855f7",
+    "whereToTakeUrl": "https://skills.github.com/",
+    "voucherTip": "100% Free interactive courses provided directly by GitHub on your own GitHub account (CipherPole). Badges appear directly on your profile.",
+    "summary": "Master automated workflows, custom Composite and Docker container Actions, secret management, matrix strategy builds, caching, and self-hosted runners directly in GitHub repositories.",
+    "youtubeCourse": {
+      "title": "GitHub Actions Tutorial – Full Course for Beginners",
+      "creator": "TechWorld with Nana",
+      "duration": "2h 45m",
+      "url": "https://www.youtube.com/watch?v=R8_veQiYBjI",
+      "highlights": "Step-by-step workflow triggers, environment secrets, build matrices, artifact uploads, and automated Docker container publishing."
+    },
+    "pairedProjectId": "gitops-argocd-eks",
+    "pairedProjectTitle": "GitOps Continuous Delivery with ArgoCD & EKS",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "GitHub Actions (official by GitHub)",
+        "YAML"
+      ],
+      "setupCommands": [
+        "# Test GitHub Actions locally using 'act' (no cloud commit needed)",
+        "winget install nektos.act",
+        "# Run default push workflow in terminal",
+        "act push",
+        "# Run specific job with mock secrets",
+        "act -j test -s GITHUB_TOKEN=mock_secret"
+      ],
+      "labNotes": "Install 'act' to test GitHub Actions workflows right on your workstation without pushing commits to GitHub. This lets you debug CI pipelines in seconds."
+    }
+  },
+  {
+    "id": "cert-hashicorp-cloud-badges",
+    "name": "HashiCorp Cloud Engineer Foundations & Security Badges",
+    "tier": "free",
+    "cost": "$0 FREE",
+    "costNumeric": 0,
+    "provider": "HashiCorp Developer Learn & Credly",
+    "examFormat": "Self-Paced Interactive Labs & Verifiable Credly Digital Badges",
+    "studyHours": "10–14 Hours (1–2 Weeks)",
+    "roiScore": 8.9,
+    "roiLabel": "Resume Proof of Competence",
+    "statusDefault": "not-started",
+    "icon": "🛡️",
+    "color": "#10b981",
+    "whereToTakeUrl": "https://developer.hashicorp.com/tutorials",
+    "voucherTip": "Free digital badges issue officially through Credly and can be linked directly to your LinkedIn profile with 1 click.",
+    "summary": "Covers foundational architecture across Terraform, Vault (Secrets management), Consul (Service mesh), and Nomad. Provides verified digital badges proving hands-on competency.",
+    "youtubeCourse": {
+      "title": "HashiCorp Vault Tutorial for Beginners",
+      "creator": "TechWorld with Nana",
+      "duration": "1h 50m",
+      "url": "https://www.youtube.com/watch?v=VyMPp3E_jJ4",
+      "highlights": "Vault architecture, secret engines, dynamic secrets, Kubernetes auth method, and policy creation."
+    },
+    "pairedProjectId": "zero-trust-vault-devsecops",
+    "pairedProjectTitle": "Zero-Trust DevSecOps Pipeline with HashiCorp Vault",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "HashiCorp Vault extension",
+        "HashiCorp HCL"
+      ],
+      "setupCommands": [
+        "# Run local Vault dev server in Docker",
+        "docker run -d --name=dev-vault -p 8200:8200 -e 'VAULT_DEV_ROOT_TOKEN_ID=myroot' vault:latest",
+        "# Export environment variables in terminal",
+        "$env:VAULT_ADDR='http://127.0.0.1:8200'",
+        "$env:VAULT_TOKEN='myroot'",
+        "# Test reading and writing secrets via CLI",
+        "vault kv put secret/my-app api_key=supersecret"
+      ],
+      "labNotes": "Run Vault in dev mode locally to practice writing policies and creating dynamic credentials right inside your IDE."
+    }
+  },
+  {
+    "id": "cert-aws-educate-badges",
+    "name": "AWS Educate & Skill Builder Digital Badges (DevOps & Serverless)",
+    "tier": "free",
+    "cost": "$0 FREE",
+    "costNumeric": 0,
+    "provider": "AWS Skill Builder & Credly",
+    "examFormat": "Self-Paced Digital Quests, Knowledge Checks & Credly Badges",
+    "studyHours": "12–16 Hours (2 Weeks)",
+    "roiScore": 8.8,
+    "roiLabel": "Official Free Amazon Badges",
+    "statusDefault": "not-started",
+    "icon": "📦",
+    "color": "#f59e0b",
+    "whereToTakeUrl": "https://aws.amazon.com/education/awseducate/",
+    "voucherTip": "Completely free with no credit card required. Includes free hands-on AWS console sandbox environments during the labs.",
+    "summary": "Official AWS digital badges for Cloud Computing Essentials, Serverless Architecture, and DevOps Pipelines that verify foundational mastery directly on Credly and LinkedIn.",
+    "youtubeCourse": {
+      "title": "AWS Basics for Beginners – Full Hands-On Course",
+      "creator": "freeCodeCamp / Andrew Brown",
+      "duration": "5h 15m",
+      "url": "https://www.youtube.com/watch?v=2Tz8i8Wb04I",
+      "highlights": "Core AWS services overview with free tier guidance, security fundamentals, and cost controls."
+    },
+    "pairedProjectId": "go-serverless-microservice",
+    "pairedProjectTitle": "High-Performance Event-Driven Microservice in Go",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "AWS Toolkit",
+        "SAM CLI Support"
+      ],
+      "setupCommands": [
+        "# Install AWS SAM CLI for local serverless testing",
+        "winget install Amazon.SAM-CLI",
+        "# Test Lambda locally without deploying to AWS",
+        "sam local invoke 'MyFunction' -e event.json"
+      ],
+      "labNotes": "Use `sam local start-api` in your IDE terminal to run a live REST API on localhost:3000 powered by your Lambda functions for $0."
+    }
+  },
+  {
+    "id": "cert-finops-foundation",
+    "name": "Introduction to FinOps & Cloud Financial Management",
+    "tier": "free",
+    "cost": "$0 FREE",
+    "costNumeric": 0,
+    "provider": "Linux Foundation & edX (FinOps Foundation)",
+    "examFormat": "Free Audit Course & Knowledge Assessments",
+    "studyHours": "8–10 Hours (1 Week)",
+    "roiScore": 9.1,
+    "roiLabel": "High Executive Visibility",
+    "statusDefault": "not-started",
+    "icon": "💰",
+    "color": "#10b981",
+    "whereToTakeUrl": "https://www.edx.org/learn/cloud-computing/the-linux-foundation-introduction-to-finops",
+    "voucherTip": "Audit the full course for $0 on edX. Provides the exact terminology and governance models executives expect from a $200k Platform Lead.",
+    "summary": "Teaches cloud financial governance, cost allocation tags, unit economics, rightsizing, commitment discounts (Reserved Instances / Savings Plans), and cultural FinOps alignment.",
+    "youtubeCourse": {
+      "title": "What is FinOps? Cloud Cost Management Explained",
+      "creator": "FinOps Foundation & IBM Technology",
+      "duration": "45m",
+      "url": "https://www.youtube.com/watch?v=eFw9kG78LqI",
+      "highlights": "FinOps lifecycle (Inform, Optimize, Operate), cloud cost KPIs, and bridging engineering and finance teams."
+    },
+    "pairedProjectId": "finops-aws-cost-optimizer",
+    "pairedProjectTitle": "FinOps Cloud Cost Optimization Bot & Dashboard",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "Infracost (official)"
+      ],
+      "setupCommands": [
+        "# Install Infracost CLI to view cloud cost breakdown in your IDE",
+        "winget install Infracost.Infracost",
+        "# Generate monthly cost estimate before running terraform apply",
+        "infracost breakdown --path ."
+      ],
+      "labNotes": "Infracost integrates directly into Antigravity IDE and VS Code to show real-time monthly cost diffs in your editor as you write Terraform code."
+    }
+  },
+  {
+    "id": "cert-datadog-fundamentals",
+    "name": "Datadog Fundamentals & Observability Badge",
+    "tier": "free",
+    "cost": "$0 FREE",
+    "costNumeric": 0,
+    "provider": "Datadog Learning Center",
+    "examFormat": "Interactive Hands-on Sandbox Labs & Course Completion Badge",
+    "studyHours": "6–8 Hours (3–5 Days)",
+    "roiScore": 8.7,
+    "roiLabel": "Fixes Key Gap for $0",
+    "statusDefault": "not-started",
+    "icon": "📊",
+    "color": "#8b5cf6",
+    "whereToTakeUrl": "https://learn.datadoghq.com/",
+    "voucherTip": "Datadog provides full interactive lab sandbox environments completely free with no credit card or account license required.",
+    "summary": "Teaches Datadog Agent installation, metric collection, synthetic monitoring, log management, APM distributed tracing, and monitor alerting.",
+    "youtubeCourse": {
+      "title": "Datadog Monitoring & APM Tutorial for DevOps",
+      "creator": "TechWorld with Nana",
+      "duration": "1h 30m",
+      "url": "https://www.youtube.com/watch?v=wXQjB_7LqXo",
+      "highlights": "Host metrics, Docker container monitoring, custom dashboards, log pipelines, and anomaly detection alerts."
+    },
+    "pairedProjectId": "observability-prometheus-grafana",
+    "pairedProjectTitle": "Enterprise Observability Mesh with Prometheus & Grafana",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "Datadog extension for VS Code / Antigravity"
+      ],
+      "setupCommands": [
+        "# Run Datadog Agent in Docker for local metrics",
+        "docker run -d --name datadog-agent -v /var/run/docker.sock:/var/run/docker.sock:ro -e DD_API_KEY=YOUR_KEY -e DD_SITE='datadoghq.com' gcr.io/datadoghq/agent:7"
+      ],
+      "labNotes": "Use Datadog's free trial or free sandbox to send traces from your local Docker containers right into a live Datadog dashboard."
+    }
+  },
+  {
+    "id": "cert-cks",
+    "name": "Certified Kubernetes Security Specialist (CKS)",
+    "tier": "paid",
+    "cost": "$395 USD",
+    "costNumeric": 395,
+    "provider": "Cloud Native Computing Foundation (CNCF) & Linux Foundation",
+    "examFormat": "100% Hands-on Performance Exam (15–16 Complex Security Scenarios, 2 Hours)",
+    "studyHours": "45–60 Hours (5–6 Weeks)",
+    "roiScore": 9.8,
+    "roiLabel": "Premier DevSecOps Differentiator",
+    "statusDefault": "not-started",
+    "icon": "🛡️",
+    "color": "#ef4444",
+    "whereToTakeUrl": "https://www.cncf.io/certification/cks/",
+    "voucherTip": "Requires active CKA certification. Bundle CKA + CKS during Linux Foundation promotion periods for up to 60% total savings.",
+    "summary": "Advanced hands-on security: cluster setup hardening, system hardening with AppArmor/seccomp, microservice vulnerability scanning, runtime security monitoring with Falco, and audit logging.",
+    "youtubeCourse": {
+      "title": "Certified Kubernetes Security Specialist (CKS) Preparation Guide",
+      "creator": "Walid Shaari / CNCF Community & freeCodeCamp",
+      "duration": "6h 45m",
+      "url": "https://www.youtube.com/watch?v=3Kq1mDk6X8w",
+      "highlights": "Network policies, gVisor container sandboxing, Falco runtime threat detection, Trivy image scans, and Kubernetes CIS benchmarks."
+    },
+    "pairedProjectId": "zero-trust-vault-devsecops",
+    "pairedProjectTitle": "Zero-Trust DevSecOps Pipeline with HashiCorp Vault",
+    "ideLabGuide": {
+      "ide": "Antigravity IDE / Visual Studio Code",
+      "recommendedExtensions": [
+        "Kubernetes",
+        "Trivy Vulnerability Scanner"
+      ],
+      "setupCommands": [
+        "# Install Trivy to scan containers in IDE terminal",
+        "winget install AquaSecurity.Trivy",
+        "# Scan local Docker image for CVEs",
+        "trivy image nginx:latest",
+        "# Audit Kubernetes cluster against CIS Benchmark with kube-bench",
+        "docker run --rm -v `pwd`:/host aquasec/kube-bench:latest"
+      ],
+      "labNotes": "CKS is one of the rarest and most lucrative credentials in platform engineering. Practice configuring AppArmor profiles and Falco alerts in your local VM or container lab."
+    }
+  }
+]

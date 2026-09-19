@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Joseph Erexson III — DevOps Lead | QA Automation Lead | Platform Engineer</title>
+  <meta name="description" content="Resume of Joseph Erexson III — DevOps Lead with 10+ years enterprise experience in AWS, GCP, Kubernetes, Terraform, CI/CD, and DevSecOps.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 12pt; }
+    body {
+      font-family: 'Inter', Arial, sans-serif;
+      color: #1a1a1a;
+      background: #fff;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 40px 48px;
+      line-height: 1.5;
+    }
+
+    /* Print */
+    @media print {
+      body { padding: 24px 32px; }
+      .no-print { display: none !important; }
+      a { color: #7c2d00 !important; }
+      @page { margin: 12mm 14mm; }
+    }
+
+    /* Print button */
+    .no-print {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      display: flex;
+      gap: 8px;
+    }
+    .print-btn {
+      background: #f59e0b;
+      color: #000;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .back-btn {
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    /* Header */
+    .resume-name {
+      font-size: 28pt;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: #111;
+      margin-bottom: 4px;
+    }
+    .resume-title {
+      font-size: 13pt;
+      font-weight: 600;
+      color: #b45309;
+      margin-bottom: 10px;
+    }
+    .resume-contact {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 10pt;
+      color: #555;
+      margin-bottom: 6px;
+    }
+    .resume-contact a { color: #b45309; text-decoration: none; }
+
+    /* Divider */
+    hr {
+      border: none;
+      border-top: 2px solid #b45309;
+      margin: 14px 0;
+    }
+    hr.thin {
+      border-top-width: 1px;
+      border-color: #e5e7eb;
+    }
+
+    /* Section */
+    .section-heading {
+      font-size: 10pt;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #b45309;
+      margin: 18px 0 8px;
+    }
+
+    /* Summary */
+    .summary {
+      font-size: 11pt;
+      color: #333;
+      line-height: 1.65;
+    }
+
+    /* Skills Grid */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3px 16px;
+      font-size: 10pt;
+      color: #333;
+    }
+    .skills-grid div { padding: 2px 0; }
+
+    /* Job */
+    .job-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2px;
+    }
+    .job-title {
+      font-size: 12pt;
+      font-weight: 700;
+      color: #111;
+    }
+    .job-dates {
+      font-size: 10pt;
+      color: #777;
+      white-space: nowrap;
+      margin-left: 12px;
+    }
+    .job-meta {
+      font-size: 10pt;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .job-meta .team-size {
+      display: inline-block;
+      background: #fef3c7;
+      color: #92400e;
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      margin-left: 8px;
+      font-size: 9pt;
+    }
+    ul {
+      padding-left: 16px;
+      margin-bottom: 14px;
+    }
+    ul li {
+      font-size: 10.5pt;
+      color: #333;
+      margin-bottom: 4px;
+      line-height: 1.55;
+    }
+    ul li strong { color: #111; }
+
+    /* Accomplishments */
+    .accomplishments {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4px 24px;
+    }
+    .accomplishments li { font-size: 10pt; }
+
+    /* Education */
+    .edu-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .edu-degree { font-size: 11pt; font-weight: 600; color: #111; }
+    .edu-school { font-size: 10pt; color: #666; }
+
+    /* Certs */
+    .certs { display: flex; gap: 16px; flex-wrap: wrap; }
+    .cert-badge {
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      color: #92400e;
+      padding: 3px 12px;
+      border-radius: 99px;
+      font-size: 10pt;
+      font-weight: 600;
+    }
+
+    /* Ventures */
+    .venture-header {
+      display: flex;
+      justify-content: space-between;
+    }
+    .venture-name { font-size: 11.5pt; font-weight: 700; color: #111; }
+    .venture-entity { font-size: 10pt; color: #777; }
+
+    /* Page 2 indicator (visual) */
+    .page-break { page-break-before: always; }
+
+    /* Keyword density note — hidden in print */
+    .ats-note {
+      font-size: 8pt;
+      color: #aaa;
+      margin-top: 24px;
+      border-top: 1px solid #eee;
+      padding-top: 8px;
+    }
+    @media print { .ats-note { display: none; } }
+  </style>
+
+  <!-- JSON-LD for AI Crawlers & Google -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Joseph Erexson III",
+    "jobTitle": "DevOps Lead / QA Automation Lead / Platform Engineer",
+    "telephone": "980-447-7049",
+    "email": "jerexson3@gmail.com",
+    "address": { "@type": "PostalAddress", "addressLocality": "New London", "addressRegion": "NC", "addressCountry": "US" },
+    "sameAs": [
+      "https://www.linkedin.com/in/joseph-erexson-iii-46bb6285/",
+      "https://github.com/CipherPole"
+    ],
+    "knowsAbout": [
+      "DevOps", "DevSecOps", "Kubernetes", "Docker", "Terraform", "Ansible",
+      "Jenkins", "Amazon Web Services", "Google Cloud Platform", "CI/CD",
+      "Platform Engineering", "Cloud Architecture", "QA Automation", "Python",
+      "PowerShell", "Infrastructure as Code", "Agile", "Team Leadership"
+    ],
+    "worksFor": { "@type": "Organization", "name": "Bank of America" },
+    "alumniOf": { "@type": "CollegeOrUniversity", "name": "ITT Technical Institute" }
+  }
+  </script>
+</head>
+<body>
+
+  <div class="no-print">
+    <button class="back-btn" onclick="window.close()">← Back</button>
+    <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  </div>
+
+  <!-- ── HEADER ──────────────────────────────────────────── -->
+  <div class="resume-name">Joseph Erexson III</div>
+  <div class="resume-title">DevOps Lead &nbsp;|&nbsp; QA Automation Lead &nbsp;|&nbsp; Platform Engineering</div>
+  <div class="resume-contact">
+    <span>📍 New London, NC &mdash; 100% Remote (US)</span>
+    <span>📞 980-447-7049</span>
+    <span>✉️ <a href="mailto:jerexson3@gmail.com">jerexson3@gmail.com</a></span>
+    <span>🔗 <a href="https://www.linkedin.com/in/joseph-erexson-iii-46bb6285/" target="_blank">linkedin.com/in/joseph-erexson-iii-46bb6285</a></span>
+    <span>💻 <a href="https://github.com/CipherPole" target="_blank">github.com/CipherPole</a></span>
+  </div>
+  <hr>
+
+  <!-- ── SUMMARY ─────────────────────────────────────────── -->
+  <div class="section-heading">Professional Summary</div>
+  <div class="summary">
+    Senior DevOps Lead and QA Automation Engineer with <strong>10+ years of enterprise experience</strong> across financial, healthcare, education, and legal sectors. Currently embedded at <strong>Bank of America</strong>, leading a cross-functional team of <strong>10+ engineers</strong> driving DevSecOps strategy, CI/CD pipeline modernization, cloud infrastructure automation (AWS &amp; GCP), and enterprise-scale container orchestration. Delivered measurable outcomes: <strong>80% reduction</strong> in CI/CD provisioning time via Terraform IaC, <strong>70% improvement</strong> in system scalability via Docker/Kubernetes orchestration, and <strong>500+ endpoint</strong> Postman API coverage integrated as quality gates. Founder of <strong>Unity Recovery</strong> (live SaaS) and principal consultant at <strong>Mythralis / Fortico Holdings</strong> (AI &amp; IT consulting).
+  </div>
+  <hr>
+
+  <!-- ── SKILLS ──────────────────────────────────────────── -->
+  <div class="section-heading">Core Competencies &amp; Technical Skills</div>
+  <div class="skills-grid">
+    <div>&#x2022; AWS: EC2, S3, IAM, EKS, VPC, Route53</div>
+    <div>&#x2022; GCP: GKE, Cloud Run</div>
+    <div>&#x2022; Microsoft Azure (AD, VM, Networking)</div>
+    <div>&#x2022; Kubernetes, Docker, OpenShift</div>
+    <div>&#x2022; Terraform (IaC), Ansible, CloudFormation</div>
+    <div>&#x2022; Jenkins, XLRelease / Digital.ai, Bitbucket</div>
+    <div>&#x2022; Playwright, Postman (500+ endpoints), qTest</div>
+    <div>&#x2022; Insomnia, Selenium, API Testing</div>
+    <div>&#x2022; DevSecOps, CI/CD Pipeline Engineering</div>
+    <div>&#x2022; Python, PowerShell, Bash, JavaScript, VB</div>
+    <div>&#x2022; Tanium Patching, SCCM, Kaseya VSA</div>
+    <div>&#x2022; GitHub Copilot, Replit AI, O365 Copilot</div>
+    <div>&#x2022; Agile / Scrum Master, Cross-Team Leadership</div>
+    <div>&#x2022; AD, DNS, DHCP, GPO, VPN, TCP/IP</div>
+    <div>&#x2022; SonicWall, WatchGuard, Meraki, Unifi</div>
+    <div>&#x2022; Veeam, Datto, StorageCraft (DR)</div>
+    <div>&#x2022; MySQL, PyCharm, Tableau, JIRA</div>
+    <div>&#x2022; Windows Server 2008R2 &ndash; 2022</div>
+  </div>
+  <hr>
+
+  <!-- ── ACCOMPLISHMENTS ─────────────────────────────────── -->
+  <div class="section-heading">Key Accomplishments</div>
+  <ul class="accomplishments">
+    <li>CI/CD pipeline with Terraform IaC &mdash; <strong>80% reduction</strong> in manual provisioning time</li>
+    <li>Postman API Collection covering <strong>500+ endpoints</strong> integrated as CI/CD quality gates</li>
+    <li>Docker/Kubernetes orchestration achieving <strong>70% improvement</strong> in scalability</li>
+    <li>DevSecOps strategy embedded across <strong>10+ engineer team</strong> at Bank of America</li>
+    <li>Multi-team Agile project planning for enterprise platform releases</li>
+    <li>Dashboard and Lean Agile transition replacing Excel-based tracking for full team</li>
+  </ul>
+  <hr>
+
+  <!-- ── EXPERIENCE ──────────────────────────────────────── -->
+  <div class="section-heading">Professional Experience</div>
+
+  <div class="job-header">
+    <div class="job-title">DevOps Lead / QA Automation Lead</div>
+    <div class="job-dates">March 2019 &ndash; Present</div>
+  </div>
+  <div class="job-meta">
+    Bank of America &nbsp;&bull;&nbsp; Charlotte, NC (Remote) &nbsp;&bull;&nbsp; via TekSystems
+    <span class="team-size">Team: 10+ Engineers</span>
+  </div>
+  <ul>
+    <li>Lead a cross-functional team of <strong>10+ engineers</strong> across DevSecOps, QA automation, and platform reliability at enterprise financial scale.</li>
+    <li>Architected and scaled CI/CD pipelines using Jenkins, OpenShift, Docker, and Kubernetes &mdash; improving deployment throughput by <strong>80%</strong> and cutting infrastructure provisioning time by <strong>80%</strong> through Terraform IaC automation.</li>
+    <li>Designed and deployed advanced container orchestration systems using Docker and Kubernetes, achieving a <strong>70% improvement</strong> in system scalability and reliability.</li>
+    <li>Built and own a Postman API collection of <strong>500+ endpoints</strong> for enterprise-scale functional and regression testing integrated as CI/CD quality gates.</li>
+    <li>Leveraged <strong>AWS</strong> (EC2, S3, IAM, EKS, VPC, Route53) and <strong>GCP</strong> (GKE, Cloud Run) to architect and automate cloud infrastructure at enterprise scale.</li>
+    <li>Spearheaded DevSecOps strategy across Agile squads &mdash; embedding security controls, compliance checkpoints, and automated policy enforcement into the full SDLC.</li>
+    <li>Drove <strong>XLRelease / Digital.ai</strong> release orchestration and <strong>Tanium</strong> patch automation across Windows Server 2016&ndash;2022 enterprise environments.</li>
+    <li>Integrated <strong>Ansible</strong> orchestration for configuration management and automated deployment across hybrid cloud environments.</li>
+    <li>Implemented AI-assisted development workflows (GitHub Copilot, Replit AI, O365 Copilot) accelerating team delivery velocity.</li>
+    <li>Automated functional testing using <strong>Playwright</strong> and <strong>qTest</strong>, embedded as regression gates across multiple release pipelines.</li>
+  </ul>
+
+  <hr class="thin">
+
+  <div class="job-header">
+    <div class="job-title">Network Engineer / System Administrator</div>
+    <div class="job-dates">July 2018 &ndash; January 2019</div>
+  </div>
+  <div class="job-meta">Bytes of Knowledge &nbsp;&bull;&nbsp; Nashville, TN</div>
+  <ul>
+    <li>Designed and developed automated testing suites for test plans, scenarios, scripts, and procedures.</li>
+    <li>Used Kaseya VSA to deploy patches after review, removing <strong>50% overhead</strong> on failure management across managed client environments.</li>
+    <li>Configured and supported Veeam, Datto, and IDrive backup products for offsite replication and disaster recovery.</li>
+  </ul>
+
+  <hr class="thin">
+
+  <div class="job-header">
+    <div class="job-title">Technology Consultant</div>
+    <div class="job-dates">July 2017 &ndash; July 2018</div>
+  </div>
+  <div class="job-meta">LogicForce Consulting &nbsp;&bull;&nbsp; Nashville, TN</div>
+  <ul>
+    <li>Designed automated testing tools, test plans, scenarios, and procedures for legal sector clients.</li>
+    <li>Supported Opentext, NetDocuments, iManage, and Worldox document management systems for legal practice management.</li>
+    <li>Managed Autotask, Continuum, and N-Central endpoint management services.</li>
+  </ul>
+
+  <hr class="thin">
+
+  <div class="job-header">
+    <div class="job-title">Senior Technology Support Specialist</div>
+    <div class="job-dates">February 2014 &ndash; December 2016</div>
+  </div>
+  <div class="job-meta">Vanderbilt University &nbsp;&bull;&nbsp; Nashville, TN &nbsp;&bull;&nbsp; via Apex Systems</div>
+  <ul>
+    <li>Managed client networks, system backups, security updates, hardware, VOIP systems, and custom applications at university scale.</li>
+    <li>Developed Batch file scripting and MS Excel VBA automation for application software deployment workflows.</li>
+  </ul>
+  <hr>
+
+  <!-- ── VENTURES ─────────────────────────────────────────── -->
+  <div class="section-heading">Entrepreneurial Ventures</div>
+
+  <div class="venture-header">
+    <div class="venture-name">Founder &mdash; Unity Recovery</div>
+    <div class="venture-entity">Fortico Holdings &nbsp;&bull;&nbsp; 2023 &ndash; Present</div>
+  </div>
+  <ul>
+    <li>Built and operate a <strong>live SaaS platform</strong> for addiction recovery organizations &mdash; client management, peer support coordination, and healthcare compliance tooling.</li>
+    <li>Sole architect of the cloud infrastructure, automation pipeline, and product roadmap.</li>
+  </ul>
+
+  <div class="venture-header">
+    <div class="venture-name">Founder / Principal Consultant &mdash; Mythralis (AI &amp; IT Consulting)</div>
+    <div class="venture-entity">Fortico Holdings &nbsp;&bull;&nbsp; 2024 &ndash; Present</div>
+  </div>
+  <ul>
+    <li>AI and IT consulting firm providing DevOps, cloud infrastructure, and automation strategy to clients using enterprise-grade practices from 10+ years of financial-sector experience.</li>
+  </ul>
+  <hr>
+
+  <!-- ── CERTS ───────────────────────────────────────────── -->
+  <div class="section-heading">Certifications</div>
+  <div class="certs">
+    <span class="cert-badge">Kaseya Certified Technician</span>
+    <span class="cert-badge">ConnectWise Certified Administrator</span>
+  </div>
+  <hr>
+
+  <!-- ── EDUCATION ───────────────────────────────────────── -->
+  <div class="section-heading">Education</div>
+  <div class="edu-row">
+    <div>
+      <div class="edu-degree">Bachelor of Science &mdash; Information Systems / Cyber Security</div>
+      <div class="edu-school">ITT Technical Institute &nbsp;&bull;&nbsp; Nashville, TN</div>
+    </div>
+  </div>
+  <div class="edu-row" style="margin-top:6px;">
+    <div>
+      <div class="edu-degree">Associate of Science &mdash; Networking &amp; System Administration</div>
+      <div class="edu-school">ITT Technical Institute &nbsp;&bull;&nbsp; Nashville, TN</div>
+    </div>
+  </div>
+
+  <div class="ats-note">
+    ATS-Safe Resume &bull; Generated by Career Engine &bull; Joseph Erexson III &bull; DevOps Lead &bull; AWS &bull; Kubernetes &bull; Terraform &bull; 10+ Years Enterprise CI/CD
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Career Engine — Joseph Erexson III</title>
+  <meta name="description" content="Personal AI Career Engine for Joseph Erexson III — DevOps Lead, Platform Engineer, AWS/GCP/Kubernetes specialist.">
+  <meta name="robots" content="noindex"><!-- Private local tool -->
+  <link rel="stylesheet" href="./styles/main.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── Sidebar ──────────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">
+        <div class="logo-icon">⚡</div>
+        <div class="logo-name">Career Engine</div>
+      </div>
+      <div class="logo-tagline">Joseph Erexson III</div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Command Center</div>
+      <div class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">🏠</span> Dashboard
+      </div>
+
+      <div class="nav-section-label">Resume & Brand</div>
+      <div class="nav-item" data-page="resume">
+        <span class="nav-icon">📄</span> Resume Studio
+        <span class="nav-badge">FIX</span>
+      </div>
+      <div class="nav-item" data-page="linkedin">
+        <span class="nav-icon">🔗</span> LinkedIn Optimizer
+      </div>
+
+      <div class="nav-section-label">Job Search</div>
+      <div class="nav-item" data-page="jobs">
+        <span class="nav-icon">💼</span> Job Tracker
+      </div>
+      <div class="nav-item" data-page="cover">
+        <span class="nav-icon">🎯</span> Cover Letter
+      </div>
+
+      <div class="nav-section-label">Growth</div>
+      <div class="nav-item" data-page="training">
+        <span class="nav-icon">🎯</span> Training Hub
+      </div>
+      <div class="nav-item" data-page="certs">
+        <span class="nav-icon">🎓</span> Certifications
+        <span class="nav-badge gold">NEW</span>
+      </div>
+      <div class="nav-item" data-page="skills">
+        <span class="nav-icon">🧠</span> Skill Gap Engine
+      </div>
+      <div class="nav-item" data-page="projects">
+        <span class="nav-icon">🚀</span> Project Showcase
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div style="font-weight:600;color:var(--text-secondary);margin-bottom:4px;">$145k → $200k</div>
+      <div style="font-size:10px;color:var(--text-dim);margin-bottom:6px;">Compensation Gap: $55k</div>
+      <div class="comp-bar">
+        <div class="comp-fill" id="sidebar-comp-bar"></div>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap;">
+        <a href="https://www.linkedin.com/in/joseph-erexson-iii-46bb6285/" target="_blank" class="chip" style="font-size:9px;">LinkedIn</a>
+        <a href="https://github.com/CipherPole" target="_blank" class="chip" style="font-size:9px;">GitHub</a>
+        <a href="./pages/resume.html" target="_blank" class="chip gold" style="font-size:9px;">Print PDF</a>
+        <span class="chip green" style="font-size:9px;cursor:default;" title="Paranoid Security Audit: 0 Secrets, 100% Clean">🛡️ Clean Repo</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────────────── -->
+  <main class="main-content">
+    <div id="page-content" style="transition:opacity 0.25s ease,transform 0.25s ease;">
+      <!-- Rendered by JS -->
+      <div class="empty-state">
+        <div class="empty-icon animate-pulse">⚡</div>
+        <div class="empty-title">Loading Career Engine...</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ── Toast ────────────────────────────────────────────────── -->
+  <div class="toast-wrap" id="toast-wrap"></div>
+
+</div>
+
+<script type="module">
+  import './scripts/app.js';
+
+  // Expose State globally so modules can share it
+  window._state = window._state || {};
+
+  // Animate sidebar comp bar on load
+  window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      const bar = document.getElementById('sidebar-comp-bar');
+      if (bar) bar.style.transition = 'width 1.5s ease';
+    }, 1000);
+  });
+
+  // Expose navigate globally
+  window.navigate = async (pageId) => {
+    const { default: AppModule } = await import('./scripts/app.js').catch(() => ({}));
+    // Fallback — trigger nav item click
+    const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
+    if (navItem) navItem.click();
+  };
+</script>
+
+<!-- Minimal inline fallback navigate for onclick handlers -->
+<script>
+  // Ensure navigate is available from inline onclick handlers immediately
+  function navigate(pageId) {
+    const navItem = document.querySelector('.nav-item[data-page="' + pageId + '"]');
+    if (navItem) navItem.click();
+  }
+</script>
+</body>
+</html>

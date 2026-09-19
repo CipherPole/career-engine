@@ -1,0 +1,218 @@
+[
+  {
+    "id": "gitops-argocd-eks",
+    "title": "GitOps Continuous Delivery with ArgoCD & EKS",
+    "tagline": "Multi-environment declarative Kubernetes deployments with automated canary rollouts",
+    "category": "GitOps & CI/CD",
+    "difficulty": 4,
+    "estimatedHours": 18,
+    "impactScore": 9.6,
+    "gapSkills": ["ArgoCD / GitOps", "GitHub Actions", "Helm", "AWS EKS"],
+    "statusDefault": "available",
+    "icon": "🔄",
+    "color": "#f59e0b",
+    "summary": "Build a modern production GitOps repository using ArgoCD managing applications on an AWS EKS cluster with multi-environment sync (dev/staging/prod), Helm charts, automated drift detection, and Slack notifications.",
+    "whatYouBuild": [
+      "Modular Helm chart for a containerized microservice with environment values",
+      "ArgoCD Application and AppProject manifests with automated sync policy",
+      "GitHub Actions workflow for automated image build, vulnerability scan (Trivy), and GitOps repo commit",
+      "Slack webhook notification on deployment sync failure and drift alert"
+    ],
+    "deliverables": [
+      "Repository with /apps, /infrastructure, /bootstrap structure",
+      "Architecture diagram in Mermaid.js",
+      "Recorded CLI asciinema or gif showing automatic sync"
+    ],
+    "githubRepoSuggested": "argocd-gitops-delivery-mesh",
+    "readmeStarter": "# ArgoCD GitOps Continuous Delivery Mesh\n\nDeclarative GitOps deployment pipeline managing multi-environment Kubernetes applications on AWS EKS using ArgoCD, Helm, and GitHub Actions.\n\n## Architecture Overview\n```\n[Code Push] -> [GitHub Actions Build & Scan] -> [Update GitOps Repo]\n                                                      |\n                                                      v\n                                           [ArgoCD Sync Controller]\n                                                      |\n                                             +--------+--------+\n                                             |                 |\n                                         [EKS Dev]         [EKS Prod]\n```\n\n## Tech Stack\n- ArgoCD 2.10+\n- Kubernetes / AWS EKS\n- Helm 3\n- GitHub Actions\n- Trivy (Container security scan)\n\n## Key Features\n- Declarative application state via Git repository as single source of truth\n- Automated drift detection with self-healing reconciliation\n- Slack alert dispatch on deployment status change\n- Strict RBAC with least-privilege service accounts\n"
+  },
+  {
+    "id": "observability-prometheus-grafana",
+    "title": "Enterprise Observability Mesh with Prometheus & Grafana",
+    "tagline": "End-to-end telemetry pipeline with golden signals, custom dashboards, and Alertmanager",
+    "category": "Observability & SRE",
+    "difficulty": 3,
+    "estimatedHours": 14,
+    "impactScore": 9.4,
+    "gapSkills": ["Prometheus", "Grafana", "Datadog", "Kubernetes (K8s)"],
+    "statusDefault": "available",
+    "icon": "📊",
+    "color": "#06b6d4",
+    "summary": "Deploy a complete observability stack monitoring Kubernetes cluster health and microservice application golden signals (Latency, Traffic, Errors, Saturation) with automated alert routing.",
+    "whatYouBuild": [
+      "Prometheus Operator (kube-prometheus-stack) deployed via Helm on Kubernetes",
+      "Custom Grafana executive dashboard displaying SRE 4 Golden Signals and P99 latency",
+      "Custom PrometheusRule alert definitions for pod crash-loops, high CPU throttling, and error spikes",
+      "Alertmanager routing to Slack channel and PagerDuty mock endpoint"
+    ],
+    "deliverables": [
+      "Exported Grafana dashboard JSON file ready to import",
+      "Production Alertmanager routing configuration",
+      "Stress test script generating synthetic traffic and triggering alerts"
+    ],
+    "githubRepoSuggested": "k8s-observability-prometheus-grafana",
+    "readmeStarter": "# Kubernetes Observability Stack — Prometheus & Grafana\n\nComprehensive enterprise telemetry pipeline for Kubernetes microservices measuring the SRE Four Golden Signals.\n\n## Dashboard Previews\n- Cluster Capacity & Node Saturation\n- Application P50/P90/P99 Request Latency & Error Budgets\n- Pod Memory Limits & CPU Throttling Rate\n\n## Setup Instructions\n```bash\nhelm repo add prometheus-community https://prometheus-community.github.io/helm-charts\nhelm install kube-prom prometheus-community/kube-prometheus-stack -f values-override.yaml\n```\n"
+  },
+  {
+    "id": "terraform-aws-multiregion",
+    "title": "Production AWS Multi-Region VPC & EKS with Terraform",
+    "tagline": "Enterprise-grade IaC modules with Terratest, remote state locking, and tfsec security scanning",
+    "category": "Cloud & IaC",
+    "difficulty": 4,
+    "estimatedHours": 20,
+    "impactScore": 9.7,
+    "gapSkills": ["Terraform", "AWS EKS", "AWS VPC", "AWS IAM", "AWS Cost Explorer / FinOps"],
+    "statusDefault": "available",
+    "icon": "🏗️",
+    "color": "#10b981",
+    "summary": "Author a reusable Terraform module suite provisioning high-availability AWS infrastructure across multiple regions with S3/DynamoDB remote state locking, least-privilege IAM roles, and automated Terratest validation.",
+    "whatYouBuild": [
+      "Multi-AZ VPC module with public/private subnets, NAT Gateways, and flow logs",
+      "Production AWS EKS cluster module with managed node groups and KMS envelope encryption",
+      "Security scanning in CI via tfsec and checkov preventing misconfigured security groups",
+      "Automated infrastructure testing suite written in Go using Terratest"
+    ],
+    "deliverables": [
+      "Tested Terraform module published in GitHub repository",
+      "Passing tfsec zero-warning compliance report",
+      "Automated cost estimate report generated via Infracost in GitHub Actions"
+    ],
+    "githubRepoSuggested": "terraform-aws-enterprise-platform",
+    "readmeStarter": "# Enterprise Multi-Region AWS Platform with Terraform\n\nProduction-ready, modular Infrastructure as Code (IaC) provisioning secure multi-region AWS environments compliant with CIS benchmarks.\n\n## Modules Included\n- `modules/vpc`: Multi-tier VPC with VPC endpoints and NAT optimization\n- `modules/eks`: Managed Kubernetes cluster with IRSA (IAM Roles for Service Accounts)\n- `modules/security`: KMS keys, Security Groups, and CloudWatch Log groups\n\n## Compliance & Testing\n- Validated with **Terratest** (Go)\n- Scanned with **tfsec** and **checkov**\n- Cost-governed with **Infracost** in CI\n"
+  },
+  {
+    "id": "zero-trust-vault-devsecops",
+    "title": "Zero-Trust DevSecOps Pipeline with HashiCorp Vault",
+    "tagline": "Dynamic credentials, secret injection, container signing (Cosign), and SAST scanning",
+    "category": "Security & DevSecOps",
+    "difficulty": 4,
+    "estimatedHours": 16,
+    "impactScore": 9.5,
+    "gapSkills": ["Secrets Management (Vault)", "DevSecOps Practices", "SAST/DAST Integration", "Docker"],
+    "statusDefault": "available",
+    "icon": "🛡️",
+    "color": "#ef4444",
+    "summary": "Eliminate static credentials across CI/CD by deploying HashiCorp Vault to dynamically generate temporary database credentials and inject secrets into Kubernetes pods at runtime.",
+    "whatYouBuild": [
+      "HashiCorp Vault cluster integrated with Kubernetes auth method",
+      "Vault Agent sidecar injector delivering credentials to application pods without code changes",
+      "GitHub Actions security pipeline with Trivy container vulnerability scanner",
+      "Container image signing and verification using Cosign before cluster deployment"
+    ],
+    "deliverables": [
+      "Vault configuration scripts and Kubernetes policy manifests",
+      "CI/CD pipeline halting build on critical CVEs or secret leakage",
+      "Security proof demonstration guide"
+    ],
+    "githubRepoSuggested": "devsecops-vault-zero-trust-pipeline",
+    "readmeStarter": "# Zero-Trust DevSecOps Pipeline with HashiCorp Vault\n\nEnterprise security pipeline delivering dynamic credentials, runtime secret injection, and cryptographically signed container delivery.\n\n## Security Features\n- Dynamic, short-lived database credentials (TTL: 1 hour)\n- No hardcoded secrets in Git, environment variables, or Docker images\n- Supply chain verification: Cosign image signatures verified by Kyverno in Kubernetes\n"
+  },
+  {
+    "id": "go-serverless-microservice",
+    "title": "High-Performance Event-Driven Microservice in Go",
+    "tagline": "AWS Lambda, API Gateway, DynamoDB, and structured tracing with sub-15ms cold starts",
+    "category": "Languages & Scripting",
+    "difficulty": 3,
+    "estimatedHours": 12,
+    "impactScore": 8.8,
+    "gapSkills": ["Go (Golang)", "AWS Lambda", "Python", "DevSecOps Practices"],
+    "statusDefault": "available",
+    "icon": "⚡",
+    "color": "#3b82f6",
+    "summary": "Develop a cloud-native RESTful API microservice in Golang compiled to ARM64 for AWS Lambda (Graviton3), achieving ultra-fast execution times, zero server management, and automated unit/integration tests.",
+    "whatYouBuild": [
+      "Clean Architecture Go service with interfaces for repository and handler layers",
+      "AWS Lambda handler triggered via HTTP API Gateway with JWT authorizer",
+      "Optimized DynamoDB queries using single-table design principles",
+      "GitHub Actions pipeline compiling multi-stage Go binary and deploying via AWS SAM or Terraform"
+    ],
+    "deliverables": [
+      "Clean Go code with 85%+ test coverage (`go test -race -cover`)",
+      "Load test benchmark script demonstrating sub-20ms P95 response time",
+      "OpenAPI / Swagger 3.0 specification"
+    ],
+    "githubRepoSuggested": "go-serverless-event-microservice",
+    "readmeStarter": "# High-Performance Serverless Microservice in Golang\n\nUltra-low-latency event-driven microservice built in Go, targeting AWS Lambda Graviton3 with DynamoDB.\n\n## Performance Benchmarks\n- Cold Start: < 18ms (ARM64 binary)\n- P99 Latency: < 12ms under 1,000 req/sec\n- Memory Footprint: < 22MB\n\n## Architecture\nBuilt with Clean Architecture principles: Domain, Use Cases, Repository, and Infrastructure layers.\n"
+  },
+  {
+    "id": "finops-aws-cost-optimizer",
+    "title": "FinOps Cloud Cost Optimization Bot & Dashboard",
+    "tagline": "Automated idle asset reclamation, rightsizing recommendations, and Slack cost anomaly alerts",
+    "category": "Cloud & IaC",
+    "difficulty": 3,
+    "estimatedHours": 14,
+    "impactScore": 9.2,
+    "gapSkills": ["AWS Cost Explorer / FinOps", "FinOps / Cloud Cost Management", "Python", "AWS Lambda"],
+    "statusDefault": "available",
+    "icon": "💰",
+    "color": "#f59e0b",
+    "summary": "Create an automated FinOps tool that inspects AWS accounts for unattached EBS volumes, idle NAT Gateways, over-provisioned EC2 instances, and posts daily executive cost reports to Slack.",
+    "whatYouBuild": [
+      "Python-based serverless scanner using Boto3 and AWS Cost Explorer API",
+      "Daily Slack notification with breakdown of top spending services and week-over-week deltas",
+      "Automated tagging enforcement policy identifying untagged resources and alerting owners",
+      "Interactive cost savings calculator web dashboard"
+    ],
+    "deliverables": [
+      "Deployable Python package with CLI and Lambda entry points",
+      "Sample executive report PDF/HTML generator",
+      "Case study calculating estimated enterprise savings ($5,000+/mo)"
+    ],
+    "githubRepoSuggested": "finops-aws-cost-guard",
+    "readmeStarter": "# FinOps Cloud Cost Guard — Automated AWS Cost Optimization\n\nAutomated FinOps agent identifying cloud waste, idle infrastructure, and unoptimized resource allocations across AWS multi-account organizations.\n\n## Detected Opportunities\n- Unattached EBS Volumes & Stale Snapshots\n- Low-utilization EC2 instances (CPU < 5% for 14 days)\n- Idle NAT Gateways with < 100MB daily transfer\n- Non-current S3 versions without lifecycle expiration\n"
+  },
+  {
+    "id": "canary-flagger-istio-k8s",
+    "title": "Progressive Canary Deployments on EKS with Flagger & Istio",
+    "tagline": "Automated zero-downtime canary rollouts driven by Prometheus error rate and latency metrics",
+    "category": "GitOps & CI/CD",
+    "difficulty": 5,
+    "estimatedHours": 18,
+    "impactScore": 9.3,
+    "gapSkills": ["Kubernetes (K8s)", "ArgoCD / GitOps", "Prometheus", "Helm"],
+    "statusDefault": "available",
+    "icon": "🚦",
+    "color": "#8b5cf6",
+    "summary": "Implement modern progressive delivery in Kubernetes. When a new container image is pushed, traffic shifts progressively (5% -> 20% -> 50% -> 100%) with automated rollbacks if HTTP 5xx errors exceed 1%.",
+    "whatYouBuild": [
+      "Istio Service Mesh ingress gateway and virtual service configuration",
+      "Flagger Canary custom resource linked to Prometheus metric checks",
+      "Automated web traffic load generator simulating normal and error conditions",
+      "Slack webhook notification demonstrating live step-by-step promotion and rollback"
+    ],
+    "deliverables": [
+      "Kubernetes deployment and canary manifests",
+      "Recorded screen capture of automatic rollback triggered by synthetic error injection",
+      "Documentation on deployment strategies: Blue/Green vs Canary vs Rolling"
+    ],
+    "githubRepoSuggested": "flagger-istio-progressive-delivery",
+    "readmeStarter": "# Progressive Delivery on Kubernetes — Flagger & Istio Canary\n\nZero-downtime, metric-driven automated canary deployments for mission-critical microservices.\n\n## Canary Analysis Flow\n1. New version detected by Flagger\n2. Shift 5% traffic to canary pod\n3. Query Prometheus for 99th percentile latency and HTTP 5xx error rate\n4. If metrics pass, step up to 25%, 50%, 100%\n5. If failure threshold exceeded, immediately rollback to primary baseline\n"
+  },
+  {
+    "id": "ai-ops-incident-responder",
+    "title": "Autonomous AI Incident Triager & Postmortem Generator",
+    "tagline": "AI Ops agent querying Prometheus/Datadog metrics and generating root-cause analysis drafts",
+    "category": "AI-Assisted Development",
+    "difficulty": 3,
+    "estimatedHours": 14,
+    "impactScore": 9.1,
+    "gapSkills": ["LLM Pipeline Integration", "GitHub Copilot", "Python", "Observability & Monitoring"],
+    "statusDefault": "available",
+    "icon": "🤖",
+    "color": "#ec4899",
+    "summary": "Construct an AI Ops incident triage assistant that receives alert webhooks, queries cluster logs and Prometheus metric snapshots, and creates an instant Root Cause Analysis (RCA) summary in GitHub or Slack.",
+    "whatYouBuild": [
+      "FastAPI / Python webhook receiver parsing Alertmanager incident payloads",
+      "Metric collector pulling time-series data and recent Kubernetes events surrounding the incident",
+      "LLM prompt pipeline synthesizing technical diagnostics into concise executive postmortem drafts",
+      "GitHub Issue generator automatically tagging the responsible service repository"
+    ],
+    "deliverables": [
+      "Ready-to-run Python microservice with Dockerfile",
+      "Sample incident postmortems generated from simulated production outages",
+      "Architecture document explaining LLM guardrails for SRE operations"
+    ],
+    "githubRepoSuggested": "ai-ops-incident-triager",
+    "readmeStarter": "# AI Ops Incident Triager & RCA Generator\n\nAutomated SRE assistant leveraging LLMs and time-series telemetry to accelerate Mean Time to Resolution (MTTR).\n\n## How it Works\n```\n[Alertmanager Webhook] -> [Fetch Prometheus & K8s Events] -> [LLM Analysis Engine] -> [Post Incident Draft to Slack/GitHub]\n```\n"
+  }
+]

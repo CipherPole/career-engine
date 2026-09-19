@@ -1,0 +1,135 @@
+{
+  "meta": {
+    "targetRoles": ["DevOps Lead", "DevSecOps Lead", "Platform Engineering Lead", "Staff DevOps Engineer", "Engineering Manager", "Cloud Architect"],
+    "targetComp": 200000,
+    "lastUpdated": "2026-09-18"
+  },
+  "categories": [
+    {
+      "id": "cicd",
+      "label": "CI/CD & Pipeline Engineering",
+      "skills": [
+        { "name": "Jenkins", "level": 5, "demand200k": 5, "status": "confirmed" },
+        { "name": "OpenShift", "level": 5, "demand200k": 4, "status": "confirmed" },
+        { "name": "XLRelease / Digital.ai", "level": 4, "demand200k": 3, "status": "confirmed" },
+        { "name": "GitHub Actions", "level": 3, "demand200k": 5, "status": "gap" },
+        { "name": "ArgoCD / GitOps", "level": 1, "demand200k": 5, "status": "gap" },
+        { "name": "Flux CD", "level": 1, "demand200k": 4, "status": "gap" }
+      ]
+    },
+    {
+      "id": "cloud_aws",
+      "label": "Amazon Web Services (AWS)",
+      "skills": [
+        { "name": "AWS EC2", "level": 4, "demand200k": 5, "status": "confirmed" },
+        { "name": "AWS S3", "level": 4, "demand200k": 5, "status": "confirmed" },
+        { "name": "AWS IAM", "level": 4, "demand200k": 5, "status": "confirmed" },
+        { "name": "AWS EKS", "level": 4, "demand200k": 5, "status": "confirmed" },
+        { "name": "AWS VPC", "level": 4, "demand200k": 5, "status": "confirmed" },
+        { "name": "AWS Route53", "level": 3, "demand200k": 4, "status": "confirmed" },
+        { "name": "AWS Lambda", "level": 2, "demand200k": 4, "status": "gap" },
+        { "name": "AWS CloudFormation / CDK", "level": 2, "demand200k": 4, "status": "gap" },
+        { "name": "AWS Cost Explorer / FinOps", "level": 1, "demand200k": 4, "status": "gap" },
+        { "name": "AWS SAA-C03 Certification", "level": 0, "demand200k": 5, "status": "cert-gap", "resource": "https://aws.amazon.com/certification/certified-solutions-architect-associate/" },
+        { "name": "AWS DevOps Pro Certification", "level": 0, "demand200k": 5, "status": "cert-gap", "resource": "https://aws.amazon.com/certification/certified-devops-engineer-professional/" }
+      ]
+    },
+    {
+      "id": "cloud_gcp",
+      "label": "Google Cloud Platform (GCP)",
+      "skills": [
+        { "name": "GCP GKE", "level": 3, "demand200k": 4, "status": "confirmed" },
+        { "name": "GCP Cloud Run", "level": 3, "demand200k": 4, "status": "confirmed" },
+        { "name": "GCP IAM", "level": 2, "demand200k": 4, "status": "gap" },
+        { "name": "GCP Professional Cloud DevOps Cert", "level": 0, "demand200k": 4, "status": "cert-gap", "resource": "https://cloud.google.com/certification/cloud-devops-engineer" }
+      ]
+    },
+    {
+      "id": "containers",
+      "label": "Containers & Orchestration",
+      "skills": [
+        { "name": "Docker", "level": 5, "demand200k": 5, "status": "confirmed" },
+        { "name": "Kubernetes (K8s)", "level": 5, "demand200k": 5, "status": "confirmed" },
+        { "name": "OpenShift", "level": 5, "demand200k": 4, "status": "confirmed" },
+        { "name": "Helm", "level": 2, "demand200k": 4, "status": "gap" },
+        { "name": "CKA Certification", "level": 0, "demand200k": 5, "status": "cert-gap", "resource": "https://www.cncf.io/certification/cka/" }
+      ]
+    },
+    {
+      "id": "iac",
+      "label": "Infrastructure as Code (IaC)",
+      "skills": [
+        { "name": "Terraform", "level": 5, "demand200k": 5, "status": "confirmed" },
+        { "name": "Ansible", "level": 5, "demand200k": 4, "status": "confirmed" },
+        { "name": "Packer", "level": 1, "demand200k": 3, "status": "gap" },
+        { "name": "Pulumi", "level": 1, "demand200k": 3, "status": "gap" },
+        { "name": "HashiCorp Terraform Associate Cert", "level": 0, "demand200k": 4, "status": "cert-gap", "resource": "https://www.hashicorp.com/certification/terraform-associate" }
+      ]
+    },
+    {
+      "id": "observability",
+      "label": "Observability & Monitoring",
+      "skills": [
+        { "name": "Tanium (Patching/Monitoring)", "level": 4, "demand200k": 3, "status": "confirmed" },
+        { "name": "Tableau (Visualization)", "level": 3, "demand200k": 2, "status": "confirmed" },
+        { "name": "Datadog", "level": 1, "demand200k": 5, "status": "gap", "resource": "https://www.datadoghq.com/learn/" },
+        { "name": "Grafana", "level": 1, "demand200k": 5, "status": "gap", "resource": "https://grafana.com/tutorials/" },
+        { "name": "Prometheus", "level": 1, "demand200k": 5, "status": "gap", "resource": "https://prometheus.io/docs/introduction/overview/" },
+        { "name": "ELK Stack (Elasticsearch/Kibana)", "level": 1, "demand200k": 4, "status": "gap" }
+      ]
+    },
+    {
+      "id": "testing_qa",
+      "label": "Testing & QA Automation",
+      "skills": [
+        { "name": "Postman (500+ endpoints)", "level": 5, "demand200k": 4, "status": "confirmed" },
+        { "name": "Playwright", "level": 4, "demand200k": 4, "status": "confirmed" },
+        { "name": "qTest", "level": 4, "demand200k": 3, "status": "confirmed" },
+        { "name": "Insomnia", "level": 4, "demand200k": 3, "status": "confirmed" }
+      ]
+    },
+    {
+      "id": "languages",
+      "label": "Languages & Scripting",
+      "skills": [
+        { "name": "Python", "level": 4, "demand200k": 5, "status": "confirmed" },
+        { "name": "PowerShell", "level": 5, "demand200k": 4, "status": "confirmed" },
+        { "name": "Bash / Shell", "level": 4, "demand200k": 5, "status": "confirmed" },
+        { "name": "JavaScript", "level": 3, "demand200k": 3, "status": "confirmed" },
+        { "name": "Go (Golang)", "level": 1, "demand200k": 4, "status": "gap", "resource": "https://go.dev/learn/" }
+      ]
+    },
+    {
+      "id": "security",
+      "label": "Security & Compliance",
+      "skills": [
+        { "name": "DevSecOps Practices", "level": 5, "demand200k": 5, "status": "confirmed" },
+        { "name": "IAM / RBAC", "level": 4, "demand200k": 5, "status": "confirmed" },
+        { "name": "SonicWall / WatchGuard Firewall", "level": 4, "demand200k": 2, "status": "confirmed" },
+        { "name": "Secrets Management (Vault)", "level": 1, "demand200k": 4, "status": "gap", "resource": "https://developer.hashicorp.com/vault/tutorials" },
+        { "name": "SAST/DAST Integration", "level": 2, "demand200k": 4, "status": "gap" }
+      ]
+    },
+    {
+      "id": "leadership",
+      "label": "Leadership & Platform Ownership",
+      "skills": [
+        { "name": "Cross-functional Team Lead (10+ Eng)", "level": 5, "demand200k": 5, "status": "confirmed" },
+        { "name": "Agile / Scrum Master", "level": 5, "demand200k": 4, "status": "confirmed" },
+        { "name": "Enterprise Project Delivery", "level": 5, "demand200k": 4, "status": "confirmed" },
+        { "name": "FinOps / Cloud Cost Management", "level": 1, "demand200k": 4, "status": "gap", "resource": "https://www.finops.org/training/" },
+        { "name": "Platform Product Ownership", "level": 3, "demand200k": 4, "status": "gap" }
+      ]
+    },
+    {
+      "id": "ai_tools",
+      "label": "AI-Assisted Development",
+      "skills": [
+        { "name": "GitHub Copilot", "level": 4, "demand200k": 4, "status": "confirmed" },
+        { "name": "Replit AI", "level": 4, "demand200k": 3, "status": "confirmed" },
+        { "name": "O365 Copilot", "level": 4, "demand200k": 3, "status": "confirmed" },
+        { "name": "LLM Pipeline Integration", "level": 2, "demand200k": 4, "status": "gap" }
+      ]
+    }
+  ]
+}
