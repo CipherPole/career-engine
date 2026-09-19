@@ -1,9 +1,9 @@
 'use strict';
 
 const { verifyGoogleCredential } = require('./_lib/google');
-const { upsertUserFromGoogle } = require('./_lib/db');
+const { upsertUserFromGoogle, ensureProfileForUser, logAuthEvent } = require('./_lib/db');
 const { json, methodNotAllowed, readJsonBody } = require('./_lib/http');
-const { encodeSession, serializeCookie, clearCookieHeader, ONE_WEEK_SECONDS } = require('./_lib/session');
+const { encodeSession, serializeCookie, clearCookieHeader, ONE_WEEK_SECONDS, getSessionFromRequest } = require('./_lib/session');
 
 module.exports = async (req, res) => {
   try {
@@ -12,6 +12,26 @@ module.exports = async (req, res) => {
       const credential = body?.credential;
       const identity = await verifyGoogleCredential(credential);
       const { user, isNewUser } = await upsertUserFromGoogle(identity);
+
+      await ensureProfileForUser(user.id, {
+        contact: {
+          name: identity.name,
+          email: identity.email,
+        },
+        createdAt: new Date().toISOString(),
+        source: 'google-signin',
+      });
+
+      await logAuthEvent({
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        eventType: isNewUser ? 'USER_CREATED' : 'USER_SIGNIN',
+        isNewUser,
+        metadata: {
+          provider: 'google',
+        },
+      });
 
       const now = Math.floor(Date.now() / 1000);
       const sessionPayload = {
@@ -38,6 +58,19 @@ module.exports = async (req, res) => {
     }
 
     if (req.method === 'DELETE') {
+      const session = getSessionFromRequest(req);
+      if (session?.uid) {
+        await logAuthEvent({
+          userId: session.uid,
+          email: session.email || '',
+          role: session.role || 'user',
+          eventType: 'USER_SIGNOUT',
+          isNewUser: false,
+          metadata: {
+            source: 'manual_or_idle_logout',
+          },
+        });
+      }
       res.setHeader('Set-Cookie', clearCookieHeader());
       return json(res, 200, { ok: true });
     }

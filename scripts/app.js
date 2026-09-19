@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig } from './auth-engine.js?v=6';
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig, IDLE_TIMEOUT_MS, signOut } from './auth-engine.js?v=6';
 import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=6';
 
 // ── Global State ─────────────────────────────────────────────
@@ -408,6 +408,20 @@ async function init() {
       }
     }, { passive: true });
   });
+
+  // Enforce inactivity lock in runtime so stale sessions are proactively revoked.
+  setInterval(() => {
+    try {
+      const raw = sessionStorage.getItem('careerEngine_session_v2') || localStorage.getItem('careerEngine_session_v2');
+      if (!raw) return;
+      const sess = JSON.parse(raw);
+      if (!sess?.isLoggedIn) return;
+      if (sess.lastActive && (Date.now() - sess.lastActive) > IDLE_TIMEOUT_MS) {
+        signOut();
+        toast('Session locked due to inactivity. Please sign in again.', 'gold');
+      }
+    } catch {}
+  }, 15000);
 
   // Nav click handlers
   document.querySelectorAll('.nav-item').forEach(el =>

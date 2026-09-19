@@ -49,6 +49,19 @@ async function ensureSchema() {
         PRIMARY KEY (user_id, state_key)
       );
     `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS auth_events (
+        id BIGSERIAL PRIMARY KEY,
+        user_id BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+        email TEXT,
+        role TEXT,
+        event_type TEXT NOT NULL,
+        is_new_user BOOLEAN NOT NULL DEFAULT FALSE,
+        metadata JSONB NOT NULL DEFAULT '{}'::jsonb,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `;
   })();
 
   return schemaReadyPromise;
@@ -124,6 +137,17 @@ async function upsertProfileByUserId(userId, profile) {
   return rows[0]?.profile_json || {};
 }
 
+async function ensureProfileForUser(userId, seedProfile) {
+  await ensureSchema();
+  const sql = getSql();
+  const payload = JSON.stringify(seedProfile || {});
+  await sql`
+    INSERT INTO user_profiles (user_id, profile_json, updated_at)
+    VALUES (${userId}, ${payload}::jsonb, NOW())
+    ON CONFLICT (user_id) DO NOTHING;
+  `;
+}
+
 async function getUserStateByKey(userId, stateKey) {
   await ensureSchema();
   const sql = getSql();
@@ -152,12 +176,38 @@ async function upsertUserStateByKey(userId, stateKey, stateValue) {
   return rows[0]?.state_json ?? {};
 }
 
+async function logAuthEvent({ userId = null, email = '', role = 'user', eventType, isNewUser = false, metadata = {} }) {
+  await ensureSchema();
+  const sql = getSql();
+  const payload = JSON.stringify(metadata || {});
+  await sql`
+    INSERT INTO auth_events (user_id, email, role, event_type, is_new_user, metadata)
+    VALUES (${userId}, ${email}, ${role}, ${eventType}, ${isNewUser}, ${payload}::jsonb);
+  `;
+}
+
+async function getRecentAuthEvents(limit = 100) {
+  await ensureSchema();
+  const sql = getSql();
+  const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 500);
+  const rows = await sql`
+    SELECT id, user_id, email, role, event_type, is_new_user, metadata, created_at
+    FROM auth_events
+    ORDER BY created_at DESC
+    LIMIT ${safeLimit};
+  `;
+  return rows;
+}
+
 module.exports = {
   ensureSchema,
   upsertUserFromGoogle,
   getUserById,
   getProfileByUserId,
   upsertProfileByUserId,
+  ensureProfileForUser,
   getUserStateByKey,
   upsertUserStateByKey,
+  logAuthEvent,
+  getRecentAuthEvents,
 };

@@ -22,7 +22,7 @@ import {
 export const OWNER_EMAIL = 'jerexson3@gmail.com';
 const SESSION_STORAGE_KEY = 'careerEngine_session_v2';
 const CONFIG_STORAGE_KEY = 'careerEngine_google_client_id';
-const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes auto-lock
+export const IDLE_TIMEOUT_MS = 3 * 60 * 1000; // 3 minutes auto-lock
 
 export const ROLES = {
   ADMIN: 'admin',
@@ -177,11 +177,11 @@ export function revokeSession() {
 function getDefaultGuestSession() {
   return {
     user: {
-      name: 'Joseph Erexson III',
-      email: OWNER_EMAIL,
+      name: 'Guest',
+      email: '',
       picture: '',
     },
-    role: ROLES.ADMIN, // Default Showcase / Local Admin
+    role: ROLES.GUEST,
     isLoggedIn: false,
     lastActive: Date.now(),
   };
@@ -205,7 +205,7 @@ export function getCurrentUser() {
   const session = getActiveSession();
   return {
     name: session.user?.name || 'Explorer',
-    email: session.user?.email || OWNER_EMAIL,
+    email: session.user?.email || '',
     picture: session.user?.picture || '',
     role: session.role,
     isLoggedIn: session.isLoggedIn,
@@ -699,6 +699,7 @@ export function renderSettingsPage() {
   const user = session.user;
   const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || sessionStorage.getItem('careerEngine_runtime_client_id') || '';
   const currentOrigin = window.location.origin;
+  const idleTimeoutMinutes = Math.round(IDLE_TIMEOUT_MS / 60000);
 
   content.innerHTML = `
     <div class="page-header">
@@ -774,7 +775,7 @@ export function renderSettingsPage() {
             </div>
             <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:12px;">
               <span style="color:var(--text-secondary);">Session Inactivity Lock:</span>
-              <span style="color:var(--green);font-weight:600;">30 Minutes Idle Auto-Lock</span>
+              <span style="color:var(--green);font-weight:600;">${idleTimeoutMinutes} Minutes Idle Auto-Lock</span>
             </div>
             <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;font-size:12px;">
               <span style="color:var(--text-secondary);">Paranoid Pre-Push Audit:</span>
@@ -1124,12 +1125,39 @@ export function renderSettingsPage() {
   // ── Telemetry Feed Hydration & Controls ──────────────────────
   let currentCategory = 'ALL';
   let currentLevel = 'ALL';
+  let serverAuthEvents = [];
+
+  async function hydrateServerAuthEvents() {
+    try {
+      const res = await fetch('/api/admin-auth-events?limit=150', { credentials: 'include' });
+      if (!res.ok) return;
+      const body = await res.json();
+      if (!Array.isArray(body?.events)) return;
+      serverAuthEvents = body.events.map((evt) => ({
+        id: `srv_${evt.id}`,
+        timestamp: evt.created_at,
+        localTime: new Date(evt.created_at).toLocaleTimeString(),
+        level: evt.event_type === 'USER_CREATED' ? LOG_LEVELS.SECURITY : LOG_LEVELS.INFO,
+        category: LOG_CATEGORIES.AUTH,
+        message: evt.event_type,
+        metadata: {
+          userId: evt.user_id,
+          email: evt.email,
+          role: evt.role,
+          isNewUser: evt.is_new_user,
+          ...evt.metadata,
+          source: 'server_audit',
+        },
+      }));
+    } catch {}
+  }
 
   function updateTelemetryView() {
     const feed = document.getElementById('telemetry-logs-feed');
     if (!feed) return;
 
-    const allLogs = getLogs();
+    const localLogs = getLogs();
+    const allLogs = [...serverAuthEvents, ...localLogs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     const errorCount = allLogs.filter(l => l.level === LOG_LEVELS.ERROR).length;
 
     const totalEl = document.getElementById('stat-total-logs');
@@ -1232,7 +1260,7 @@ export function renderSettingsPage() {
   });
 
   document.getElementById('btn-telemetry-clear')?.addEventListener('click', () => {
-    if (confirm('Clear all telemetry action logs?')) {
+    if (confirm('Clear local telemetry logs from this browser? Server auth audit logs are retained.')) {
       clearLogs();
       window.toast?.('Action logs cleared.', 'gold');
       updateTelemetryView();
@@ -1240,7 +1268,14 @@ export function renderSettingsPage() {
   });
 
   // Initial render of logs feed
-  updateTelemetryView();
+  hydrateServerAuthEvents().then(updateTelemetryView);
+  const serverAuditRefresh = setInterval(() => {
+    if (!document.getElementById('telemetry-logs-feed')) {
+      clearInterval(serverAuditRefresh);
+      return;
+    }
+    hydrateServerAuthEvents().then(updateTelemetryView);
+  }, 30000);
 
   // Bind client ID & lockdown buttons
   document.getElementById('btn-save-page-client-id')?.addEventListener('click', () => {
