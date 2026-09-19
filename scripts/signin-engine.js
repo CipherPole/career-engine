@@ -40,9 +40,9 @@ export async function renderSignInPage() {
     ? `Welcome Back${lastUserName ? ', ' + lastUserName : ''}` 
     : 'Create Your Free Account';
   const pageSubtitle = isReturning
-    ? 'Continue to your personal engineering dashboard, skills roadmap, and telemetry.'
-    : 'Get started in seconds with Google. Upload your resume and get instant $200k lead gap analysis.';
-  const badgeLabel = isReturning ? '⚡ Welcome Back' : '✨ Instant Setup • 100% Free';
+    ? 'Continue to your personal skills roadmap, interactive radar benchmarks, and career telemetry.'
+    : 'Personal AI Career Engine to help you benchmark, understand, and improve your technical skills.';
+  const badgeLabel = isReturning ? '⚡ Welcome Back' : '✨ Skill Intelligence Platform • Free';
 
   // Attach background layers before #app directly on body for true 100% full-screen coverage
   const bgContainer = document.createElement('div');
@@ -84,7 +84,7 @@ export async function renderSignInPage() {
           ${pageHeading}
         </div>
         <div style="font-size:13px;color:var(--gold-light);font-weight:600;margin-bottom:14px;">
-          Personal AI Career Engine & Command Center
+          Personal AI Career Engine to help you improve and master your skills
         </div>
 
         <p style="font-size:13px;color:var(--text-secondary);line-height:1.6;margin-bottom:22px;">

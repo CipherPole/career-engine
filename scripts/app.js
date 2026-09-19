@@ -35,16 +35,16 @@ const ROUTE_PERMISSIONS = {
 
 // ── Router ────────────────────────────────────────────────────
 const PAGES = {
-  signin:     () => import('./signin-engine.js').then(m => m.renderSignInPage()),
-  dashboard:  () => import('./resume-engine.js').then(m => m.renderDashboard()),
-  resume:     () => import('./resume-engine.js').then(m => m.renderResumeStudio()),
-  linkedin:   () => import('./linkedin-engine.js').then(m => m.renderLinkedInOptimizer()),
-  jobs:       () => import('./tracker-engine.js').then(m => m.renderJobTracker()),
-  skills:     () => import('./resume-engine.js').then(m => m.renderSkillGap()),
-  training:   () => import('./training-engine.js').then(m => m.renderTrainingHub()),
-  certs:      () => import('./cert-engine.js').then(m => m.renderCertifications()),
-  projects:   () => import('./project-showcase.js').then(m => m.renderProjects()),
-  settings:   () => import('./auth-engine.js').then(m => m.renderSettingsPage()),
+  signin:     () => import('./signin-engine.js?v=6').then(m => m.renderSignInPage()),
+  dashboard:  () => import('./resume-engine.js?v=6').then(m => m.renderDashboard()),
+  resume:     () => import('./resume-engine.js?v=6').then(m => m.renderResumeStudio()),
+  linkedin:   () => import('./linkedin-engine.js?v=6').then(m => m.renderLinkedInOptimizer()),
+  jobs:       () => import('./tracker-engine.js?v=6').then(m => m.renderJobTracker()),
+  skills:     () => import('./resume-engine.js?v=6').then(m => m.renderSkillGap()),
+  training:   () => import('./training-engine.js?v=6').then(m => m.renderTrainingHub()),
+  certs:      () => import('./cert-engine.js?v=6').then(m => m.renderCertifications()),
+  projects:   () => import('./project-showcase.js?v=6').then(m => m.renderProjects()),
+  settings:   () => import('./auth-engine.js?v=6').then(m => m.renderSettingsPage()),
   cover:      () => renderCoverLetterPage(),
 };
 
