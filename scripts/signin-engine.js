@@ -120,31 +120,12 @@ export async function renderSignInPage() {
           <div style="font-size:11px;font-weight:700;color:var(--text-dim);text-transform:uppercase;margin-bottom:16px;letter-spacing:0.5px;">
             ${isReturning ? 'Verified Google Authentication' : 'Fast 1-Click Google Sign Up'}
           </div>
-          
-          <!-- Native Official Google GIS Button Target -->
-          <div id="landing-google-btn-container" style="display:flex;justify-content:center;min-height:44px;align-items:center;">
-            <!-- Rendered by Google Identity Services with dynamic text -->
-          </div>
 
-          <!-- Helpful Desktop Notice -->
-          <div id="landing-popup-notice" style="margin-top:12px;font-size:11px;color:var(--text-secondary);background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:8px 12px;line-height:1.4;">
-            💡 <strong>Desktop Notice:</strong> Google personalizes the button as <em>"Sign in as [Name]"</em> when Chrome is signed into your Google profile. Clicking opens a Google Accounts popup window to confirm sign-in.
-          </div>
+          <!-- Hidden GIS host: keeps callback wiring active while UX uses one clear center button -->
+          <div id="landing-google-btn-container" style="display:none;"></div>
 
-          <!-- Collapsible Desktop Troubleshooter -->
-          <details style="margin-top:10px;text-align:left;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;line-height:1.5;">
-            <summary style="cursor:pointer;color:var(--gold-light);font-weight:600;">
-              🔧 Desktop Troubleshooter (Popups & Ad Blockers)
-            </summary>
-            <div style="margin-top:8px;color:var(--text-secondary);display:flex;flex-direction:column;gap:6px;">
-              <div>• <strong>Popup in Background:</strong> On PC, Chrome often opens the Google Sign-in window behind your main browser window. Press <code style="color:var(--gold);">Alt + Tab</code> or check your taskbar.</div>
-              <div>• <strong>Ad Blockers (uBlock / AdBlock):</strong> If you see <code>ERR_BLOCKED_BY_CLIENT</code> in console, an ad blocker blocked Google telemetry. Pause it or whitelist this site.</div>
-              <div>• <strong>Chrome Popup Blocker:</strong> If Chrome blocked the popup, look for the pop-up icon with a red ✕ in the right corner of your address bar and click <em>"Always allow"</em>.</div>
-            </div>
-          </details>
-
-          <!-- Fallback Interactive Trigger (Only visible if GIS iframe is loading or offline) -->
-          <div id="landing-custom-google-wrapper" style="display:none;margin-top:8px;">
+          <!-- Single explicit sign-in button for desktop/mobile consistency -->
+          <div id="landing-custom-google-wrapper" style="display:block;margin-top:8px;">
             <button class="btn w-full" id="btn-trigger-google-auth" style="background:#ffffff;color:#1f1f1f;font-weight:600;font-size:13px;border:1px solid #dadce0;border-radius:24px;padding:11px 16px;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.12);cursor:pointer;">
               <svg width="18" height="18" viewBox="0 0 18 18">
                 <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
@@ -154,6 +135,10 @@ export async function renderSignInPage() {
               </svg>
               <span style="color:#3c4043;font-weight:600;">${buttonLabel}</span>
             </button>
+          </div>
+
+          <div id="landing-popup-notice" style="margin-top:12px;font-size:11px;color:var(--text-secondary);background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:8px 12px;line-height:1.4;">
+            Click the Google button above to choose your account and continue.
           </div>
         </div>
 
@@ -209,14 +194,22 @@ export async function renderSignInPage() {
     }
 
     try {
-      // Prefer the centered GIS button to avoid detached top-right One Tap prompts.
-      const centerButtonHost = document.getElementById('landing-google-btn-container');
-      const centerButton = centerButtonHost?.querySelector('div[role="button"], iframe');
-      if (centerButton && typeof centerButton.click === 'function') {
-        centerButton.click();
-      } else {
-        window.toast?.('Use the centered Google button to continue.', 'gold');
+      const notice = document.getElementById('landing-popup-notice');
+      if (notice) {
+        notice.innerHTML = '⏳ Opening Google account chooser... if nothing appears, allow popups for this site and try again.';
+        notice.style.borderColor = 'var(--gold)';
+        notice.style.color = 'var(--gold-light)';
       }
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+          const helper = document.getElementById('landing-popup-notice');
+          if (helper) {
+            helper.innerHTML = 'Google chooser did not open. Allow popups for this site and disable strict ad blockers, then click again.';
+            helper.style.borderColor = 'rgba(239,68,68,0.45)';
+            helper.style.color = '#fca5a5';
+          }
+        }
+      });
     } catch (e) {
       console.error('Google Sign-In Error:', e);
     }
@@ -227,7 +220,7 @@ export async function renderSignInPage() {
     const activeClientId = getGoogleClientId();
     const customWrapper = document.getElementById('landing-custom-google-wrapper');
     if (activeClientId) {
-      if (customWrapper) customWrapper.style.display = 'none';
+      if (customWrapper) customWrapper.style.display = 'block';
       renderGoogleSignInButton('landing-google-btn-container', (session, isNewUser) => {
         cleanupMotionBackground();
         window.navigate?.('dashboard');
@@ -235,17 +228,6 @@ export async function renderSignInPage() {
           import('./onboarding-wizard.js').then(m => m.openOnboardingWizard());
         }
       }, buttonTextMode);
-
-      // Window blur listener to detect when Google Accounts popup is opened/focused
-      window.addEventListener('blur', () => {
-        const notice = document.getElementById('landing-popup-notice');
-        if (notice) {
-          notice.innerHTML = '⏳ <strong>Google Sign-In Active:</strong> Please complete authentication in the open Google Accounts window.';
-          notice.style.borderColor = 'var(--gold)';
-          notice.style.color = 'var(--gold-light)';
-        }
-        logAuth('GOOGLE_POPUP_DETECTED', { detail: 'Window blur event - popup interaction detected' });
-      }, { once: true });
     } else {
       if (customWrapper) customWrapper.style.display = 'block';
     }
