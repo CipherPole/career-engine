@@ -916,37 +916,49 @@ export function openDeleteAccountModal() {
     }
 
     btnConfirm.disabled = true;
-    if (label) label.innerHTML = `<span>🗑️</span> <span>Deleting account & purging data...</span>`;
+    if (label) label.innerHTML = `<span>🗑️</span> <span>Deleting account &amp; purging data...</span>`;
 
     // 1. Purge server database if online/authenticated
+    let serverDeleted = false;
     try {
-      await fetch('/api/profile', {
+      const delRes = await fetch('/api/profile', {
         method: 'DELETE',
         credentials: 'include',
       });
+      serverDeleted = delRes.ok;
     } catch {}
 
-    // 2. Purge all local user storage keys
+    // 2. Purge ALL local storage keys — including has_visited so they get new-user onboarding
     const emailKey = userEmail;
     if (emailKey) {
       localStorage.removeItem(`careerEngine_profile_${emailKey}`);
       localStorage.removeItem(`career_jobs_${emailKey}`);
       localStorage.removeItem(`careerEngine_training_${emailKey}`);
+      localStorage.removeItem(`careerEngine_certs_${emailKey}`);
+      localStorage.removeItem(`careerEngine_state_${emailKey}`);
     }
+    // Global / legacy keys
     localStorage.removeItem('careerEngine_active_profile');
     localStorage.removeItem('career_jobs_v1');
     localStorage.removeItem('careerEngine_training_v1');
     localStorage.removeItem('careerEngine_last_user');
+    // CRITICAL: clear the "returning user" flag so they go through new-user onboarding on next sign-in
+    localStorage.removeItem('careerEngine_has_visited');
 
-    // 3. Clear session and reload
+    // 3. Clear all sessionStorage keys
+    sessionStorage.removeItem('careerEngine_showcase_active');
+    sessionStorage.removeItem(SESSION_STORAGE_KEY);
+
+    // 4. Clear server cookie + client session
+    try { await fetch('/api/auth-session', { method: 'DELETE', credentials: 'include' }); } catch {}
     revokeSession();
     modal.classList.remove('open');
-    window.toast?.('Your account and all associated data have been permanently deleted.', 'green');
+    window.toast?.('Your account and all associated data have been permanently deleted. Redirecting to sign-in...', 'green');
 
     setTimeout(() => {
       window.location.hash = '#signin';
       window.location.reload();
-    }, 500);
+    }, 1200);
   });
 
   document.getElementById('btn-close-delete-modal')?.addEventListener('click', () => {
@@ -1107,12 +1119,15 @@ export function renderSettingsPage() {
             <span>🛰️</span> Action Logs & Diagnostic Trace Route
           </div>
           <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-            Structured ring buffer telemetry (last 150 events). Real-time tracking of auth lifecycle, network latencies, RBAC assertions, and errors.
+            Live server audit log (last 200 events) + client telemetry ring buffer. Auto-refreshes every 10s. USER_DELETED events appear in red.
           </div>
         </div>
 
         <!-- Action Toolbar -->
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-secondary btn-sm" id="btn-telemetry-refresh" style="font-size:11px;padding:7px 14px;font-weight:700;display:flex;align-items:center;gap:6px;color:var(--green);border-color:rgba(34,197,94,0.4);">
+            <span>🔄</span> Refresh Now
+          </button>
           <button class="btn btn-gold btn-sm" id="btn-telemetry-copy" style="font-size:11px;padding:7px 14px;font-weight:700;display:flex;align-items:center;gap:6px;">
             <span>📋</span> Copy Diagnostics Report
           </button>
@@ -1123,7 +1138,7 @@ export function renderSettingsPage() {
             <span>🧪</span> Test Error Handler
           </button>
           <button class="btn btn-secondary btn-sm" id="btn-telemetry-clear" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;color:var(--red);">
-            <span>🗑️</span> Clear Logs
+            <span>🗑️</span> Clear Local Logs
           </button>
         </div>
       </div>
@@ -1436,17 +1451,31 @@ export function renderSettingsPage() {
 
   async function hydrateServerAuthEvents() {
     try {
-      const res = await fetch('/api/admin-auth-events?limit=150', { credentials: 'include' });
+      const res = await fetch('/api/admin-auth-events?limit=200', { credentials: 'include' });
       if (!res.ok) return;
       const body = await res.json();
       if (!Array.isArray(body?.events)) return;
+
+      const eventLevelMap = {
+        USER_DELETED:  LOG_LEVELS.ERROR,    // Red — account destroyed
+        USER_CREATED:  LOG_LEVELS.SECURITY, // Purple — new account
+        USER_SIGNIN:   LOG_LEVELS.INFO,     // Blue — normal sign-in
+        USER_SIGNOUT:  'WARN',              // Amber — sign-out
+      };
+      const eventLabelMap = {
+        USER_DELETED:  '🗑️ USER_DELETED — Account & data purged',
+        USER_CREATED:  '✨ USER_CREATED — New account registered',
+        USER_SIGNIN:   '🔑 USER_SIGNIN — Authenticated session started',
+        USER_SIGNOUT:  '🚪 USER_SIGNOUT — Session ended',
+      };
+
       serverAuthEvents = body.events.map((evt) => ({
         id: `srv_${evt.id}`,
         timestamp: evt.created_at,
-        localTime: new Date(evt.created_at).toLocaleTimeString(),
-        level: evt.event_type === 'USER_CREATED' ? LOG_LEVELS.SECURITY : LOG_LEVELS.INFO,
+        localTime: new Date(evt.created_at).toLocaleString(),
+        level: eventLevelMap[evt.event_type] || LOG_LEVELS.INFO,
         category: LOG_CATEGORIES.AUTH,
-        message: evt.event_type,
+        message: eventLabelMap[evt.event_type] || evt.event_type,
         metadata: {
           userId: evt.user_id,
           email: evt.email,
@@ -1576,13 +1605,21 @@ export function renderSettingsPage() {
 
   // Initial render of logs feed
   hydrateServerAuthEvents().then(updateTelemetryView);
+  // Poll every 10 seconds so account creation / deletion events appear in near real-time
   const serverAuditRefresh = setInterval(() => {
     if (!document.getElementById('telemetry-logs-feed')) {
       clearInterval(serverAuditRefresh);
       return;
     }
     hydrateServerAuthEvents().then(updateTelemetryView);
-  }, 30000);
+  }, 10000);
+
+  // Manual refresh button
+  document.getElementById('btn-telemetry-refresh')?.addEventListener('click', async () => {
+    await hydrateServerAuthEvents();
+    updateTelemetryView();
+    window.toast?.('Action logs refreshed from server.', 'green');
+  });
 
   // Bind client ID & lockdown buttons
   document.getElementById('btn-save-page-client-id')?.addEventListener('click', () => {

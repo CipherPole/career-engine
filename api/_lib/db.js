@@ -213,6 +213,8 @@ async function getRecentAuthEvents(limit = 100) {
     LIMIT ${safeLimit};
   `;
   return rows;
+}
+
 async function deleteUserAccount(userId) {
   await ensureSchema();
   const sql = getSql();

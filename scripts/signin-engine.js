@@ -10,7 +10,8 @@ import {
   renderGoogleSignInButton, 
   handleGoogleCredentialResponse,
   getGoogleClientId,
-  fetchAuthConfig
+  fetchAuthConfig,
+  getActiveSession,
 } from './auth-engine.js?v=8';
 
 import {
@@ -26,6 +27,16 @@ import { openResumeReviewModal } from './onboarding-wizard.js';
 
 let animationFrameId = null;
 
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 export async function renderSignInPage() {
   const content = document.getElementById('page-content');
   if (!content) return;
@@ -39,24 +50,40 @@ export async function renderSignInPage() {
     clientId = await fetchAuthConfig();
   }
 
+  // Check if user is already authenticated (e.g., just deleted their account and re-auth'd)
+  const activeSession = getActiveSession();
+  const isAuthenticated = activeSession?.isLoggedIn && activeSession?.user?.email;
+  const authenticatedEmail = isAuthenticated ? activeSession.user.email.toLowerCase() : null;
+  const hasExistingProfile = authenticatedEmail ? !!localStorage.getItem(`careerEngine_profile_${authenticatedEmail}`) : false;
+  const isAuthenticatedNewUser = isAuthenticated && !hasExistingProfile;
+
   // Determine if returning or first-time user
   const hasVisited = localStorage.getItem('careerEngine_has_visited') === 'true';
   const lastUserRaw = localStorage.getItem('careerEngine_last_user') || '';
   const lastUserName = lastUserRaw ? lastUserRaw.split(' ')[0] : '';
+  const authenticatedName = isAuthenticated ? activeSession.user.name?.split(' ')[0] : '';
 
-  const isReturning = hasVisited;
+  const isReturning = hasVisited && !isAuthenticatedNewUser;
   const buttonTextMode = isReturning ? 'continue_with' : 'signup_with';
   const buttonLabel = isReturning ? 'Continue with Google' : 'Sign In with Google';
 
-  logAuth('SIGNIN_GATE_VIEWED', { isReturning, buttonTextMode, clientIdConfigured: !!clientId });
+  logAuth('SIGNIN_GATE_VIEWED', { isReturning, isAuthenticatedNewUser, buttonTextMode, clientIdConfigured: !!clientId });
 
-  const pageHeading = isReturning 
-    ? `Welcome Back${lastUserName ? ', ' + lastUserName : ''}` 
-    : 'Import Your Resume to Start';
-  const pageSubtitle = isReturning
-    ? 'Continue to your personal skills roadmap, interactive radar benchmarks, and career telemetry.'
-    : 'Drag and drop your resume to automatically extract your skills, analyze ATS readiness, and generate your dashboard.';
-  const badgeLabel = isReturning ? '⚡ Welcome Back' : '✨ Instant Resume Import • Private Workspace';
+  let pageHeading, pageSubtitle, badgeLabel;
+  if (isAuthenticatedNewUser) {
+    // Authenticated user with no profile — show personalized resume import screen
+    pageHeading = `Almost there, ${authenticatedName || activeSession.user.name}!`;
+    pageSubtitle = 'Upload or paste your resume to build your personalized Career Engine profile. We\'ll extract your skills, experience, and career history automatically.';
+    badgeLabel = '✨ One More Step • Build Your Profile';
+  } else if (isReturning) {
+    pageHeading = `Welcome Back${lastUserName ? ', ' + lastUserName : ''}`;
+    pageSubtitle = 'Continue to your personal skills roadmap, interactive radar benchmarks, and career telemetry.';
+    badgeLabel = '⚡ Welcome Back';
+  } else {
+    pageHeading = 'Import Your Resume to Start';
+    pageSubtitle = 'Drag and drop your resume to automatically extract your skills, analyze ATS readiness, and generate your dashboard.';
+    badgeLabel = '✨ Instant Resume Import • Private Workspace';
+  }
 
   // Attach background layers before #app directly on body for true 100% full-screen coverage
   const bgContainer = document.createElement('div');
@@ -141,11 +168,21 @@ export async function renderSignInPage() {
         <div style="display:flex;align-items:center;gap:12px;margin:20px 0 16px;">
           <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
           <span style="font-size:11px;color:var(--text-dim);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">
-            ${isReturning ? 'Returning User Sign In' : 'Or Existing Google Account'}
+            ${isAuthenticatedNewUser ? 'Authenticated — Build Your Profile' : (isReturning ? 'Returning User Sign In' : 'Or Existing Google Account')}
           </span>
           <div style="flex:1;height:1px;background:rgba(255,255,255,0.08);"></div>
         </div>
 
+        ${isAuthenticatedNewUser ? `
+        <!-- Authenticated user — show confirmation instead of Google button -->
+        <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.35);border-radius:var(--radius-lg);padding:14px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;">
+          <span style="font-size:22px;">✅</span>
+          <div>
+            <div style="font-weight:700;font-size:13px;color:#4ade80;">Google Account Verified</div>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Signed in as <strong>${escapeHtml(isAuthenticated ? activeSession.user.email : '')}</strong> — upload your resume above to continue.</div>
+          </div>
+        </div>
+        ` : `
         <!-- Google Authentication Button -->
         <div style="background:rgba(6, 8, 13, 0.7);border:1px solid rgba(255,255,255,0.07);border-radius:var(--radius-lg);padding:16px 14px;margin-bottom:12px;">
           
@@ -166,9 +203,10 @@ export async function renderSignInPage() {
           </div>
 
           <div id="landing-popup-notice" style="margin-top:10px;font-size:11px;color:var(--text-secondary);background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:6px 10px;line-height:1.4;">
-            ${isReturning ? 'Sign in to access your saved resume, benchmarks & job tracker.' : 'Have an existing account? Click above to sign in.'}
+            ${isReturning ? 'Sign in to access your saved resume, benchmarks &amp; job tracker.' : 'Have an existing account? Click above to sign in.'}
           </div>
         </div>
+        `}
 
         <!-- Showcase Banner Link -->
         <div style="background:rgba(245, 158, 11, 0.04);border:1px solid rgba(245, 158, 11, 0.15);border-radius:var(--radius-md);padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;">
@@ -184,7 +222,7 @@ export async function renderSignInPage() {
           <div style="margin-top:2px;display:flex;align-items:center;justify-content:center;gap:8px;">
             <a href="#terms" id="link-signin-terms" style="color:var(--gold-light);text-decoration:underline;cursor:pointer;">Terms of Service</a>
             <span>•</span>
-            <a href="#agreement" id="link-signin-agreement" style="color:var(--gold-light);text-decoration:underline;cursor:pointer;">User Agreement & IP Notice</a>
+            <a href="#agreement" id="link-signin-agreement" style="color:var(--gold-light);text-decoration:underline;cursor:pointer;">User Agreement &amp; IP Notice</a>
           </div>
         </div>
 
@@ -362,9 +400,18 @@ export async function renderSignInPage() {
       if (customWrapper) customWrapper.style.display = 'block';
       renderGoogleSignInButton('landing-google-btn-container', (session, isNewUser) => {
         cleanupMotionBackground();
-        window.navigate?.('dashboard');
         if (isNewUser) {
-          openOnboardingWizard();
+          // New user (or deleted user returning): send them to the resume import experience
+          // so they can upload their resume and go through review before their profile is built.
+          // The onboarding wizard's "Create My Profile" button will then navigate to dashboard.
+          logAuth('AUTH_NEW_USER_REDIRECT_TO_ONBOARDING', { email: session?.user?.email });
+          window.toast?.(`Welcome, ${session?.user?.name || 'there'}! Please upload your resume to build your profile.`, 'gold');
+          // Re-render sign-in page (which shows the dropzone) with the user now authenticated
+          // The session is already saved, so the dropzone will show a personalized header.
+          import('./signin-engine.js?v=8').then(m => m.renderSignInPage());
+        } else {
+          // Returning user with an existing profile — go straight to dashboard
+          window.navigate?.('dashboard');
         }
       }, buttonTextMode);
     } else {
