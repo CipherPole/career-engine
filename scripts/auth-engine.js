@@ -482,11 +482,6 @@ export function renderAuthPill() {
           </div>
         </div>
 
-        ${!isLoggedIn ? `
-          <button class="btn btn-gold btn-sm" onclick="window.navigate?.('signin')" style="font-size:11px;padding:5px 12px;border-radius:20px;">
-            ⚡ Sign In
-          </button>
-        ` : ''}
       </div>
     </div>
   `;

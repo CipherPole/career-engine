@@ -9,6 +9,9 @@ Goals:
 - Preserve a repeatable release process
 - Make each session easy to resume by another agent
 
+UI requirement:
+- Before making UI changes, read docs/UI_PROGRAMMING_STANDARDS.md.
+
 ## Project Facts
 - Runtime: Static SPA plus Vercel Serverless API routes
 - Hosting: Vercel

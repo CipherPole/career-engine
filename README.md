@@ -14,6 +14,7 @@
 - Agent operating guide: [AGENTS.md](AGENTS.md)
 - End-to-end workflow runbook: [docs/ENGINEERING_WORKFLOW.md](docs/ENGINEERING_WORKFLOW.md)
 - Security policy: [docs/CODE_REVIEW_SECURITY_POLICY.md](docs/CODE_REVIEW_SECURITY_POLICY.md)
+- UI standards: [docs/UI_PROGRAMMING_STANDARDS.md](docs/UI_PROGRAMMING_STANDARDS.md)
 
 Use these documents as the source of truth for commit, review, CI checks, preview validation, production release, and rollback.
 
