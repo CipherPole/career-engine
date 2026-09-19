@@ -4,6 +4,8 @@
 
 'use strict';
 
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner } from './auth-engine.js';
+
 // ── Global State ─────────────────────────────────────────────
 const State = {
   resumeData:           null,
@@ -64,7 +66,24 @@ async function loadData() {
       fetch('./data/training-projects.json').then(r => r.json()).catch(() => []),
       fetch('./data/certifications.json').then(r => r.json()).catch(() => []),
     ]);
-    State.resumeData           = resume;
+
+    const user = getCurrentUser();
+    if (isOwner()) {
+      State.resumeData = resume;
+    } else {
+      const customProfile = localStorage.getItem(`careerEngine_profile_${user.email}`);
+      if (customProfile) {
+        try {
+          const parsed = JSON.parse(customProfile);
+          State.resumeData = { ...resume, ...parsed };
+        } catch {
+          State.resumeData = resume;
+        }
+      } else {
+        State.resumeData = resume;
+      }
+    }
+
     State.skillsData           = skills;
     State.projectsData         = projects;
     State.jobsData             = jobs;
@@ -130,11 +149,11 @@ function calcATSScore(resumeData, skillsData) {
   const baseScore = Math.round((found / highDemandKeywords.length) * 65);
   // Penalties / bonuses
   const bonuses = [
-    resumeData.contact.linkedin ? 5 : 0,
-    resumeData.contact.github   ? 5 : 0,
-    resumeData.experience[0].teamSize ? 5 : 0,
-    resumeData.accomplishments.length > 5 ? 5 : 0,
-    resumeData.certifications.length > 0 ? 5 : 0,
+    resumeData.contact?.linkedin ? 5 : 0,
+    resumeData.contact?.github   ? 5 : 0,
+    resumeData.experience?.[0]?.teamSize ? 5 : 0,
+    (resumeData.accomplishments?.length || 0) > 5 ? 5 : 0,
+    (resumeData.certifications?.length || 0) > 0 ? 5 : 0,
   ];
   return Math.min(100, baseScore + bonuses.reduce((a, b) => a + b, 0));
 }
@@ -292,6 +311,10 @@ async function init() {
   // Expose navigate globally so engine modules can call it
   window.navigate = navigate;
 
+  // Render top bar auth pill and initialize Google Auth
+  renderAuthPill();
+  initGoogleAuth();
+
   // Nav click handlers
   document.querySelectorAll('.nav-item').forEach(el =>
     el.addEventListener('click', () => navigate(el.dataset.page))
@@ -302,3 +325,4 @@ async function init() {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+

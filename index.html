@@ -9,6 +9,7 @@
   <link rel="stylesheet" href="./styles/main.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 <body>
 <div id="app">
@@ -79,6 +80,7 @@
 
   <!-- ── Main Content ─────────────────────────────────────────── -->
   <main class="main-content">
+    <div id="user-auth-pill" style="display:flex;justify-content:flex-end;margin-bottom:12px;"></div>
     <div id="page-content" style="transition:opacity 0.25s ease,transform 0.25s ease;">
       <!-- Rendered by JS -->
       <div class="empty-state">
