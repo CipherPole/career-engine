@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig, IDLE_TIMEOUT_MS, signOut } from './auth-engine.js?v=6';
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig, IDLE_TIMEOUT_MS, signOut, hydrateSessionFromServer } from './auth-engine.js?v=6';
 import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=6';
 
 // ── Global State ─────────────────────────────────────────────
@@ -384,6 +384,7 @@ window.updateSidebarPermissions = updateSidebarPermissions;
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
   await fetchAuthConfig();
+  await hydrateSessionFromServer();
   await loadData();
 
   // Expose navigate globally so engine modules can call it

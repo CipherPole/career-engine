@@ -2,6 +2,8 @@
 
 const { neon } = require('@neondatabase/serverless');
 
+const OWNER_EMAIL = 'jerexson3@gmail.com';
+
 let schemaReadyPromise = null;
 
 function getSql() {
@@ -70,6 +72,8 @@ async function ensureSchema() {
 async function upsertUserFromGoogle(identity) {
   await ensureSchema();
   const sql = getSql();
+  const normalizedEmail = String(identity?.email || '').toLowerCase();
+  const effectiveRole = normalizedEmail === OWNER_EMAIL.toLowerCase() ? 'admin' : 'user';
 
   const existing = await sql`
     SELECT id FROM users WHERE google_sub = ${identity.sub} LIMIT 1;
@@ -78,7 +82,7 @@ async function upsertUserFromGoogle(identity) {
 
   const rows = await sql`
     INSERT INTO users (google_sub, email, name, picture, role, updated_at)
-    VALUES (${identity.sub}, ${identity.email}, ${identity.name}, ${identity.picture}, ${identity.role}, NOW())
+    VALUES (${identity.sub}, ${normalizedEmail}, ${identity.name}, ${identity.picture}, ${effectiveRole}, NOW())
     ON CONFLICT (google_sub)
     DO UPDATE SET
       email = EXCLUDED.email,

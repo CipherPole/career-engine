@@ -214,6 +214,8 @@ export function getCurrentUser() {
 
 export function setCurrentUser(user) {
   const isUserOwner = user.email?.toLowerCase() === OWNER_EMAIL.toLowerCase();
+  const iat = Math.floor(Date.now() / 1000);
+  const sub = user.sub || `local-${(user.email || 'user').toLowerCase()}`;
   const session = {
     user: {
       name: user.name,
@@ -222,13 +224,55 @@ export function setCurrentUser(user) {
     },
     role: isUserOwner ? ROLES.ADMIN : ROLES.USER,
     isLoggedIn: true,
-    sub: user.sub || 'simulated-sub',
-    iat: Math.floor(Date.now() / 1000),
+    sub,
+    iat,
     expiresAt: Date.now() + (60 * 60 * 1000), // 1 hour
-    fingerprint: generateFingerprint(user.sub || 'simulated-sub', Math.floor(Date.now() / 1000)),
+    fingerprint: generateFingerprint(sub, iat),
     lastActive: Date.now(),
   };
   saveActiveSession(session);
+}
+
+export async function hydrateSessionFromServer() {
+  try {
+    const res = await fetch('/api/me', { credentials: 'include' });
+    if (!res.ok) {
+      const local = getActiveSession();
+      if (local?.isLoggedIn) {
+        revokeSession();
+      }
+      return false;
+    }
+
+    const body = await res.json();
+    const serverUser = body?.user;
+    if (!serverUser?.email) {
+      return false;
+    }
+
+    const isOwnerEmail = serverUser.email.toLowerCase() === OWNER_EMAIL.toLowerCase();
+    const role = (serverUser.role === ROLES.ADMIN || isOwnerEmail) ? ROLES.ADMIN : ROLES.USER;
+    const iat = Math.floor(Date.now() / 1000);
+    const sub = `srv-${serverUser.id || serverUser.email.toLowerCase()}`;
+    const session = {
+      user: {
+        name: serverUser.name || 'Career Explorer',
+        email: serverUser.email,
+        picture: serverUser.picture || '',
+      },
+      role,
+      isLoggedIn: true,
+      sub,
+      iat,
+      expiresAt: Date.now() + (60 * 60 * 1000),
+      fingerprint: generateFingerprint(sub, iat),
+      lastActive: Date.now(),
+    };
+    saveActiveSession(session);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 // ── Google Identity Services Initialization ───────────────────
