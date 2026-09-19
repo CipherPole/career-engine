@@ -6,6 +6,23 @@
 
 ## Session Log: September 19, 2026
 
+### Milestone 9: Server Auth Audit, Idle Lock, And Admin Identity Repair
+- **Context:** Production sign-in required stronger isolation guarantees, visibility into new user activity, and a reliable owner/admin experience for `jerexson3@gmail.com`.
+- **Implementation:**
+  - Added server-side auth event logging for `USER_CREATED`, `USER_SIGNIN`, and `USER_SIGNOUT`.
+  - Added `api/admin-auth-events.js` so the admin console can read recent auth events.
+  - Reduced idle session lock to 3 minutes and enforced sign-out on inactivity.
+  - Ensured `user_profiles` rows are created during first successful Google sign-in.
+  - Enforced owner-email-to-admin mapping on the server during Google upsert.
+  - Hydrated browser auth state from `/api/me` and refreshed the auth pill/sidebar immediately after login so production no longer remains visually stuck in Guest mode.
+
+### Milestone 10: Growth Upgrade With Antigravity Implementation Lab
+- **Context:** The project now also serves as a learning system for implementation quality, not only as a career dashboard.
+- **Implementation:**
+  - Added a new Growth page, **Antigravity Implementation Lab**, for rating request quality and comparing original vs improved prompts.
+  - Added local persistence for implementation rating snapshots and coaching notes.
+  - Authored `docs/IMPLEMENTATION_PLAYBOOK.md` to preserve successful prompting patterns, stronger request structure, and project-specific lessons for future agents and sessions.
+
 ### Milestone 1: Zero-Credential Git Hygiene & Vercel Serverless Integration
 - **Context:** The project was open-sourced to public GitHub (`CipherPole/career-engine`). Google OAuth credentials could not be stored in client-side code or Git repository files.
 - **Implementation:**

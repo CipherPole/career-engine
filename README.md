@@ -15,8 +15,19 @@
 - End-to-end workflow runbook: [docs/ENGINEERING_WORKFLOW.md](docs/ENGINEERING_WORKFLOW.md)
 - Security policy: [docs/CODE_REVIEW_SECURITY_POLICY.md](docs/CODE_REVIEW_SECURITY_POLICY.md)
 - UI standards: [docs/UI_PROGRAMMING_STANDARDS.md](docs/UI_PROGRAMMING_STANDARDS.md)
+- Implementation coaching playbook: [docs/IMPLEMENTATION_PLAYBOOK.md](docs/IMPLEMENTATION_PLAYBOOK.md)
 
 Use these documents as the source of truth for commit, review, CI checks, preview validation, production release, and rollback.
+
+---
+
+## Antigravity Implementation Learning
+
+This project now includes an in-app Growth page called **Implementation Lab** for improving implementation prompts and setup quality.
+
+- Use it to rate how well a request was framed before or after a build session.
+- Compare an original prompt against an improved, more implementation-ready version.
+- Capture project-specific lessons so future agent sessions start from verified patterns instead of guesswork.
 
 ---
 

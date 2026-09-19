@@ -49,6 +49,7 @@ const PAGES = {
   training:   () => import('./training-engine.js?v=6').then(m => m.renderTrainingHub()),
   certs:      () => import('./cert-engine.js?v=6').then(m => m.renderCertifications()),
   projects:   () => import('./project-showcase.js?v=6').then(m => m.renderProjects()),
+  implementation: () => import('./implementation-engine.js?v=6').then(m => m.renderImplementationLab()),
   settings:   () => import('./auth-engine.js?v=6').then(m => m.renderSettingsPage()),
   cover:      () => renderCoverLetterPage(),
 };
