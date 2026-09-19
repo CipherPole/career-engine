@@ -123,19 +123,36 @@ const STAGE_COLORS = { Saved:'var(--text-dim)', Applied:'var(--blue)', Screening
 
 let jobsData = [];
 
-function loadJobs() {
+async function loadJobs() {
   try {
     const stored = localStorage.getItem('career_jobs_v1');
     if (stored) jobsData = JSON.parse(stored);
   } catch { jobsData = []; }
+
+  try {
+    const res = await fetch('/api/state?key=jobs', { credentials: 'include' });
+    if (res.ok) {
+      const body = await res.json();
+      if (Array.isArray(body?.state)) {
+        jobsData = body.state;
+        localStorage.setItem('career_jobs_v1', JSON.stringify(jobsData));
+      }
+    }
+  } catch {}
 }
 
 function saveJobs() {
   localStorage.setItem('career_jobs_v1', JSON.stringify(jobsData));
+  fetch('/api/state?key=jobs', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ state: jobsData }),
+  }).catch(() => {});
 }
 
-export function renderJobTracker() {
-  loadJobs();
+export async function renderJobTracker() {
+  await loadJobs();
   const content = document.getElementById('page-content');
   content.innerHTML = `
     <div class="page-header">

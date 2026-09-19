@@ -128,7 +128,18 @@ async function loadData() {
     if (isOwner()) {
       State.resumeData = resume;
     } else {
-      const customProfile = localStorage.getItem(`careerEngine_profile_${user.email}`);
+      let serverProfile = null;
+      try {
+        const profileRes = await fetch('/api/profile', { credentials: 'include' });
+        if (profileRes.ok) {
+          const body = await profileRes.json();
+          if (body?.profile && typeof body.profile === 'object') {
+            serverProfile = body.profile;
+          }
+        }
+      } catch {}
+
+      const customProfile = serverProfile ? JSON.stringify(serverProfile) : localStorage.getItem(`careerEngine_profile_${user.email}`);
       if (customProfile) {
         try {
           const parsed = JSON.parse(customProfile);

@@ -7,18 +7,35 @@
 const STORAGE_KEY = 'careerEngine_training_v1';
 let radarChartInstance = null;
 
+const DEFAULT_TRAINING_STATE = {
+  conqueredSkills: [],
+  projectStates: {}, // [projectId]: { status: 'available'|'in-progress'|'conquered', repoUrl: '', completedAt: null }
+};
+
 // Default storage state helper
-function getTrainingState() {
+function getTrainingStateFromLocal() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {
     console.warn('Failed reading training state:', e);
   }
-  return {
-    conqueredSkills: [],
-    projectStates: {}, // [projectId]: { status: 'available'|'in-progress'|'conquered', repoUrl: '', completedAt: null }
-  };
+  return { ...DEFAULT_TRAINING_STATE };
+}
+
+async function getTrainingState() {
+  const localState = getTrainingStateFromLocal();
+  try {
+    const res = await fetch('/api/state?key=training', { credentials: 'include' });
+    if (res.ok) {
+      const body = await res.json();
+      if (body?.state && typeof body.state === 'object' && !Array.isArray(body.state)) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(body.state));
+        return body.state;
+      }
+    }
+  } catch {}
+  return localState;
 }
 
 function saveTrainingState(state) {
@@ -27,6 +44,13 @@ function saveTrainingState(state) {
   } catch (e) {
     console.warn('Failed saving training state:', e);
   }
+
+  fetch('/api/state?key=training', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ state }),
+  }).catch(() => {});
 }
 
 // ── Radar Axes Definition ─────────────────────────────────────
@@ -96,7 +120,7 @@ export async function renderTrainingHub() {
 
   const skillsData = window._state?.skillsData;
   const trainingProjects = window._state?.trainingProjectsData || [];
-  const trainingState = getTrainingState();
+  const trainingState = await getTrainingState();
 
   // If user has no conquered skills yet, pre-populate with confirmed skills so they get credit for what they know
   if (!trainingState.conqueredSkills || trainingState.conqueredSkills.length === 0) {

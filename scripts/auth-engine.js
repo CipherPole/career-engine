@@ -348,7 +348,7 @@ export function renderGoogleSignInButton(containerId, onAuthSuccess, buttonText 
 }
 
 // ── Handle Google Credential Callback ─────────────────────────
-export function handleGoogleCredentialResponse(response, onAuthSuccess) {
+export async function handleGoogleCredentialResponse(response, onAuthSuccess) {
   const clientId = getGoogleClientId();
   logAuth('GSI_CREDENTIAL_RECEIVED', { hasCredential: !!response?.credential });
   const validation = validateGoogleJwt(response.credential, clientId);
@@ -361,13 +361,30 @@ export function handleGoogleCredentialResponse(response, onAuthSuccess) {
   }
 
   const payload = validation.payload;
-  const isUserOwner = (payload.email?.toLowerCase() === OWNER_EMAIL.toLowerCase()) && (payload.email_verified === true);
+  let serverAuth = null;
+  try {
+    const serverRes = await fetch('/api/auth-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential: response.credential }),
+    });
+    if (!serverRes.ok) {
+      throw new Error(`auth-session status ${serverRes.status}`);
+    }
+    serverAuth = await serverRes.json();
+  } catch (e) {
+    logSecurity('SERVER_AUTH_FAILED', { reason: e.message });
+    window.toast?.('Could not establish secure server session. Please try again.', 'red');
+    return;
+  }
+
+  const isUserOwner = serverAuth?.user?.role === ROLES.ADMIN;
 
   const session = {
     user: {
-      name: payload.name || payload.given_name || 'Career Explorer',
-      email: payload.email,
-      picture: payload.picture || '',
+      name: serverAuth?.user?.name || payload.name || payload.given_name || 'Career Explorer',
+      email: serverAuth?.user?.email || payload.email,
+      picture: serverAuth?.user?.picture || payload.picture || '',
     },
     role: isUserOwner ? ROLES.ADMIN : ROLES.USER,
     isLoggedIn: true,
@@ -389,7 +406,7 @@ export function handleGoogleCredentialResponse(response, onAuthSuccess) {
   // Auto-create isolated workspace profile for new visitors
   const profileKey = `careerEngine_profile_${payload.email.toLowerCase()}`;
   const existingProfile = localStorage.getItem(profileKey);
-  const isNewUser = !isUserOwner && !existingProfile;
+  const isNewUser = !!serverAuth?.isNewUser || (!isUserOwner && !existingProfile);
 
   if (isNewUser) {
     const newProfile = {
@@ -425,6 +442,7 @@ export function handleGoogleCredentialResponse(response, onAuthSuccess) {
 export function signOut() {
   const session = getActiveSession();
   logAuth('AUTH_SIGNOUT', { email: session?.user?.email || 'guest' });
+  fetch('/api/auth-session', { method: 'DELETE' }).catch(() => {});
   revokeSession();
   sessionStorage.removeItem('careerEngine_showcase_active');
   window.toast?.('Signed out successfully.', 'gold');

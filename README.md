@@ -9,6 +9,16 @@
 
 ---
 
+## Engineering Workflow And Agent Guide
+
+- Agent operating guide: [AGENTS.md](AGENTS.md)
+- End-to-end workflow runbook: [docs/ENGINEERING_WORKFLOW.md](docs/ENGINEERING_WORKFLOW.md)
+- Security policy: [docs/CODE_REVIEW_SECURITY_POLICY.md](docs/CODE_REVIEW_SECURITY_POLICY.md)
+
+Use these documents as the source of truth for commit, review, CI checks, preview validation, production release, and rollback.
+
+---
+
 ## ⚡ Opening Locally (No Server Required)
 
 1. Open **File Explorer** → navigate to `e:\resume\`

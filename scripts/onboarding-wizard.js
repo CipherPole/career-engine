@@ -130,7 +130,7 @@ export function openOnboardingWizard() {
   };
 
   // Create workspace action
-  document.getElementById('btn-create-workspace').onclick = () => {
+  document.getElementById('btn-create-workspace').onclick = async () => {
     const name = document.getElementById('onboard-name').value.trim() || 'Guest Engineer';
     const email = document.getElementById('onboard-email').value.trim() || `guest_${Date.now()}@example.com`;
     const title = document.getElementById('onboard-title').value.trim() || 'Software & DevOps Engineer';
@@ -191,6 +191,15 @@ export function openOnboardingWizard() {
 
     // Save user profile and activate
     localStorage.setItem(`careerEngine_profile_${email}`, JSON.stringify(userProfile));
+
+    try {
+      await fetch('/api/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ profile: userProfile }),
+      });
+    } catch {}
 
     setCurrentUser({
       name: name,

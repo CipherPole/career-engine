@@ -6,16 +6,33 @@
 
 const STORAGE_KEY = 'careerEngine_certs_v1';
 
-function getCertState() {
+const DEFAULT_CERT_STATE = {
+  certStates: {}, // [certId]: { status: 'not-started'|'studying'|'scheduled'|'earned', earnedAt: null }
+};
+
+function getCertStateFromLocal() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {
     console.warn('Failed reading cert state:', e);
   }
-  return {
-    certStates: {}, // [certId]: { status: 'not-started'|'studying'|'scheduled'|'earned', earnedAt: null }
-  };
+  return { ...DEFAULT_CERT_STATE };
+}
+
+async function getCertState() {
+  const localState = getCertStateFromLocal();
+  try {
+    const res = await fetch('/api/state?key=certs', { credentials: 'include' });
+    if (res.ok) {
+      const body = await res.json();
+      if (body?.state && typeof body.state === 'object' && !Array.isArray(body.state)) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(body.state));
+        return body.state;
+      }
+    }
+  } catch {}
+  return localState;
 }
 
 function saveCertState(state) {
@@ -24,6 +41,13 @@ function saveCertState(state) {
   } catch (e) {
     console.warn('Failed saving cert state:', e);
   }
+
+  fetch('/api/state?key=certs', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ state }),
+  }).catch(() => {});
 }
 
 // ── Main Page Render ──────────────────────────────────────────
@@ -32,7 +56,7 @@ export async function renderCertifications() {
   if (!content) return;
 
   const certs = window._state?.certsData || [];
-  const certState = getCertState();
+  const certState = await getCertState();
 
   // Metrics calculation
   const totalCerts = certs.length;
