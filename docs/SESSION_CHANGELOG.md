@@ -6,6 +6,53 @@
 
 ## Session Log: September 19, 2026
 
+### Milestone 14: Two-Phase Sign-In Gateway & Zero Data Leakage Enforcement
+- **Context:** User requested that the landing page (`#signin`) present a clean entry gate with only the Google button, avoiding clutter from the drag-and-drop resume uploader. Furthermore, when new users register, their account should start with an absolute clean slate with zero inherited data from Joseph's profile.
+- **Implementation:**
+  - Refactored `scripts/signin-engine.js` into two distinct phases:
+    - **Phase 1 (Clean Sign-In Gate):** Features aurora animation, interactive constellation particles, and a clean card with Google's official GIS button only.
+    - **Phase 2 (Dedicated Resume Upload Page):** Rendered via `renderResumeUploadPage()` immediately following new-user Google sign-in. Shows a 4-step progress tracker (`[✓ Google Verified] ──▶ [📄 Upload Resume] ──▶ [👁️ Review & Tailor] ──▶ [🚀 Create Profile]`), large drag-and-drop dropzone, and text paste fallback.
+  - Hardened `scripts/onboarding-wizard.js` against data leakage:
+    - Automatically binds candidate name and email from verified Google claims.
+    - Email rendered readonly with a green `[✅ Google Verified]` badge.
+    - Missing resume sections (experience, education, certifications, accomplishments) default to empty arrays (`[]`) rather than Joseph's profile bullets.
+    - Compensation fields default to blank instead of $120k–$175k defaults.
+    - Replaced the "Explore Joseph's Profile" showcase button with a private data guarantee notice.
+  - Verified that users who delete their account and re-register are properly redirected into Phase 2 resume onboarding.
+
+### Milestone 13: Neon DB Server-Side Syntax Bugfix & Admin Action Logs Upgrade
+- **Context:** Account deletion was failing silently in production with server errors, and the Admin Action Log was missing real-time visibility into account deletion activity.
+- **Root Cause & Resolution:**
+  - Inspected `api/_lib/db.js`: Discovered `getRecentAuthEvents` was missing its closing curly brace `}`, causing `deleteUserAccount` to be nested inside it as dead code. As a result, calls to `DELETE /api/profile` threw a syntax runtime error and failed to delete the user row from Neon Postgres.
+  - Restored the closing brace for `getRecentAuthEvents()` and verified `deleteUserAccount()` exports correctly as a top-level function.
+  - Updated `api/profile.js` to log a `USER_DELETED` event into `auth_events` before purging the user record via `DELETE FROM users WHERE id = ${user.id}` (which cascades via foreign key constraints to `user_profiles` and `user_states`).
+  - Upgraded Admin Action Log viewer in `scripts/auth-engine.js`:
+    - `USER_DELETED` displayed with prominent Red badge (`ERROR` level).
+    - `USER_CREATED` displayed with Purple badge (`SECURITY` level).
+    - `USER_SIGNIN` displayed with Blue badge (`INFO` level).
+  - Added manual **`🔄 Refresh Now`** button to the action log toolbar and increased auto-poll frequency from 30s to 10s.
+
+### Milestone 12: Account Deletion Safety Gate (Hover-to-Confirm) & Complete Purge
+- **Context:** Users required a way to completely delete their accounts and start over. Due to the destructive nature of account deletion, accidental clicks needed to be physically prevented.
+- **Implementation:**
+  - Engineered the **3-Second Hover-to-Confirm Button** in `openDeleteAccountModal()` (`scripts/auth-engine.js`):
+    - Users must hover their cursor over the "Confirm Delete" button continuously for 3 seconds.
+    - A smooth visual progress bar fills up dynamically across the button face.
+    - Moving the cursor away instantly resets the timer and drains the progress bar.
+    - Only upon reaching 100% does the button unlock and accept a click.
+  - Orchestrated full client-side purge in `executeAccountPurge()`:
+    - Calls `DELETE /api/profile` to purge cloud Postgres records.
+    - Calls `DELETE /api/auth-session` to clear HTTP-only server session cookies.
+    - Iterates through `localStorage` and `sessionStorage`, wiping all keys matching `careerEngine_profile_<email>`, `careerEngine_jobs_<email>`, `careerEngine_training_<email>`, and `careerEngine_certs_<email>`.
+    - Clears `careerEngine_has_visited` so the user is treated as a new visitor on return.
+
+### Milestone 11: Drag-and-Drop Resume Ingestion & Client-Side Parser
+- **Context:** Eliminate manual profile entry for new candidates by allowing them to drag and drop their existing resume (PDF, TXT, DOCX) directly into the browser.
+- **Implementation:**
+  - Created `scripts/resume-parser.js`: High-speed client-side text extractor and regex tokenizer capable of pulling contact info, target job title, technical skills, employment dates, and bulleted achievements without uploading files to external servers.
+  - Created `scripts/onboarding-wizard.js`: 4-step wizard modal providing candidates with real-time feedback and the ability to review and fine-tune extracted skills before profile generation.
+  - Integrated dropzone events (`dragover`, `dragleave`, `drop`) with visual glowing feedback and file type validation.
+
 ### Milestone 9: Server Auth Audit, Idle Lock, And Admin Identity Repair
 - **Context:** Production sign-in required stronger isolation guarantees, visibility into new user activity, and a reliable owner/admin experience for `jerexson3@gmail.com`.
 - **Implementation:**

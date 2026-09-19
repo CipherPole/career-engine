@@ -3,7 +3,7 @@
 **Project:** Career Engine (Personal AI Career & Skill Intelligence Platform)  
 **Maintained by:** Joseph Erexson III (`jerexson3@gmail.com`)  
 **Target Repository:** `CipherPole/career-engine`  
-**Current Release:** v2.4.0 (Stable & Deployed)  
+**Current Release:** v2.6.0 (Stable & Deployed)  
 **Last Updated:** September 19, 2026
 
 ---
@@ -12,6 +12,8 @@
 
 | Version | Release Date | Milestone Title | Key Features & Delivered Scope | Impact Rating |
 | :--- | :--- | :--- | :--- | :---: |
+| **v2.6.0** | Sep 2026 | **Zero Data Leakage & Hover-to-Confirm Account Purge** | • Strict multi-tenant data isolation preventing owner profile leakage into new accounts.<br>• Verified Google email binding with readonly `[✅ Google Verified]` badge.<br>• 3-Second Hover-to-Confirm Account Deletion with animated progress fill.<br>• Neon Postgres cascading user deletion (`users` $\rightarrow$ `user_profiles`, `user_states`).<br>• Complete client-side cache wipe (`careerEngine_has_visited` & email-scoped storage).<br>• Real-time Admin Action Logs with dynamic event levels (Red = Delete, Purple = Create, Blue = Signin). | **10.0 / 10** |
+| **v2.5.0** | Sep 2026 | **Two-Phase Onboarding & Client Resume Parser** | • Decoupled clean Sign-In Gate (Phase 1) from Resume Upload Screen (Phase 2).<br>• Interactive 4-step progress tracker (`Google Verified` $\rightarrow$ `Upload` $\rightarrow$ `Review` $\rightarrow$ `Create`).<br>• Client-side PDF/TXT resume parser and keyword extraction (`scripts/resume-parser.js`).<br>• Review modal with real-time skill refinement and safe profile defaults. | **9.9 / 10** |
 | **v2.4.0** | Sep 2026 | **Legal Compliance & Security Baseline** | • Integrated comprehensive Terms of Service (`#terms`) & User Agreement (`#agreement`).<br>• Explicit intellectual property protection and anti-scraping policy.<br>• Consolidated single Sign-Out UX inside User Profile Modal.<br>• Automated `npm run audit` zero-vulnerability CI scanner.<br>• Zero-dependency `package.json` manifest with pre-commit hygiene enforcement. | **9.9 / 10** |
 | **v2.3.0** | Sep 2026 | **Telemetry & Diagnostic Traceroute** | • 150-event circular ring buffer logging system (`scripts/auth-engine.js`).<br>• Real-time error capture, network traceroute, and category filtering (AUTH, NETWORK, ROUTER, RBAC).<br>• Diagnostics export to clipboard and JSON download.<br>• Interactive self-test error injection tool in Admin Settings. | **9.5 / 10** |
 | **v2.2.0** | Sep 2026 | **Google Identity Services (GIS) & Auth Modernization** | • Google One-Tap & GIS popup integration.<br>• Auto-provisioning user accounts on first sign-in.<br>• Dynamic "Continue with Google" vs "Create Account with Google" states.<br>• Cross-platform desktop & mobile Android compatibility.<br>• Strict Origin checks and fallback guest mode. | **9.7 / 10** |

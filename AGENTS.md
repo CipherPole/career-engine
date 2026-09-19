@@ -9,6 +9,13 @@ Goals:
 - Preserve a repeatable release process
 - Make each session easy to resume by another agent
 
+Essential Reference Documentation:
+- Architecture & Lifecycles: [docs/PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md)
+- Complete Module & Function Guide: [docs/MODULE_GUIDE.md](docs/MODULE_GUIDE.md)
+- Technical Specifications & ERD: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+- Session History & Changelog: [docs/SESSION_CHANGELOG.md](docs/SESSION_CHANGELOG.md)
+- Strategic Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
+
 UI requirement:
 - Before making UI changes, read docs/UI_PROGRAMMING_STANDARDS.md.
 

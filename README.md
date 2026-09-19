@@ -1,163 +1,212 @@
-# 🚀 Joseph Erexson III — Personal AI Career Engine
+# 🚀 Career Engine — Personal AI Career & Skill Intelligence Platform
 
 [![CI Pipeline](https://github.com/CipherPole/career-engine/actions/workflows/ci.yml/badge.svg)](https://github.com/CipherPole/career-engine/actions/workflows/ci.yml)
 [![Paranoid Security Audit](https://github.com/CipherPole/career-engine/actions/workflows/security-audit.yml/badge.svg)](https://github.com/CipherPole/career-engine/actions/workflows/security-audit.yml)
+[![Vercel Deployment](https://img.shields.io/badge/Vercel-Serverless%20Edge-black?logo=vercel)](https://career-engine-five.vercel.app)
+[![Database](https://img.shields.io/badge/Database-Neon%20PostgreSQL-00e599?logo=postgresql)](https://neon.tech)
+[![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20Runtime-blue.svg)](#technology-stack)
+[![Release Version](https://img.shields.io/badge/Release-v2.6.0-gold.svg)](docs/ROADMAP.md)
 
-> **Target:** DevOps Lead / Platform Engineering / $200k+ | 100% Remote  
-> **GitHub:** [@CipherPole](https://github.com/CipherPole)  
-> **LinkedIn:** [joseph-erexson-iii-46bb6285](https://www.linkedin.com/in/joseph-erexson-iii-46bb6285/)  
-
----
-
-## Engineering Workflow And Agent Guide
-
-- Agent operating guide: [AGENTS.md](AGENTS.md)
-- End-to-end workflow runbook: [docs/ENGINEERING_WORKFLOW.md](docs/ENGINEERING_WORKFLOW.md)
-- Security policy: [docs/CODE_REVIEW_SECURITY_POLICY.md](docs/CODE_REVIEW_SECURITY_POLICY.md)
-- UI standards: [docs/UI_PROGRAMMING_STANDARDS.md](docs/UI_PROGRAMMING_STANDARDS.md)
-- Implementation coaching playbook: [docs/IMPLEMENTATION_PLAYBOOK.md](docs/IMPLEMENTATION_PLAYBOOK.md)
-
-Use these documents as the source of truth for commit, review, CI checks, preview validation, production release, and rollback.
+> **Platform:** Career Engine — Universal AI Career & Skill Intelligence Platform  
+> **Repository:** `CipherPole/career-engine`  
+> **Production URL:** [career-engine-five.vercel.app](https://career-engine-five.vercel.app)  
+> **Admin & Platform Owner:** Joseph Erexson III (`jerexson3@gmail.com`)  
+> **Primary Target:** SRE / Platform Engineering / Cloud Architecture | 100% Remote  
 
 ---
 
-## Antigravity Implementation Learning
+## 🌟 What is Career Engine?
 
-This project now includes an in-app Growth page called **Implementation Lab** for improving implementation prompts and setup quality.
+**Career Engine** is an enterprise-grade, client-first career acceleration platform. Built on pure modern web standards, it delivers instant resume ingestion, real-time ATS keyword matching, interactive skill radar charts, an application tracking CRM, and structured certification pathways.
 
-- Use it to rate how well a request was framed before or after a build session.
-- Compare an original prompt against an improved, more implementation-ready version.
-- Capture project-specific lessons so future agent sessions start from verified patterns instead of guesswork.
+Originally conceived as an executive career portfolio, Career Engine has evolved into a **universal multi-tenant platform**. Every candidate who visits receives their own **completely private, isolated workspace** with zero data leakage from other accounts.
 
 ---
 
-## ⚡ Opening Locally (No Server Required)
+## ✨ Key Platform Features
 
-1. Open **File Explorer** → navigate to `e:\resume\`
-2. Double-click `index.html` — opens in your default browser
-3. That's it. No install, no server, no dependencies.
+### 1. 🚪 Clean Two-Phase Sign-In & Onboarding
+- **Phase 1 (Clean Entry Gate):** A focused, distraction-free landing page with an interactive constellation network, motion aurora gradients, and a single Google Identity button.
+- **Phase 2 (Dedicated Resume Upload):** Rendered immediately after a new candidate signs in. Features a 4-step progress bar (`[✓ Google Verified] ──▶ [📄 Upload Resume] ──▶ [👁️ Review] ──▶ [🚀 Create Profile]`), large drag-and-drop dropzone, and text paste fallback.
 
-> **Tip:** For the best experience, open in **Chrome** or **Edge** (not Firefox — ES modules need a server or Chrome/Edge).
+### 2. ⚡ Client-Side Resume Parser (`scripts/resume-parser.js`)
+- Instant extraction of candidate contact information, job titles, technical skills, employment chronologies, and achievements.
+- Runs 100% client-side in the browser—zero external file uploads required for parsing.
+
+### 3. 🛡️ Strict Multi-Tenant Isolation (Zero Data Leakage)
+- Every candidate begins with a clean slate. New users never see or inherit personal data, work history, or compensation figures from the platform owner.
+- Candidate name and verified email are populated directly from Google OIDC claims with a readonly `[✅ Google Verified]` badge.
+- Scoped browser storage (`careerEngine_profile_<email>`) paired with row-level PostgreSQL session isolation.
+
+### 4. 🗑️ 3-Second Hover-to-Confirm Account Deletion & Purge
+- Physical protection against accidental deletion: candidates must hover over the confirmation button for **3 continuous seconds** while a dynamic progress bar fills.
+- Complete cascading deletion across Neon Postgres database tables (`users`, `user_profiles`, `user_states`).
+- Full purge of browser cache and cookies, allowing users to start fresh or re-register cleanly at any time.
+
+### 5. 🎯 Resume Studio & Real-Time ATS Gap Analyzer
+- Live ATS match score (0–100) calculated dynamically against target role requirements.
+- Real-time missing keyword highlights, skill radar charts, and instant ATS-compliant PDF generation.
+
+### 6. 📊 Job Application CRM Pipeline
+- Interactive 5-stage tracking pipeline: Wishlist, Applied, Interviewing, Offer, Rejected.
+- Scoped cloud synchronization via `/api/state?key=jobs`.
+
+### 7. 🛰️ Admin Console, Telemetry & Server Action Logs
+- 150-event circular ring-buffer telemetry engine (`scripts/telemetry-engine.js`).
+- Live-updating Admin Action Log with color-coded event badges (Red for `USER_DELETED`, Purple for `USER_CREATED`, Blue for `USER_SIGNIN`).
+- 1-click clipboard diagnostic export for rapid issue triaging.
 
 ---
 
-## 🖨️ Printing Your Clean Resume PDF
+## 🏛️ System Architecture & Technology Stack
 
-1. Click **Resume Studio** in the sidebar
-2. Click **"Print / Export PDF"** button (or open `pages/resume.html` directly)
-3. `Ctrl + P` → **Save as PDF** → ensure "Background graphics" is **OFF**
-4. This gives you a 100% ATS-safe, properly encoded PDF with your real name, AWS/GCP skills, and team size clearly parsed.
+```mermaid
+graph TD
+    Client[Browser Client SPA<br>Vanilla JS + CSS3] -->|1. Google Sign-In| GSI[Google Identity Services OIDC]
+    GSI -->|2. Cryptographic ID Token| Client
+    Client -->|3. POST /api/auth-session| VercelAPI[Vercel Serverless Functions]
+    VercelAPI -->|4. Query / Upsert / Delete| NeonDB[(Neon Postgres Database)]
+    VercelAPI -->|5. Encrypted HTTP-Only Session Cookie| Client
+    Client -->|6. Client-Side Resume Ingestion| Parser[scripts/resume-parser.js]
+    Parser -->|7. Review & Activate Profile| Wizard[scripts/onboarding-wizard.js]
+    Wizard -->|8. PUT /api/profile| NeonDB
+    Client -->|9. Scoped Workspace Storage| LocalStorage[(Browser LocalStorage)]
+    Client -->|10. Telemetry & Audit Logs| Telemetry[scripts/telemetry-engine.js]
+    Telemetry -->|11. Real-Time Security Audit| AdminConsole[⚙️ Administrator Console]
+```
+
+- **Frontend:** Pure Vanilla JavaScript (ES2022+ Modules) + Vanilla CSS3 (Custom Design System). Zero build step, zero npm runtime dependencies.
+- **Backend / Edge:** Node.js Serverless Functions deployed on the Vercel Edge Network (`/api/*.js`).
+- **Database:** Neon Serverless PostgreSQL (`users`, `user_profiles`, `user_states`, `auth_events`) with connection pooling and cascading foreign keys.
+- **Authentication:** Google Identity Services (GIS) OIDC JWT + Encrypted HMAC-SHA256 HTTP-only session cookies.
 
 ---
 
-## 📁 Project Structure
+## 📁 Repository Directory Structure
 
 ```
-e:\resume\
-├── index.html              ← Main career engine app
-├── vercel.json             ← Vercel deployment config
-├── .gitignore              ← Git rules
-├── README.md               ← This file
+e:\resume/
+├── index.html                  # Single-Page Application HTML shell & entry point
+├── package.json                # Project manifest, npm test, and npm audit scripts
+├── vercel.json                 # Serverless routing, headers, rewrites, and security config
+├── launch.bat                  # Local quick-launch helper
+├── audit.bat                   # Local security audit execution script
+├── AGENTS.md                   # Strict Agent Operating Guide and CI/CD workflow rules
 │
-├── data/
-│   ├── resume.json         ← Structured resume (edit here to update all views)
-│   ├── skills.json         ← Skills inventory + $200k gap ratings
-│   ├── projects.json       ← Portfolio projects
-│   └── jobs.json           ← Application tracker seed (live data in localStorage)
+├── api/                        # Vercel Serverless Functions (Node.js runtime)
+│   ├── auth-config.js          # Serves GOOGLE_CLIENT_ID from environment
+│   ├── auth-session.js         # Session creation (POST) and termination (DELETE)
+│   ├── me.js                   # Authenticated user identity endpoint (GET)
+│   ├── profile.js              # User profile CRUD & account deletion (GET/PUT/DELETE)
+│   ├── state.js                # Scoped user state persistence (jobs, training, certs) (GET/PUT)
+│   ├── admin-auth-events.js    # Admin-only audit log reader (GET)
+│   └── _lib/                   # Shared serverless utilities
+│       ├── db.js               # Neon Postgres pool, schema migration, and data queries
+│       ├── session.js          # Cryptographic session cookie sealing, parsing, and clearing
+│       └── http.js             # Standardized HTTP JSON responses, errors, and body parsing
 │
-├── docs/
-│   ├── RESUME_MASTER.md    ← Canonical Markdown resume
-│   ├── LINKEDIN_STRATEGY.md← Optimized LinkedIn copy blocks
-│   ├── SKILLS_ROADMAP.md   ← $200k+ gap analysis & learning paths
-│   ├── PROJECTS_DEEPDIVE.md← Technical deep-dives on your projects
-│   └── INTERVIEW_PLAYBOOK.md← STAR-format interview scripts
-│
-├── scripts/
-│   ├── app.js              ← Core router & state
-│   ├── resume-engine.js    ← Dashboard, Resume Studio, Skill Gap
-│   ├── linkedin-engine.js  ← LinkedIn optimizer & copy blocks
-│   ├── tracker-engine.js   ← Job boards & application pipeline
-│   └── project-showcase.js ← Project cards & GitHub API
+├── scripts/                    # Frontend ES Modules (Vanilla JS)
+│   ├── app.js                  # Master application router, navigation, and page dispatcher
+│   ├── auth-engine.js          # Identity state, Google OIDC token handler, profile modal, delete flow, admin settings
+│   ├── signin-engine.js        # Two-phase sign-in gateway (Phase 1: Google button; Phase 2: Resume upload dropzone)
+│   ├── onboarding-wizard.js    # 4-step resume review modal, safe profile synthesis, and account creation
+│   ├── resume-parser.js        # Client-side multi-format resume text parser and keyword extractor
+│   ├── resume-engine.js        # Resume Studio, ATS keyword match scoring, and skills radar
+│   ├── tracker-engine.js       # Job application tracker, pipeline stages, and company notes
+│   ├── training-engine.js      # Learning pathways, lab projects, and skill progress tracking
+│   ├── cert-engine.js          # Certification registry, credential verification, and expiry tracking
+│   ├── implementation-engine.js# Antigravity Implementation Lab (prompt evaluation & coaching)
+│   ├── telemetry-engine.js     # Circular ring-buffer logger, error capture, and diagnostics export
+│   ├── legal-engine.js         # Terms of Service and User Agreement renderer
+│   ├── project-showcase.js     # Technical portfolio cards and GitHub repository showcases
+│   ├── linkedin-engine.js      # Profile optimization copy blocks and headline generators
+│   └── security-audit.js       # Pre-commit zero-secrets and dependency security scanner
 │
 ├── styles/
-│   └── main.css            ← Dark/gold executive design system
+│   ├── index.css               # Core CSS design tokens, typography, glassmorphism, responsive grid
+│   └── main.css                # Legacy & component-specific style rules
+│
+├── data/
+│   ├── resume.json             # Seed template for resume structure
+│   ├── skills.json             # Skill catalog and market valuation benchmarks
+│   ├── projects.json           # Engineering project showcase data
+│   ├── jobs.json               # Seed application tracking data (gitignored private data)
+│   └── training-projects.json  # Curated training lab exercises
 │
 ├── pages/
-│   ├── resume.html         ← Clean, ATS-safe printable resume
-│   └── portfolio.html      ← Public-facing Vercel portfolio
+│   ├── resume.html             # Clean, ATS-safe printable resume page
+│   └── portfolio.html          # Public-facing portfolio showcase
 │
-└── assets/
-    ├── JosephErexsonResume2024.pdf   ← Original (reference only — has encoding bug)
-    └── JosephErexsonResume2024.txt   ← Original text extraction
+└── docs/                       # Comprehensive Engineering & Architecture Documentation
+    ├── PROJECT_OVERVIEW.md     # High-level architecture, user lifecycles, and isolation model
+    ├── MODULE_GUIDE.md         # Deep-dive into every file, function, and interface
+    ├── ARCHITECTURE.md         # Technical architecture and data flow diagrams
+    ├── SESSION_CHANGELOG.md    # Chronological history of milestones, bugs, and fixes
+    ├── ROADMAP.md              # RICE-scored strategic backlog and release history
+    ├── UI_PROGRAMMING_STANDARDS.md # UI design tokens, aesthetics, and animation guidelines
+    ├── CODE_REVIEW_SECURITY_POLICY.md # Security audit policies and zero-secret rules
+    ├── ENGINEERING_WORKFLOW.md # Git, branch, and Vercel release runbook
+    ├── ADMIN_GUIDE.md          # Guide for platform owner administration
+    ├── IMPLEMENTATION_PLAYBOOK.md # Prompt coaching and implementation patterns
+    ├── TERMS_OF_SERVICE.md     # Platform terms and intellectual property rights
+    └── USER_AGREEMENT.md       # User privacy agreement and zero-data-brokering terms
 ```
 
 ---
 
-## ✏️ Updating Your Resume
+## ⚡ Developer Quickstart
 
-All content is driven by `data/resume.json`. To update:
+### 1. Launching Locally
+Because Career Engine uses modern ES Modules, run with a local web server:
 
-1. Open `data/resume.json` in any text editor
-2. Edit your experience, skills, accomplishments, or contact info
-3. Save → refresh `index.html` — all views update automatically
+```powershell
+# Quick launch helper:
+.\launch.bat
+
+# Or run any static server:
+npx serve -l 4444 .
+```
+Navigate to `http://localhost:4444` in Chrome or Edge.
 
 ---
 
-## 🌐 Deploying to Vercel (Free)
+### 2. Pre-Commit Verification (Mandatory)
+In accordance with [AGENTS.md](AGENTS.md), always run pre-commit checks before pushing any branch:
 
-### Prerequisites
-- [Vercel account](https://vercel.com) — you already have one ✅
-- Git repository on GitHub — push this folder as a new repo
+```powershell
+# 1. Run security, policy, and syntax scan
+npm test
 
-### Steps
-
-```bash
-# 1. Initialize git (run in e:\resume)
-git init
-git add .
-git commit -m "Initial Career Engine"
-
-# 2. Create a new GitHub repo named 'career-engine' (private)
-# Then connect:
-git remote add origin https://github.com/CipherPole/career-engine.git
-git push -u origin main
+# 2. Verify zero dependency vulnerabilities
+npm audit
 ```
 
-Then in Vercel:
-1. Click **"Add New Project"**
-2. Import `career-engine` from GitHub
-3. Leave all settings default (it's a static site)
-4. Click **Deploy** → live at `career-engine.vercel.app` in ~60 seconds
-
-To use a custom domain later:
-- Settings → Domains → Add `josepherexson.dev` (if purchased)
+If any check fails, do not commit.
 
 ---
 
-## 🔗 Key Resources
+### 3. Environment Variables
+To enable full cloud persistence in development or preview environments, configure these variables in Vercel or your local `.env`:
 
-| Resource | Link |
-|----------|------|
-| LinkedIn Profile | [linkedin.com/in/joseph-erexson-iii-46bb6285](https://www.linkedin.com/in/joseph-erexson-iii-46bb6285/) |
-| LinkedIn Certifications | [View Certifications](https://www.linkedin.com/in/joseph-erexson-iii-46bb6285/details/certifications/) |
-| GitHub | [github.com/CipherPole](https://github.com/CipherPole) |
-| AWS SAA-C03 (Priority Cert) | [aws.amazon.com/certification](https://aws.amazon.com/certification/certified-solutions-architect-associate/) |
-| Terraform Associate Cert | [hashicorp.com/certification](https://www.hashicorp.com/certification/terraform-associate) |
-| CKA Certification | [cncf.io/certification/cka](https://www.cncf.io/certification/cka/) |
-| Levels.fyi (Comp Data) | [levels.fyi](https://www.levels.fyi/jobs?jobId=&country=254&title=devops) |
+| Variable | Description | Scope |
+| :--- | :--- | :--- |
+| `GOOGLE_CLIENT_ID` | Google Identity Services OAuth 2.0 Client ID | Production & Preview |
+| `SESSION_SECRET` | 32+ character secret for HMAC-SHA256 session cookie sealing | Production & Preview |
+| `POSTGRES_URL` | Neon Serverless PostgreSQL connection URI | Production & Preview |
 
 ---
 
-## 📊 Current Status
+## 📚 Essential Documentation Links
 
-| Metric | Current | Target |
-|--------|---------|--------|
-| Compensation | ~$145k | $200k+ |
-| ATS Score | ~71/100 | 88+ |
-| LinkedIn Score | ~40% | 90%+ |
-| Certifications | 2 (Kaseya, CW) | Add AWS SAA-C03 |
-| GitHub Public Repos | 0 | 3+ |
+- **[docs/PROJECT_OVERVIEW.md](docs/PROJECT_OVERVIEW.md):** System architecture, onboarding lifecycle, and multi-tenant isolation model.
+- **[docs/MODULE_GUIDE.md](docs/MODULE_GUIDE.md):** Complete function-by-function guide to all scripts and API micro-endpoints.
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md):** Neon database ERD, sequence diagrams, and RBAC matrix.
+- **[docs/SESSION_CHANGELOG.md](docs/SESSION_CHANGELOG.md):** Chronological log of development milestones, bugfixes, and architectural decisions.
+- **[docs/ROADMAP.md](docs/ROADMAP.md):** RICE-scored strategic backlog and upcoming feature priorities.
+- **[AGENTS.md](AGENTS.md):** Required operational rules for AI agents and human contributors.
+- **[docs/UI_PROGRAMMING_STANDARDS.md](docs/UI_PROGRAMMING_STANDARDS.md):** Visual excellence, animation principles, and CSS design tokens.
+- **[docs/CODE_REVIEW_SECURITY_POLICY.md](docs/CODE_REVIEW_SECURITY_POLICY.md):** Zero-credential git hygiene and security scanning rules.
 
 ---
 
-*Built with 💛 by Joseph's Personal AI Career Engine*
+*Engineered with precision for continuous career growth.*
