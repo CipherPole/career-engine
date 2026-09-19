@@ -254,6 +254,15 @@ function initializeGsiOnce(clientId, onAuthSuccess) {
       auto_select: false,
       itp_support: true,
       cancel_on_tap_outside: true,
+      intermediate_iframe_close_callback: () => {
+        logAuth('GSI_POPUP_OR_IFRAME_CLOSED');
+        const notice = document.getElementById('landing-popup-notice');
+        if (notice) {
+          notice.innerHTML = '💡 Google window closed. Click the button above anytime to sign in.';
+          notice.style.borderColor = 'rgba(255,255,255,0.08)';
+          notice.style.color = 'var(--text-secondary)';
+        }
+      },
     });
     isGsiInitialized = true;
     logAuth('GSI_INITIALIZED_SUCCESS', { clientIdPrefix: clientId.substring(0, 15) + '...' });
@@ -321,6 +330,15 @@ export function renderGoogleSignInButton(containerId, onAuthSuccess, buttonText 
       text: buttonText,
       logo_alignment: 'left',
       width: 320,
+      click_listener: () => {
+        logAuth('GSI_BUTTON_CLICKED', { containerId, buttonText });
+        const notice = document.getElementById('landing-popup-notice');
+        if (notice) {
+          notice.innerHTML = '⏳ <strong>Google Sign-In Active:</strong> Please select your account in the open Google Accounts window (or press <code>Alt + Tab</code>).';
+          notice.style.borderColor = 'var(--gold)';
+          notice.style.color = 'var(--gold-light)';
+        }
+      },
     });
     logAuth('GSI_BUTTON_RENDERED', { containerId, buttonText });
     return true;

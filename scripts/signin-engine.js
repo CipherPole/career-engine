@@ -131,6 +131,18 @@ export async function renderSignInPage() {
             💡 <strong>Desktop Notice:</strong> Google personalizes the button as <em>"Sign in as [Name]"</em> when Chrome is signed into your Google profile. Clicking opens a Google Accounts popup window to confirm sign-in.
           </div>
 
+          <!-- Collapsible Desktop Troubleshooter -->
+          <details style="margin-top:10px;text-align:left;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.06);border-radius:var(--radius-sm);padding:8px 12px;font-size:11px;line-height:1.5;">
+            <summary style="cursor:pointer;color:var(--gold-light);font-weight:600;">
+              🔧 Desktop Troubleshooter (Popups & Ad Blockers)
+            </summary>
+            <div style="margin-top:8px;color:var(--text-secondary);display:flex;flex-direction:column;gap:6px;">
+              <div>• <strong>Popup in Background:</strong> On PC, Chrome often opens the Google Sign-in window behind your main browser window. Press <code style="color:var(--gold);">Alt + Tab</code> or check your taskbar.</div>
+              <div>• <strong>Ad Blockers (uBlock / AdBlock):</strong> If you see <code>ERR_BLOCKED_BY_CLIENT</code> in console, an ad blocker blocked Google telemetry. Pause it or whitelist this site.</div>
+              <div>• <strong>Chrome Popup Blocker:</strong> If Chrome blocked the popup, look for the pop-up icon with a red ✕ in the right corner of your address bar and click <em>"Always allow"</em>.</div>
+            </div>
+          </details>
+
           <!-- Fallback Interactive Trigger (Only visible if GIS iframe is loading or offline) -->
           <div id="landing-custom-google-wrapper" style="display:none;margin-top:8px;">
             <button class="btn w-full" id="btn-trigger-google-auth" style="background:#ffffff;color:#1f1f1f;font-weight:600;font-size:13px;border:1px solid #dadce0;border-radius:24px;padding:11px 16px;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.12);cursor:pointer;">
