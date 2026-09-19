@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner } from './auth-engine.js';
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, ROLES } from './auth-engine.js';
 
 // ── Global State ─────────────────────────────────────────────
 const State = {
@@ -18,6 +18,19 @@ const State = {
 };
 // Expose on window so dynamically-imported engine modules can read it
 window._state = State;
+
+// ── RBAC Route Permissions ────────────────────────────────────
+const ROUTE_PERMISSIONS = {
+  dashboard: ROLES.GUEST,
+  resume:    ROLES.GUEST,
+  linkedin:  ROLES.GUEST,
+  jobs:      ROLES.USER,
+  cover:     ROLES.GUEST,
+  training:  ROLES.GUEST,
+  certs:     ROLES.GUEST,
+  projects:  ROLES.GUEST,
+  settings:  ROLES.ADMIN, // Restricted exclusively to Creator / Owner
+};
 
 // ── Router ────────────────────────────────────────────────────
 const PAGES = {
@@ -35,6 +48,15 @@ const PAGES = {
 
 async function navigate(pageId) {
   if (!PAGES[pageId]) return;
+
+  // Zero-Trust RBAC Route Guard
+  const requiredRole = ROUTE_PERMISSIONS[pageId] || ROLES.GUEST;
+  if (!hasPermission(requiredRole)) {
+    State.currentPage = pageId;
+    renderAccessDenied(requiredRole);
+    return;
+  }
+
   State.currentPage = pageId;
 
   // Update nav active state
@@ -305,6 +327,15 @@ I'm actively exploring senior remote opportunities in the $200k+ range. Would lo
 window.generateCoverLetter = generateCoverLetter;
 window.generateRecruiterDM = generateRecruiterDM;
 
+// ── Sidebar Permissions ───────────────────────────────────────
+function updateSidebarPermissions() {
+  const systemSection = document.getElementById('sidebar-system-section');
+  if (systemSection) {
+    systemSection.style.display = isOwner() ? 'block' : 'none';
+  }
+}
+window.updateSidebarPermissions = updateSidebarPermissions;
+
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
   await loadData();
@@ -312,9 +343,25 @@ async function init() {
   // Expose navigate globally so engine modules can call it
   window.navigate = navigate;
 
-  // Render top bar auth pill and initialize Google Auth
+  // Render top bar auth pill and enforce sidebar RBAC
   renderAuthPill();
+  updateSidebarPermissions();
   initGoogleAuth();
+
+  // Activity listeners to update session heartbeat
+  ['mousemove', 'keydown', 'click', 'scroll'].forEach(evt => {
+    window.addEventListener(evt, () => {
+      // Touch session on activity
+      const raw = sessionStorage.getItem('careerEngine_session_v2');
+      if (raw) {
+        try {
+          const sess = JSON.parse(raw);
+          sess.lastActive = Date.now();
+          sessionStorage.setItem('careerEngine_session_v2', JSON.stringify(sess));
+        } catch {}
+      }
+    }, { passive: true });
+  });
 
   // Nav click handlers
   document.querySelectorAll('.nav-item').forEach(el =>

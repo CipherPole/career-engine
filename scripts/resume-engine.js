@@ -4,6 +4,8 @@
 
 'use strict';
 
+import { isOwner } from './auth-engine.js';
+
 // ── DASHBOARD ─────────────────────────────────────────────────
 export function renderDashboard() {
   const resume   = window._state?.resumeData;
@@ -23,7 +25,7 @@ export function renderDashboard() {
       <div class="page-subtitle">Welcome back, Joseph. Here is your career readiness snapshot.</div>
     </div>
 
-    ${!localStorage.getItem('careerEngine_google_client_id') ? `
+    ${(isOwner() && !localStorage.getItem('careerEngine_google_client_id')) ? `
       <div style="background:rgba(245, 158, 11, 0.08);border:1px solid var(--gold-border);border-radius:var(--radius-lg);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;flex-wrap:wrap;gap:12px;">
         <div style="display:flex;align-items:center;gap:12px;">
           <span style="font-size:24px;">🔑</span>
