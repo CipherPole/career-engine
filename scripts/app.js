@@ -4,7 +4,8 @@
 
 'use strict';
 
-import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig } from './auth-engine.js';
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig } from './auth-engine.js?v=6';
+import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=6';
 
 // ── Global State ─────────────────────────────────────────────
 const State = {
@@ -68,10 +69,19 @@ async function navigate(pageId) {
   // Zero-Trust RBAC Route Guard
   const requiredRole = ROUTE_PERMISSIONS[pageId] || ROLES.GUEST;
   if (!hasPermission(requiredRole)) {
+    logEvent(LOG_LEVELS.WARN, LOG_CATEGORIES.RBAC, `ACCESS_DENIED -> #${pageId}`, {
+      pageId,
+      requiredRole,
+    });
     State.currentPage = pageId;
     renderAccessDenied(requiredRole);
     return;
   }
+
+  logEvent(LOG_LEVELS.INFO, LOG_CATEGORIES.ROUTER, `NAVIGATE -> #${pageId}`, {
+    pageId,
+    previousPage: State.currentPage,
+  });
 
   State.currentPage = pageId;
 

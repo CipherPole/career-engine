@@ -11,7 +11,15 @@ import {
   handleGoogleCredentialResponse,
   getGoogleClientId,
   fetchAuthConfig
-} from './auth-engine.js';
+} from './auth-engine.js?v=6';
+
+import {
+  logAuth,
+  logError,
+  logEvent,
+  LOG_LEVELS,
+  LOG_CATEGORIES,
+} from './telemetry-engine.js?v=6';
 
 let animationFrameId = null;
 
@@ -36,6 +44,9 @@ export async function renderSignInPage() {
   const isReturning = hasVisited;
   const buttonTextMode = isReturning ? 'continue_with' : 'signup_with';
   const buttonLabel = isReturning ? 'Continue with Google' : 'Create Account with Google';
+
+  logAuth('SIGNIN_GATE_VIEWED', { isReturning, buttonTextMode, clientIdConfigured: !!clientId });
+
   const pageHeading = isReturning 
     ? `Welcome Back${lastUserName ? ', ' + lastUserName : ''}` 
     : 'Create Your Free Account';
@@ -115,8 +126,13 @@ export async function renderSignInPage() {
             <!-- Rendered by Google Identity Services with dynamic text -->
           </div>
 
+          <!-- Helpful Desktop Notice -->
+          <div id="landing-popup-notice" style="margin-top:12px;font-size:11px;color:var(--text-secondary);background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:8px 12px;line-height:1.4;">
+            💡 <strong>Desktop Notice:</strong> Google personalizes the button as <em>"Sign in as [Name]"</em> when Chrome is signed into your Google profile. Clicking opens a Google Accounts popup window to confirm sign-in.
+          </div>
+
           <!-- Fallback Interactive Trigger (Only visible if GIS iframe is loading or offline) -->
-          <div id="landing-custom-google-wrapper" style="display:none;margin-top:4px;">
+          <div id="landing-custom-google-wrapper" style="display:none;margin-top:8px;">
             <button class="btn w-full" id="btn-trigger-google-auth" style="background:#ffffff;color:#1f1f1f;font-weight:600;font-size:13px;border:1px solid #dadce0;border-radius:24px;padding:11px 16px;display:flex;align-items:center;justify-content:center;gap:12px;box-shadow:0 1px 3px rgba(0,0,0,0.12);cursor:pointer;">
               <svg width="18" height="18" viewBox="0 0 18 18">
                 <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
@@ -189,6 +205,17 @@ export async function renderSignInPage() {
           window.google?.accounts?.id?.prompt();
         } catch {}
       }, 1000);
+
+      // Window blur listener to detect when Google Accounts popup is opened/focused
+      window.addEventListener('blur', () => {
+        const notice = document.getElementById('landing-popup-notice');
+        if (notice) {
+          notice.innerHTML = '⏳ <strong>Google Sign-In Active:</strong> Please complete authentication in the open Google Accounts window.';
+          notice.style.borderColor = 'var(--gold)';
+          notice.style.color = 'var(--gold-light)';
+        }
+        logAuth('GOOGLE_POPUP_DETECTED', { detail: 'Window blur event - popup interaction detected' });
+      }, { once: true });
     } else {
       if (customWrapper) customWrapper.style.display = 'block';
     }

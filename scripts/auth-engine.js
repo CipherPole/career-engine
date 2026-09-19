@@ -5,6 +5,20 @@
 
 'use strict';
 
+import {
+  logAuth,
+  logSecurity,
+  logNetwork,
+  logError,
+  logEvent,
+  getLogs,
+  clearLogs,
+  generateDiagnosticsReport,
+  downloadLogsJson,
+  LOG_LEVELS,
+  LOG_CATEGORIES,
+} from './telemetry-engine.js?v=6';
+
 export const OWNER_EMAIL = 'jerexson3@gmail.com';
 const SESSION_STORAGE_KEY = 'careerEngine_session_v2';
 const CONFIG_STORAGE_KEY = 'careerEngine_google_client_id';
@@ -24,20 +38,32 @@ export function getGoogleClientId() {
 }
 
 export async function fetchAuthConfig() {
+  const start = performance.now();
   try {
     const res = await fetch('/api/auth-config');
+    const latencyMs = Math.round(performance.now() - start);
+    logNetwork('/api/auth-config', res.status, latencyMs);
     if (res.ok) {
       const data = await res.json();
       if (data.clientId) {
         GOOGLE_CLIENT_ID = data.clientId;
         sessionStorage.setItem('careerEngine_runtime_client_id', data.clientId);
+        logAuth('AUTH_CONFIG_RESOLVED', { source: 'vercel_serverless', clientId: data.clientId.substring(0, 15) + '...' });
         return data.clientId;
       }
     }
   } catch (e) {
-    // Graceful fallback for local offline static environments
+    const latencyMs = Math.round(performance.now() - start);
+    logNetwork('/api/auth-config', 0, latencyMs, { error: e.message });
+    logError(e, 'fetchAuthConfig failed');
   }
-  return getGoogleClientId();
+  const fallback = getGoogleClientId();
+  if (fallback) {
+    logAuth('AUTH_CONFIG_RESOLVED', { source: 'local_storage', clientId: fallback.substring(0, 15) + '...' });
+  } else {
+    logAuth('AUTH_CONFIG_MISSING', { source: 'none' });
+  }
+  return fallback;
 }
 
 // ── Session Fingerprint Helper ────────────────────────────────
@@ -216,6 +242,7 @@ function initializeGsiOnce(clientId, onAuthSuccess) {
   }
 
   if (typeof window.google === 'undefined' || !window.google.accounts || !window.google.accounts.id) {
+    logAuth('GSI_LIB_NOT_READY', { reason: 'window.google.accounts.id not yet defined' });
     return false;
   }
 
@@ -229,9 +256,10 @@ function initializeGsiOnce(clientId, onAuthSuccess) {
       cancel_on_tap_outside: true,
     });
     isGsiInitialized = true;
+    logAuth('GSI_INITIALIZED_SUCCESS', { clientIdPrefix: clientId.substring(0, 15) + '...' });
     return true;
   } catch (e) {
-    console.warn('GSI initialize error:', e);
+    logError(e, 'initializeGsiOnce exception');
     return false;
   }
 }
@@ -258,6 +286,7 @@ export function initGoogleAuth(onAuthSuccess) {
         shape: 'pill',
         text: 'signin_with',
       });
+      logAuth('GSI_TOP_BUTTON_RENDERED');
     }
     renderAuthPill();
   }
@@ -265,7 +294,10 @@ export function initGoogleAuth(onAuthSuccess) {
 
 export function renderGoogleSignInButton(containerId, onAuthSuccess, buttonText = 'continue_with') {
   const clientId = getGoogleClientId();
-  if (!clientId) return false;
+  if (!clientId) {
+    logAuth('GSI_RENDER_SKIPPED', { reason: 'Client ID missing', containerId });
+    return false;
+  }
 
   if (typeof window.google === 'undefined' || !window.google.accounts || !window.google.accounts.id) {
     setTimeout(() => renderGoogleSignInButton(containerId, onAuthSuccess, buttonText), 300);
@@ -290,17 +322,21 @@ export function renderGoogleSignInButton(containerId, onAuthSuccess, buttonText 
       logo_alignment: 'left',
       width: 320,
     });
+    logAuth('GSI_BUTTON_RENDERED', { containerId, buttonText });
     return true;
   }
+  logAuth('GSI_BUTTON_CONTAINER_NOT_FOUND', { containerId });
   return false;
 }
 
 // ── Handle Google Credential Callback ─────────────────────────
 export function handleGoogleCredentialResponse(response, onAuthSuccess) {
   const clientId = getGoogleClientId();
+  logAuth('GSI_CREDENTIAL_RECEIVED', { hasCredential: !!response?.credential });
   const validation = validateGoogleJwt(response.credential, clientId);
 
   if (!validation.valid) {
+    logSecurity('JWT_VALIDATION_FAILED', { reason: validation.reason });
     window.toast?.(`Security Alert: ${validation.reason}`, 'red');
     console.error('JWT Validation Error:', validation.reason);
     return;
@@ -353,6 +389,13 @@ export function handleGoogleCredentialResponse(response, onAuthSuccess) {
     window.toast?.(`Welcome back, ${session.user.name}! ${isUserOwner ? 'Verified Admin Session.' : 'Personal workspace loaded.'}`, 'green');
   }
 
+  logAuth('AUTH_LOGIN_SUCCESS', {
+    email: payload.email,
+    role: session.role,
+    fingerprint: session.fingerprint,
+    isNewUser,
+  });
+
   if (onAuthSuccess) {
     onAuthSuccess(session, isNewUser);
   } else {
@@ -362,6 +405,8 @@ export function handleGoogleCredentialResponse(response, onAuthSuccess) {
 
 // ── Sign Out ──────────────────────────────────────────────────
 export function signOut() {
+  const session = getActiveSession();
+  logAuth('AUTH_SIGNOUT', { email: session?.user?.email || 'guest' });
   revokeSession();
   sessionStorage.removeItem('careerEngine_showcase_active');
   window.toast?.('Signed out successfully.', 'gold');
@@ -392,15 +437,13 @@ export function renderAuthPill() {
         <button class="btn ${admin ? 'btn-gold' : 'btn-secondary'} btn-sm" id="btn-open-auth-modal" style="font-size:10px;padding:3px 10px;margin-left:6px;">
           ${admin ? '⚙️ Admin' : '👤 Account'}
         </button>
-        <button class="btn btn-secondary btn-sm" id="btn-header-signout" style="font-size:10px;padding:3px 8px;margin-left:4px;" title="Sign out">
-          🚪 Sign Out
-        </button>
       </div>
     </div>
   `;
 
-  document.getElementById('btn-open-auth-modal')?.addEventListener('click', openAuthModal);
-  document.getElementById('btn-header-signout')?.addEventListener('click', signOut);
+  document.getElementById('btn-open-auth-modal')?.addEventListener('click', () => {
+    openAuthModal();
+  });
 }
 
 // ── Access Denied Security Screen ─────────────────────────────
@@ -430,143 +473,93 @@ export function renderAccessDenied(requiredRole = 'admin') {
   `;
 }
 
-// ── Auth Modal ────────────────────────────────────────────────
+// ── Authentication & Identity Modal ───────────────────────────
 export function openAuthModal() {
-  let modal = document.getElementById('auth-modal');
-  if (!modal) {
-    modal = document.createElement('div');
-    modal.id = 'auth-modal';
-    modal.className = 'modal-overlay';
-    document.body.appendChild(modal);
-  }
+  const modal = document.getElementById('auth-modal');
+  if (!modal) return;
 
   const session = getActiveSession();
   const user = session.user;
   const admin = session.role === ROLES.ADMIN;
-  const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || '';
+  const clientId = getGoogleClientId();
 
-  modal.innerHTML = `
-    <div class="modal-box" style="max-width:540px;">
-      <div class="modal-header">
-        <div style="font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;">
-          <span>🛡️</span> Security & Workspace Identity
-        </div>
-        <button class="btn btn-secondary btn-sm" id="btn-close-auth-modal" style="padding:4px 10px;">✕</button>
-      </div>
+  const titleEl = document.getElementById('auth-modal-title');
+  if (titleEl) titleEl.textContent = admin ? '⚙️ Admin Console & Identity' : '👤 Your Account & Workspace';
 
-      <div class="modal-body" style="display:flex;flex-direction:column;gap:18px;">
-        <!-- Active Session Banner -->
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;display:flex;align-items:center;justify-content:space-between;">
-          <div style="display:flex;align-items:center;gap:12px;">
-            <div style="width:42px;height:42px;border-radius:50%;background:${admin ? 'var(--gold)' : '#3b82f6'};color:#000;font-weight:700;font-size:16px;display:flex;align-items:center;justify-content:center;">
-              ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;border-radius:50%;object-fit:cover;" />` : (user.name ? user.name[0] : '👤')}
-            </div>
-            <div>
-              <div style="font-weight:700;font-size:14px;">${user.name}</div>
-              <div style="font-size:11px;color:var(--text-dim);">${user.email}</div>
-              <div style="margin-top:4px;">
-                <span class="chip ${admin ? 'gold' : 'blue'}" style="font-size:10px;">
-                  ${admin ? '⭐ ROLE_ADMIN (Full Privileges)' : '👤 ROLE_USER (Personal Workspace)'}
-                </span>
-              </div>
-            </div>
+  const bodyEl = document.getElementById('auth-modal-body');
+  if (bodyEl) {
+    if (session.isLoggedIn) {
+      bodyEl.innerHTML = `
+        <div style="text-align:center;margin-bottom:20px;">
+          <div style="width:64px;height:64px;border-radius:50%;background:${admin ? 'var(--gold)' : '#3b82f6'};color:#000;font-size:26px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;overflow:hidden;border:2px solid var(--border);">
+            ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
           </div>
-          ${session.isLoggedIn ? `
-            <button class="btn btn-secondary btn-sm" id="btn-sign-out" style="font-size:11px;">
-              Sign Out
+          <div style="font-size:18px;font-weight:700;color:var(--text-primary);">${user.name}</div>
+          <div style="font-size:13px;color:var(--text-dim);margin-top:2px;">${user.email}</div>
+          <div style="margin-top:8px;">
+            <span class="chip ${admin ? 'gold' : 'blue'}" style="font-size:11px;">
+              ${admin ? '⭐ Verified Administrator (Owner)' : '👤 Personal Workspace'}
+            </span>
+          </div>
+        </div>
+
+        <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;margin-bottom:18px;font-size:12px;line-height:1.6;">
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;">
+            <span style="color:var(--text-dim);">Role Level:</span>
+            <strong style="color:var(--text-primary);">${session.role.toUpperCase()}</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:6px;">
+            <span style="color:var(--text-dim);">Session Fingerprint:</span>
+            <code style="color:var(--gold-light);font-size:11px;">${session.fingerprint || 'none'}</code>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-dim);">Google Auth Status:</span>
+            <span style="color:${clientId ? 'var(--green)' : 'var(--gold)'};font-weight:600;">
+              ${clientId ? '✓ Connected' : '⚠️ Client ID Missing'}
+            </span>
+          </div>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          ${admin ? `
+            <button class="btn btn-gold w-full" id="btn-modal-open-settings" style="justify-content:center;padding:10px;">
+              ⚙️ Open Administrator Console & Action Logs
             </button>
           ` : ''}
-        </div>
-
-        <!-- Google Sign-In Container -->
-        <div style="border:1px dashed var(--border);border-radius:var(--radius-md);padding:16px;text-align:center;">
-          <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Official Google Sign-In (OIDC JWT)</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-bottom:12px;">
-            Sign in with Google. Verified <strong>${OWNER_EMAIL}</strong> automatically activates Admin privilege.
-          </div>
-          <div id="google-btn-container" style="display:flex;justify-content:center;"></div>
-        </div>
-
-        <!-- Mode Switcher -->
-        <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="font-size:11px;font-weight:700;color:var(--text-secondary);text-transform:uppercase;">
-            Switch Experience:
-          </div>
-
-          <button class="btn btn-secondary w-full" id="btn-switch-owner" style="justify-content:flex-start;padding:12px;gap:12px;">
-            <span style="font-size:20px;">⭐</span>
-            <div style="text-align:left;">
-              <div style="font-weight:700;font-size:13px;color:var(--gold-light);">Joseph Erexson III (Admin Profile)</div>
-              <div style="font-size:11px;color:var(--text-dim);">Load full executive profile & administrative permissions.</div>
-            </div>
-          </button>
-
-          <button class="btn btn-primary w-full" id="btn-switch-visitor" style="justify-content:flex-start;padding:12px;gap:12px;">
-            <span style="font-size:20px;">🚀</span>
-            <div style="text-align:left;">
-              <div style="font-weight:700;font-size:13px;">Visitor Personal Workspace</div>
-              <div style="font-size:11px;color:#cbd5e1;">Test creating a personal profile with isolated data.</div>
-            </div>
+          <button class="btn btn-secondary w-full" id="btn-modal-signout" style="justify-content:center;padding:10px;color:var(--red);">
+            🚪 Sign Out of Workspace
           </button>
         </div>
+      `;
 
-        ${admin ? `
-          <!-- Admin-Only Settings Link -->
-          <div style="border-top:1px solid var(--border);padding-top:14px;">
-            <button class="btn btn-secondary w-full btn-sm" id="btn-modal-to-settings" style="justify-content:center;">
-              ⚙️ Open Full System Settings & Client ID Configuration →
-            </button>
-          </div>
-        ` : ''}
-      </div>
-
-      <div class="modal-footer">
-        <button class="btn btn-secondary btn-sm" id="btn-close-auth-action">Close</button>
-      </div>
-    </div>
-  `;
-
-  document.getElementById('btn-close-auth-modal').onclick = () => modal.classList.remove('open');
-  document.getElementById('btn-close-auth-action').onclick = () => modal.classList.remove('open');
-
-  document.getElementById('btn-switch-owner').onclick = () => {
-    setCurrentUser({
-      name: 'Joseph Erexson III',
-      email: OWNER_EMAIL,
-      picture: '',
-      sub: 'owner-sub',
-    });
-    modal.classList.remove('open');
-    window.toast?.('Authenticated as Admin (Joseph Erexson III)', 'gold');
-    setTimeout(() => window.location.reload(), 300);
-  };
-
-  document.getElementById('btn-switch-visitor').onclick = () => {
-    modal.classList.remove('open');
-    import('./onboarding-wizard.js').then(m => m.openOnboardingWizard());
-  };
-
-  document.getElementById('btn-sign-out')?.addEventListener('click', () => {
-    revokeSession();
-    window.toast?.('Signed out. Reverted to Showcase Mode.', 'gold');
-    setTimeout(() => window.location.reload(), 300);
-  });
-
-  document.getElementById('btn-modal-to-settings')?.addEventListener('click', () => {
-    modal.classList.remove('open');
-    window.navigate?.('settings');
-  });
-
-  if (window.google?.accounts?.id && clientId) {
-    try {
-      window.google.accounts.id.renderButton(document.getElementById('google-btn-container'), {
-        theme: 'filled_black',
-        size: 'large',
-        shape: 'pill',
-        text: 'signin_with',
+      document.getElementById('btn-modal-open-settings')?.addEventListener('click', () => {
+        modal.classList.remove('open');
+        window.navigate?.('settings');
       });
-    } catch (e) {
-      console.warn('GIS render error:', e);
+
+      document.getElementById('btn-modal-signout')?.addEventListener('click', () => {
+        modal.classList.remove('open');
+        signOut();
+      });
+    } else {
+      bodyEl.innerHTML = `
+        <div style="text-align:center;padding:12px 0;">
+          <div style="font-size:36px;margin-bottom:12px;">🔒</div>
+          <div style="font-size:16px;font-weight:700;margin-bottom:6px;">Sign in to Career Engine</div>
+          <p style="font-size:13px;color:var(--text-secondary);margin-bottom:18px;">
+            Authenticate with your Google account to unlock your personalized career dashboard.
+          </p>
+          <div id="modal-google-btn-container" style="display:flex;justify-content:center;min-height:44px;"></div>
+        </div>
+      `;
+
+      setTimeout(() => {
+        renderGoogleSignInButton('modal-google-btn-container', () => {
+          modal.classList.remove('open');
+          renderAuthPill();
+          window.location.reload();
+        });
+      }, 50);
     }
   }
 
@@ -586,13 +579,13 @@ export function renderSettingsPage() {
 
   const session = getActiveSession();
   const user = session.user;
-  const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || '';
+  const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || sessionStorage.getItem('careerEngine_runtime_client_id') || '';
   const currentOrigin = window.location.origin;
 
   content.innerHTML = `
     <div class="page-header">
       <div class="page-title" style="display:flex;align-items:center;gap:10px;">
-        <span>⚙️</span> Administrator Console & Google OAuth
+        <span>⚙️</span> Administrator Console & Action Logs
       </div>
       <div class="page-subtitle">Zero-trust administrative console. Role: <strong style="color:var(--gold);">ROLE_ADMIN</strong>.</div>
     </div>
@@ -612,7 +605,7 @@ export function renderSettingsPage() {
           </div>
 
           <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:16px;">
-            Paste your Google Cloud OAuth Client ID below. This enables official <strong>Sign in with Google</strong> for your site at <code style="color:var(--gold-light);">${currentOrigin}</code>.
+            Supplied dynamically via Vercel Environment Variables or local admin override. This enables official <strong>Sign in with Google</strong> at <code style="color:var(--gold-light);">${currentOrigin}</code>.
           </p>
 
           <div style="margin-bottom:14px;">
@@ -626,7 +619,7 @@ export function renderSettingsPage() {
           </div>
 
           <div style="background:rgba(255,255,255,0.03);border:1px dashed var(--border);border-radius:var(--radius-md);padding:12px;font-size:11px;color:var(--text-secondary);line-height:1.5;margin-bottom:16px;">
-            <strong style="color:var(--text-primary);">Google Cloud Console Checklist:</strong>
+            <strong style="color:var(--text-primary);">Google Cloud Console Origin Checklist:</strong>
             <ul style="padding-left:18px;margin-top:4px;display:flex;flex-direction:column;gap:3px;">
               <li>Authorized JavaScript origin: <code style="color:var(--gold-light);">${currentOrigin}</code></li>
               <li>Authorized redirect URI: <code style="color:var(--gold-light);">${currentOrigin}</code></li>
@@ -637,7 +630,7 @@ export function renderSettingsPage() {
 
         <div>
           <button class="btn btn-gold w-full" id="btn-save-page-client-id" style="justify-content:center;padding:12px;font-weight:700;">
-            💾 Save Client ID & Activate Google Sign-In
+            💾 Save Local Client ID Override
           </button>
         </div>
       </div>
@@ -679,8 +672,205 @@ export function renderSettingsPage() {
         </div>
       </div>
     </div>
+
+    <!-- Action Logs & Diagnostic Trace Route Console -->
+    <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;color:var(--text-primary);">
+            <span>🛰️</span> Action Logs & Diagnostic Trace Route
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+            Structured ring buffer telemetry (last 150 events). Real-time tracking of auth lifecycle, network latencies, RBAC assertions, and errors.
+          </div>
+        </div>
+
+        <!-- Action Toolbar -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" id="btn-telemetry-copy" style="font-size:11px;padding:7px 14px;font-weight:700;display:flex;align-items:center;gap:6px;">
+            <span>📋</span> Copy Diagnostics Report
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-telemetry-download" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;">
+            <span>⬇️</span> Export JSON
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-telemetry-test" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;" title="Dispatches a test event to verify error capture">
+            <span>🧪</span> Test Error Handler
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-telemetry-clear" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;color:var(--red);">
+            <span>🗑️</span> Clear Logs
+          </button>
+        </div>
+      </div>
+
+      <!-- Metric Badges -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;margin-bottom:18px;">
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;">Buffer Depth</div>
+          <div id="stat-total-logs" style="font-size:20px;font-weight:900;color:var(--cyan);margin-top:4px;">0 Events</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;">Errors Logged</div>
+          <div id="stat-total-errors" style="font-size:20px;font-weight:900;color:var(--green);margin-top:4px;">0 Errors</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;">Active Identity</div>
+          <div style="font-size:12px;font-weight:700;color:var(--gold);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${user.email}</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;">OAuth Status</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text-primary);margin-top:6px;">${clientId ? '✓ Live Active' : 'Missing'}</div>
+        </div>
+      </div>
+
+      <!-- Filter Controls -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+          <span style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-right:4px;">Category:</span>
+          <button class="chip filter-cat active" data-cat="ALL" style="cursor:pointer;font-size:11px;">All</button>
+          <button class="chip filter-cat" data-cat="AUTH" style="cursor:pointer;font-size:11px;">AUTH</button>
+          <button class="chip filter-cat" data-cat="NETWORK" style="cursor:pointer;font-size:11px;">NETWORK</button>
+          <button class="chip filter-cat" data-cat="ROUTER" style="cursor:pointer;font-size:11px;">ROUTER</button>
+          <button class="chip filter-cat" data-cat="RBAC" style="cursor:pointer;font-size:11px;">RBAC</button>
+          <button class="chip filter-cat" data-cat="SYSTEM" style="cursor:pointer;font-size:11px;">SYSTEM</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:11px;color:var(--text-dim);font-weight:700;text-transform:uppercase;margin-right:4px;">Level:</span>
+          <button class="chip filter-lvl active" data-lvl="ALL" style="cursor:pointer;font-size:11px;">All</button>
+          <button class="chip filter-lvl" data-lvl="ERROR" style="cursor:pointer;font-size:11px;color:var(--red);">ERROR</button>
+          <button class="chip filter-lvl" data-lvl="SECURITY" style="cursor:pointer;font-size:11px;color:#c084fc;">SECURITY</button>
+          <button class="chip filter-lvl" data-lvl="WARN" style="cursor:pointer;font-size:11px;color:var(--gold);">WARN</button>
+        </div>
+      </div>
+
+      <!-- Feed Container -->
+      <div id="telemetry-logs-feed" style="max-height:480px;overflow-y:auto;background:#05070c;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-md);padding:14px;font-family:'JetBrains Mono',monospace;font-size:12px;display:flex;flex-direction:column;gap:8px;">
+        <!-- Hydrated dynamically -->
+      </div>
+    </div>
   `;
 
+  // ── Telemetry Feed Hydration & Controls ──────────────────────
+  let currentCategory = 'ALL';
+  let currentLevel = 'ALL';
+
+  function updateTelemetryView() {
+    const feed = document.getElementById('telemetry-logs-feed');
+    if (!feed) return;
+
+    const allLogs = getLogs();
+    const errorCount = allLogs.filter(l => l.level === LOG_LEVELS.ERROR).length;
+
+    const totalEl = document.getElementById('stat-total-logs');
+    if (totalEl) totalEl.textContent = `${allLogs.length} Events`;
+
+    const errEl = document.getElementById('stat-total-errors');
+    if (errEl) {
+      errEl.textContent = `${errorCount} Errors`;
+      errEl.style.color = errorCount > 0 ? 'var(--red)' : 'var(--green)';
+    }
+
+    const filtered = allLogs.filter(l => {
+      const matchCat = currentCategory === 'ALL' || l.category === currentCategory;
+      const matchLvl = currentLevel === 'ALL' || l.level === currentLevel;
+      return matchCat && matchLvl;
+    });
+
+    if (filtered.length === 0) {
+      feed.innerHTML = `
+        <div style="text-align:center;padding:32px 16px;color:var(--text-dim);">
+          <div style="font-size:24px;margin-bottom:8px;">🛰️</div>
+          <div>No action logs matching selected filter.</div>
+        </div>
+      `;
+      return;
+    }
+
+    feed.innerHTML = filtered.map(item => {
+      const levelColors = {
+        INFO:     '#38bdf8',
+        WARN:     '#f59e0b',
+        ERROR:    '#ef4444',
+        SECURITY: '#c084fc',
+      };
+      const color = levelColors[item.level] || 'var(--text-primary)';
+      const metaKeys = Object.keys(item.metadata || {});
+      const hasMeta = metaKeys.length > 0;
+
+      return `
+        <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-left:3px solid ${color};border-radius:4px;padding:8px 12px;line-height:1.4;">
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span style="color:${color};font-weight:700;font-size:11px;">[${item.level}]</span>
+              <span style="color:var(--text-dim);font-size:10px;background:rgba(255,255,255,0.05);padding:1px 6px;border-radius:3px;">${item.category}</span>
+              <span style="color:var(--text-primary);font-weight:600;">${item.message}</span>
+            </div>
+            <span style="color:var(--text-dim);font-size:10px;white-space:nowrap;">${item.localTime}</span>
+          </div>
+          ${hasMeta ? `
+            <details style="margin-top:4px;">
+              <summary style="cursor:pointer;color:var(--gold-light);font-size:10px;">View trace metadata (${metaKeys.length} fields)</summary>
+              <pre style="background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.05);border-radius:4px;padding:8px;margin-top:4px;color:var(--text-secondary);font-size:11px;overflow-x:auto;">${JSON.stringify(item.metadata, null, 2)}</pre>
+            </details>
+          ` : ''}
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Bind category filters
+  document.querySelectorAll('.filter-cat').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-cat').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentCategory = btn.dataset.cat;
+      updateTelemetryView();
+    });
+  });
+
+  // Bind level filters
+  document.querySelectorAll('.filter-lvl').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-lvl').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLevel = btn.dataset.lvl;
+      updateTelemetryView();
+    });
+  });
+
+  // Bind toolbar actions
+  document.getElementById('btn-telemetry-copy')?.addEventListener('click', async () => {
+    const report = generateDiagnosticsReport();
+    try {
+      await navigator.clipboard.writeText(report);
+      window.toast?.('Diagnostics report copied to clipboard!', 'green');
+    } catch {
+      window.prompt('Copy diagnostics report:', report);
+    }
+  });
+
+  document.getElementById('btn-telemetry-download')?.addEventListener('click', () => {
+    downloadLogsJson();
+    window.toast?.('Telemetry JSON exported.', 'green');
+  });
+
+  document.getElementById('btn-telemetry-test')?.addEventListener('click', () => {
+    logError(new Error('Admin console simulated diagnostic probe'), 'DiagnosticSelfTest');
+    window.toast?.('Simulated diagnostic error logged to ring buffer.', 'gold');
+    updateTelemetryView();
+  });
+
+  document.getElementById('btn-telemetry-clear')?.addEventListener('click', () => {
+    if (confirm('Clear all telemetry action logs?')) {
+      clearLogs();
+      window.toast?.('Action logs cleared.', 'gold');
+      updateTelemetryView();
+    }
+  });
+
+  // Initial render of logs feed
+  updateTelemetryView();
+
+  // Bind client ID & lockdown buttons
   document.getElementById('btn-save-page-client-id')?.addEventListener('click', () => {
     const val = document.getElementById('page-google-client-id')?.value.trim();
     if (val) {
