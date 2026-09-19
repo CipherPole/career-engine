@@ -62,6 +62,7 @@ async function navigate(pageId) {
     document.body.classList.remove('is-signin-gate');
     if (sidebar) sidebar.style.display = '';
     if (pill) pill.style.display = 'flex';
+    import('./signin-engine.js').then(m => m.cleanupMotionBackground?.());
   }
 
   // Zero-Trust RBAC Route Guard

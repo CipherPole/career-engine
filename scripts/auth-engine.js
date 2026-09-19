@@ -241,12 +241,12 @@ export function initGoogleAuth(onAuthSuccess) {
   }
 }
 
-export function renderGoogleSignInButton(containerId, onAuthSuccess) {
+export function renderGoogleSignInButton(containerId, onAuthSuccess, buttonText = 'continue_with') {
   const clientId = getGoogleClientId();
   if (!clientId) return false;
 
   if (typeof window.google === 'undefined' || !window.google.accounts) {
-    setTimeout(() => renderGoogleSignInButton(containerId, onAuthSuccess), 400);
+    setTimeout(() => renderGoogleSignInButton(containerId, onAuthSuccess, buttonText), 400);
     return false;
   }
 
@@ -264,7 +264,7 @@ export function renderGoogleSignInButton(containerId, onAuthSuccess) {
         theme: 'filled_black',
         size: 'large',
         shape: 'pill',
-        text: 'signin_with',
+        text: buttonText,
         logo_alignment: 'left',
         width: 300,
       });
@@ -306,10 +306,36 @@ export function handleGoogleCredentialResponse(response, onAuthSuccess) {
   };
 
   saveActiveSession(session);
-  window.toast?.(`Welcome, ${session.user.name}! ${isUserOwner ? 'Verified Admin Session.' : 'Personal workspace ready.'}`, 'green');
+
+  // Mark device as visited and save display name
+  localStorage.setItem('careerEngine_has_visited', 'true');
+  if (session.user.name) {
+    localStorage.setItem('careerEngine_last_user', session.user.name);
+  }
+
+  // Auto-create isolated workspace profile for new visitors
+  const profileKey = `careerEngine_profile_${payload.email.toLowerCase()}`;
+  const existingProfile = localStorage.getItem(profileKey);
+  const isNewUser = !isUserOwner && !existingProfile;
+
+  if (isNewUser) {
+    const newProfile = {
+      name: payload.name || payload.given_name || 'Career Explorer',
+      title: 'Software Engineer',
+      contact: { email: payload.email, location: 'Remote, US' },
+      targetComp: '$160,000 - $200,000+',
+      experience: [],
+      skills: [],
+      createdAt: new Date().toISOString(),
+    };
+    localStorage.setItem(profileKey, JSON.stringify(newProfile));
+    window.toast?.(`Welcome to Career Engine, ${session.user.name}! Your personal workspace was created.`, 'green');
+  } else {
+    window.toast?.(`Welcome back, ${session.user.name}! ${isUserOwner ? 'Verified Admin Session.' : 'Personal workspace loaded.'}`, 'green');
+  }
 
   if (onAuthSuccess) {
-    onAuthSuccess(session);
+    onAuthSuccess(session, isNewUser);
   } else {
     window.location.reload();
   }

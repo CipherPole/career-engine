@@ -1262,6 +1262,8 @@ a:hover { color: var(--gold-light); }
 body.is-signin-gate {
   overflow-x: hidden;
   background: #06080d;
+  min-height: 100vh;
+  min-height: 100dvh;
 }
 
 body.is-signin-gate #sidebar {
@@ -1271,8 +1273,9 @@ body.is-signin-gate #sidebar {
 body.is-signin-gate .main-content {
   margin-left: 0 !important;
   max-width: 100% !important;
-  padding: 32px 16px !important;
+  padding: 24px 16px !important;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1286,20 +1289,25 @@ body.is-signin-gate #user-auth-pill {
 
 body.is-signin-gate #page-content {
   width: 100%;
-  max-width: 520px;
+  max-width: 500px;
   margin: 0 auto;
   position: relative;
   z-index: 10;
+  transform: none !important;
 }
 
 /* ── Motion Aurora Background ────────────────────────────── */
 .signin-motion-bg {
   position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  z-index: 1;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 0;
   pointer-events: none;
   overflow: hidden;
-  background: radial-gradient(circle at 50% 30%, #0c101a 0%, #05070a 100%);
+  background: radial-gradient(circle at 50% 30%, #0d111e 0%, #05070a 100%);
 }
 
 .signin-aurora-orb {
@@ -1341,8 +1349,12 @@ body.is-signin-gate #page-content {
 /* ── Interactive Particle Constellation Canvas ───────────── */
 #signin-constellation-canvas {
   position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  z-index: 2;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100vw;
+  width: 100dvw;
+  height: 100vh;
+  height: 100dvh;
+  z-index: 1;
   pointer-events: auto;
 }
 
