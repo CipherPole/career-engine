@@ -1,0 +1,28 @@
+{
+  "name": "career-engine",
+  "version": "2.4.0",
+  "description": "Personal AI Career & Skill Intelligence Platform with ATS gap engine, interactive skills radar, and zero-trust RBAC.",
+  "author": "Joseph Erexson III <jerexson3@gmail.com>",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "npx serve .",
+    "dev": "npx serve .",
+    "audit": "node scripts/security-audit.js",
+    "test": "node scripts/security-audit.js",
+    "security-check": "node scripts/security-audit.js"
+  },
+  "keywords": [
+    "career-engine",
+    "ai-career",
+    "skills-radar",
+    "ats-gap-analysis",
+    "zero-trust-rbac",
+    "oidc-jwt"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}
