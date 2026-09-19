@@ -220,8 +220,43 @@ export function initGoogleAuth(onAuthSuccess) {
   }
 }
 
+export function renderGoogleSignInButton(containerId, onAuthSuccess) {
+  const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || GOOGLE_CLIENT_ID;
+  if (!clientId) return false;
+
+  if (typeof window.google === 'undefined' || !window.google.accounts) {
+    setTimeout(() => renderGoogleSignInButton(containerId, onAuthSuccess), 400);
+    return false;
+  }
+
+  try {
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: (response) => handleGoogleCredentialResponse(response, onAuthSuccess),
+      auto_select: false,
+    });
+
+    const el = document.getElementById(containerId);
+    if (el) {
+      el.innerHTML = '';
+      window.google.accounts.id.renderButton(el, {
+        theme: 'filled_black',
+        size: 'large',
+        shape: 'pill',
+        text: 'signin_with',
+        logo_alignment: 'left',
+        width: 300,
+      });
+      return true;
+    }
+  } catch (e) {
+    console.warn('renderGoogleSignInButton error:', e);
+  }
+  return false;
+}
+
 // ── Handle Google Credential Callback ─────────────────────────
-function handleGoogleCredentialResponse(response, onAuthSuccess) {
+export function handleGoogleCredentialResponse(response, onAuthSuccess) {
   const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || GOOGLE_CLIENT_ID;
   const validation = validateGoogleJwt(response.credential, clientId);
 

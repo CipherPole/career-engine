@@ -51,6 +51,19 @@ const PAGES = {
 async function navigate(pageId) {
   if (!PAGES[pageId]) return;
 
+  // Manage Full-Screen Sign-In Gateway state
+  const sidebar = document.getElementById('sidebar');
+  const pill = document.getElementById('user-auth-pill');
+  if (pageId === 'signin') {
+    document.body.classList.add('is-signin-gate');
+    if (sidebar) sidebar.style.display = 'none';
+    if (pill) pill.style.display = 'none';
+  } else {
+    document.body.classList.remove('is-signin-gate');
+    if (sidebar) sidebar.style.display = '';
+    if (pill) pill.style.display = 'flex';
+  }
+
   // Zero-Trust RBAC Route Guard
   const requiredRole = ROUTE_PERMISSIONS[pageId] || ROLES.GUEST;
   if (!hasPermission(requiredRole)) {
@@ -174,11 +187,11 @@ function calcATSScore(resumeData, skillsData) {
   const baseScore = Math.round((found / highDemandKeywords.length) * 65);
   // Penalties / bonuses
   const bonuses = [
-    resumeData.contact?.linkedin ? 5 : 0,
-    resumeData.contact?.github   ? 5 : 0,
-    resumeData.experience?.[0]?.teamSize ? 5 : 0,
-    (resumeData.accomplishments?.length || 0) > 5 ? 5 : 0,
-    (resumeData.certifications?.length || 0) > 0 ? 5 : 0,
+    resumeData?.contact?.linkedin ? 5 : 0,
+    resumeData?.contact?.github   ? 5 : 0,
+    (Array.isArray(resumeData?.experience) && resumeData.experience[0]?.teamSize) ? 5 : 0,
+    (resumeData?.accomplishments?.length || 0) > 5 ? 5 : 0,
+    (resumeData?.certifications?.length || 0) > 0 ? 5 : 0,
   ];
   return Math.min(100, baseScore + bonuses.reduce((a, b) => a + b, 0));
 }

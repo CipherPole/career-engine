@@ -1256,4 +1256,30 @@ a:hover { color: var(--gold-light); }
   border-color: var(--gold-border);
 }
 
+/* ============================================================
+   SIGN-IN GATEWAY MODE (Full-Screen Distraction-Free Entrance)
+   ============================================================ */
+body.is-signin-gate #sidebar {
+  display: none !important;
+}
 
+body.is-signin-gate .main-content {
+  margin-left: 0 !important;
+  max-width: 100% !important;
+  padding: 32px 16px !important;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+body.is-signin-gate #user-auth-pill {
+  display: none !important;
+}
+
+body.is-signin-gate #page-content {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+}
