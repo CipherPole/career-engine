@@ -16,8 +16,29 @@ export const ROLES = {
   GUEST: 'guest',
 };
 
-// Default / configured Client ID
-let GOOGLE_CLIENT_ID = localStorage.getItem(CONFIG_STORAGE_KEY) || '';
+// Default / configured Client ID (hydrated dynamically from /api/auth-config or storage)
+let GOOGLE_CLIENT_ID = sessionStorage.getItem('careerEngine_runtime_client_id') || localStorage.getItem(CONFIG_STORAGE_KEY) || '';
+
+export function getGoogleClientId() {
+  return GOOGLE_CLIENT_ID || sessionStorage.getItem('careerEngine_runtime_client_id') || localStorage.getItem(CONFIG_STORAGE_KEY) || '';
+}
+
+export async function fetchAuthConfig() {
+  try {
+    const res = await fetch('/api/auth-config');
+    if (res.ok) {
+      const data = await res.json();
+      if (data.clientId) {
+        GOOGLE_CLIENT_ID = data.clientId;
+        sessionStorage.setItem('careerEngine_runtime_client_id', data.clientId);
+        return data.clientId;
+      }
+    }
+  } catch (e) {
+    // Graceful fallback for local offline static environments
+  }
+  return getGoogleClientId();
+}
 
 // ── Session Fingerprint Helper ────────────────────────────────
 function generateFingerprint(sub, iat) {
@@ -191,7 +212,7 @@ export function initGoogleAuth(onAuthSuccess) {
     return;
   }
 
-  const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || GOOGLE_CLIENT_ID;
+  const clientId = getGoogleClientId();
   if (!clientId) {
     renderAuthPill();
     return;
@@ -221,7 +242,7 @@ export function initGoogleAuth(onAuthSuccess) {
 }
 
 export function renderGoogleSignInButton(containerId, onAuthSuccess) {
-  const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || GOOGLE_CLIENT_ID;
+  const clientId = getGoogleClientId();
   if (!clientId) return false;
 
   if (typeof window.google === 'undefined' || !window.google.accounts) {
@@ -257,7 +278,7 @@ export function renderGoogleSignInButton(containerId, onAuthSuccess) {
 
 // ── Handle Google Credential Callback ─────────────────────────
 export function handleGoogleCredentialResponse(response, onAuthSuccess) {
-  const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || GOOGLE_CLIENT_ID;
+  const clientId = getGoogleClientId();
   const validation = validateGoogleJwt(response.credential, clientId);
 
   if (!validation.valid) {

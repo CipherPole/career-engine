@@ -10,16 +10,22 @@ import {
   setCurrentUser, 
   OWNER_EMAIL, 
   renderGoogleSignInButton, 
-  handleGoogleCredentialResponse 
+  handleGoogleCredentialResponse,
+  getGoogleClientId,
+  fetchAuthConfig
 } from './auth-engine.js';
 
 const CONFIG_STORAGE_KEY = 'careerEngine_google_client_id';
 
-export function renderSignInPage() {
+export async function renderSignInPage() {
   const content = document.getElementById('page-content');
   if (!content) return;
 
-  const clientId = localStorage.getItem(CONFIG_STORAGE_KEY) || '';
+  // Ensure runtime client ID is fetched if available from /api/auth-config
+  let clientId = getGoogleClientId();
+  if (!clientId) {
+    clientId = await fetchAuthConfig();
+  }
   const currentOrigin = window.location.origin;
 
   content.innerHTML = `
@@ -137,8 +143,11 @@ export function renderSignInPage() {
   `;
 
   // Handle Google Sign-In Click
-  const handleGoogleClick = () => {
-    const activeClientId = localStorage.getItem(CONFIG_STORAGE_KEY);
+  const handleGoogleClick = async () => {
+    let activeClientId = getGoogleClientId();
+    if (!activeClientId) {
+      activeClientId = await fetchAuthConfig();
+    }
     if (!activeClientId) {
       // Open setup modal
       const modal = document.getElementById('quick-oauth-modal');
@@ -226,11 +235,13 @@ export function renderSignInPage() {
 
   // Render official Google button if client ID is ready
   function initLandingGoogleButton() {
-    const activeClientId = localStorage.getItem(CONFIG_STORAGE_KEY);
+    const activeClientId = getGoogleClientId();
     if (activeClientId) {
       renderGoogleSignInButton('landing-google-btn-container', () => {
         window.navigate?.('dashboard');
       });
+      const quickBtn = document.getElementById('btn-open-quick-oauth-setup');
+      if (quickBtn) quickBtn.style.display = 'none';
     }
   }
 

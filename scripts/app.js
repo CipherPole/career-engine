@@ -4,7 +4,7 @@
 
 'use strict';
 
-import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES } from './auth-engine.js';
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig } from './auth-engine.js';
 
 // ── Global State ─────────────────────────────────────────────
 const State = {
@@ -353,6 +353,7 @@ window.updateSidebarPermissions = updateSidebarPermissions;
 
 // ── Init ──────────────────────────────────────────────────────
 async function init() {
+  await fetchAuthConfig();
   await loadData();
 
   // Expose navigate globally so engine modules can call it
