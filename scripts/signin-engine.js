@@ -209,11 +209,14 @@ export async function renderSignInPage() {
     }
 
     try {
-      window.google.accounts.id.prompt((notification) => {
-        if (notification.isNotDisplayed()) {
-          console.log('One Tap prompt status:', notification.getNotDisplayedReason());
-        }
-      });
+      // Prefer the centered GIS button to avoid detached top-right One Tap prompts.
+      const centerButtonHost = document.getElementById('landing-google-btn-container');
+      const centerButton = centerButtonHost?.querySelector('div[role="button"], iframe');
+      if (centerButton && typeof centerButton.click === 'function') {
+        centerButton.click();
+      } else {
+        window.toast?.('Use the centered Google button to continue.', 'gold');
+      }
     } catch (e) {
       console.error('Google Sign-In Error:', e);
     }
@@ -232,13 +235,6 @@ export async function renderSignInPage() {
           import('./onboarding-wizard.js').then(m => m.openOnboardingWizard());
         }
       }, buttonTextMode);
-
-      // Prompt One Tap on desktop after brief settle
-      setTimeout(() => {
-        try {
-          window.google?.accounts?.id?.prompt();
-        } catch {}
-      }, 1000);
 
       // Window blur listener to detect when Google Accounts popup is opened/focused
       window.addEventListener('blur', () => {
