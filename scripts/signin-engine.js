@@ -44,9 +44,10 @@ export async function renderSignInPage() {
     : 'Get started in seconds with Google. Upload your resume and get instant $200k lead gap analysis.';
   const badgeLabel = isReturning ? '⚡ Welcome Back' : '✨ Instant Setup • 100% Free';
 
-  // Attach background layers directly to document.body for true 100% full-screen coverage
+  // Attach background layers before #app directly on body for true 100% full-screen coverage
   const bgContainer = document.createElement('div');
   bgContainer.id = 'signin-bg-root';
+  bgContainer.style.pointerEvents = 'none';
   bgContainer.innerHTML = `
     <div class="signin-motion-bg">
       <div class="signin-aurora-orb signin-aurora-orb-1"></div>
@@ -55,7 +56,12 @@ export async function renderSignInPage() {
     </div>
     <canvas id="signin-constellation-canvas"></canvas>
   `;
-  document.body.appendChild(bgContainer);
+  const appEl = document.getElementById('app');
+  if (appEl) {
+    document.body.insertBefore(bgContainer, appEl);
+  } else {
+    document.body.insertBefore(bgContainer, document.body.firstChild);
+  }
 
   // Render centered glass card inside page-content
   content.innerHTML = `
@@ -147,29 +153,19 @@ export async function renderSignInPage() {
       return;
     }
 
-    if (typeof window.google === 'undefined' || !window.google.accounts) {
+    if (typeof window.google === 'undefined' || !window.google.accounts || !window.google.accounts.id) {
       window.toast?.('Google Identity Services is loading...', 'gold');
       return;
     }
 
     try {
-      window.google.accounts.id.initialize({
-        client_id: activeClientId,
-        callback: (response) => {
-          handleGoogleCredentialResponse(response, (session, isNewUser) => {
-            cleanupMotionBackground();
-            window.navigate?.('dashboard');
-            if (isNewUser) {
-              import('./onboarding-wizard.js').then(m => m.openOnboardingWizard());
-            }
-          });
-        },
-        auto_select: false,
+      window.google.accounts.id.prompt((notification) => {
+        if (notification.isNotDisplayed()) {
+          console.log('One Tap prompt status:', notification.getNotDisplayedReason());
+        }
       });
-      window.google.accounts.id.prompt();
     } catch (e) {
       console.error('Google Sign-In Error:', e);
-      window.toast?.('Google Sign-In Error.', 'red');
     }
   });
 
@@ -186,6 +182,13 @@ export async function renderSignInPage() {
           import('./onboarding-wizard.js').then(m => m.openOnboardingWizard());
         }
       }, buttonTextMode);
+
+      // Prompt One Tap on desktop after brief settle
+      setTimeout(() => {
+        try {
+          window.google?.accounts?.id?.prompt();
+        } catch {}
+      }, 1000);
     } else {
       if (customWrapper) customWrapper.style.display = 'block';
     }

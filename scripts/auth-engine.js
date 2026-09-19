@@ -206,6 +206,36 @@ export function setCurrentUser(user) {
 }
 
 // ── Google Identity Services Initialization ───────────────────
+let isGsiInitialized = false;
+let globalAuthCallback = null;
+
+function initializeGsiOnce(clientId, onAuthSuccess) {
+  if (isGsiInitialized) {
+    if (onAuthSuccess) globalAuthCallback = onAuthSuccess;
+    return true;
+  }
+
+  if (typeof window.google === 'undefined' || !window.google.accounts || !window.google.accounts.id) {
+    return false;
+  }
+
+  try {
+    if (onAuthSuccess) globalAuthCallback = onAuthSuccess;
+    window.google.accounts.id.initialize({
+      client_id: clientId,
+      callback: (response) => handleGoogleCredentialResponse(response, globalAuthCallback),
+      auto_select: false,
+      itp_support: true,
+      cancel_on_tap_outside: true,
+    });
+    isGsiInitialized = true;
+    return true;
+  } catch (e) {
+    console.warn('GSI initialize error:', e);
+    return false;
+  }
+}
+
 export function initGoogleAuth(onAuthSuccess) {
   if (typeof window.google === 'undefined' || !window.google.accounts) {
     setTimeout(() => initGoogleAuth(onAuthSuccess), 500);
@@ -218,13 +248,8 @@ export function initGoogleAuth(onAuthSuccess) {
     return;
   }
 
-  try {
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (response) => handleGoogleCredentialResponse(response, onAuthSuccess),
-      auto_select: false,
-    });
-
+  const ok = initializeGsiOnce(clientId, onAuthSuccess);
+  if (ok) {
     const btnContainer = document.getElementById('google-btn-container');
     if (btnContainer) {
       window.google.accounts.id.renderButton(btnContainer, {
@@ -234,10 +259,7 @@ export function initGoogleAuth(onAuthSuccess) {
         text: 'signin_with',
       });
     }
-
     renderAuthPill();
-  } catch (e) {
-    console.warn('Google Auth initialization warning:', e);
   }
 }
 
@@ -245,33 +267,30 @@ export function renderGoogleSignInButton(containerId, onAuthSuccess, buttonText 
   const clientId = getGoogleClientId();
   if (!clientId) return false;
 
-  if (typeof window.google === 'undefined' || !window.google.accounts) {
-    setTimeout(() => renderGoogleSignInButton(containerId, onAuthSuccess, buttonText), 400);
+  if (typeof window.google === 'undefined' || !window.google.accounts || !window.google.accounts.id) {
+    setTimeout(() => renderGoogleSignInButton(containerId, onAuthSuccess, buttonText), 300);
     return false;
   }
 
-  try {
-    window.google.accounts.id.initialize({
-      client_id: clientId,
-      callback: (response) => handleGoogleCredentialResponse(response, onAuthSuccess),
-      auto_select: false,
-    });
+  const ok = initializeGsiOnce(clientId, onAuthSuccess);
+  if (!ok) {
+    setTimeout(() => renderGoogleSignInButton(containerId, onAuthSuccess, buttonText), 300);
+    return false;
+  }
 
-    const el = document.getElementById(containerId);
-    if (el) {
-      el.innerHTML = '';
-      window.google.accounts.id.renderButton(el, {
-        theme: 'filled_black',
-        size: 'large',
-        shape: 'pill',
-        text: buttonText,
-        logo_alignment: 'left',
-        width: 300,
-      });
-      return true;
-    }
-  } catch (e) {
-    console.warn('renderGoogleSignInButton error:', e);
+  const el = document.getElementById(containerId);
+  if (el) {
+    el.innerHTML = '';
+    window.google.accounts.id.renderButton(el, {
+      type: 'standard',
+      theme: 'filled_black',
+      size: 'large',
+      shape: 'pill',
+      text: buttonText,
+      logo_alignment: 'left',
+      width: 320,
+    });
+    return true;
   }
   return false;
 }

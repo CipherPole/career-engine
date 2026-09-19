@@ -1354,14 +1354,20 @@ body.is-signin-gate #page-content {
   width: 100dvw;
   height: 100vh;
   height: 100dvh;
-  z-index: 1;
-  pointer-events: auto;
+  z-index: 0 !important;
+  pointer-events: none !important;
+  user-select: none !important;
+}
+
+#signin-bg-root {
+  pointer-events: none !important;
 }
 
 /* ── Frosted Glass Sign-in Card Enhancement ──────────────── */
 .signin-glass-card {
   position: relative;
-  z-index: 10;
+  z-index: 100 !important;
+  pointer-events: auto !important;
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
   background: rgba(13, 17, 27, 0.82) !important;
@@ -1372,6 +1378,16 @@ body.is-signin-gate #page-content {
 .signin-glass-card:hover {
   border-color: rgba(245, 158, 11, 0.35) !important;
   box-shadow: 0 35px 70px -15px rgba(0, 0, 0, 0.85), 0 0 60px rgba(245, 158, 11, 0.18) !important;
+}
+
+#landing-google-btn-container {
+  position: relative;
+  z-index: 101 !important;
+  pointer-events: auto !important;
+}
+
+#landing-google-btn-container iframe {
+  pointer-events: auto !important;
 }
 
 /* ── Animated Shimmer Badge ──────────────────────────────── */
