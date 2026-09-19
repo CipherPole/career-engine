@@ -174,6 +174,11 @@ export function revokeSession() {
   localStorage.removeItem(SESSION_STORAGE_KEY);
 }
 
+function syncAuthUi() {
+  renderAuthPill();
+  window.updateSidebarPermissions?.();
+}
+
 function getDefaultGuestSession() {
   return {
     user: {
@@ -231,6 +236,7 @@ export function setCurrentUser(user) {
     lastActive: Date.now(),
   };
   saveActiveSession(session);
+  syncAuthUi();
 }
 
 export async function hydrateSessionFromServer() {
@@ -269,6 +275,7 @@ export async function hydrateSessionFromServer() {
       lastActive: Date.now(),
     };
     saveActiveSession(session);
+    syncAuthUi();
     return true;
   } catch {
     return false;
@@ -440,6 +447,7 @@ export async function handleGoogleCredentialResponse(response, onAuthSuccess) {
   };
 
   saveActiveSession(session);
+  syncAuthUi();
 
   // Mark device as visited and save display name
   localStorage.setItem('careerEngine_has_visited', 'true');
