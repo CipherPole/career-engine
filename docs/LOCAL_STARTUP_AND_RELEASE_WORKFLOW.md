@@ -50,6 +50,52 @@ If checks fail, fix issues first, then rerun `launch.bat`.
 6. Verify production deploy on Vercel.
 7. Run production smoke tests.
 
+## Proven Reference Execution (2026-09-28)
+This section captures the exact working sequence used to ship the LinkedIn Export Diff Analyzer and workflow hardening updates to production.
+
+### A. Branch + Validation + Push
+Commands used:
+
+git checkout -b feature/linkedin-export-diff
+npm test
+npm audit
+git add scripts/linkedin-engine.js launch.bat docs/ENGINEERING_WORKFLOW.md AGENTS.md README.md docs/SESSION_CHANGELOG.md docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md
+git commit -m "feat: add linkedin export diff analyzer and rewrite checklist"
+git commit -m "chore: enforce validated local startup workflow"
+git commit -m "docs: standardize startup and release runbook for future sessions"
+git push -u origin feature/linkedin-export-diff
+
+### B. PR + Checks + Merge (GitHub CLI Path)
+Prerequisite: authenticated GitHub CLI session (`gh auth status` shows active account).
+
+Commands used:
+
+gh pr create --base main --head feature/linkedin-export-diff --title "feat: LinkedIn export diff analyzer + validated startup workflow" --body "..."
+gh pr checks 1
+gh pr merge 1 --merge --delete-branch
+
+Expected gates before merge:
+- CI Pipeline = success
+- Paranoid Security and Hygiene Audit = success
+- Vercel deployment checks = success
+
+### C. Post-Deploy Smoke Checklist (Production)
+URL: `https://career-engine-five.vercel.app`
+
+Validated checks:
+1. `#signin` route loads.
+2. Demo/dashboard route loads (`#dashboard`).
+3. LinkedIn Optimizer route loads.
+4. New UI is present:
+	- One-Time Full Rewrite Checklist
+	- LinkedIn Export Diff Analyzer
+5. Existing copy blocks continue to render.
+
+### D. Notes For Future Sessions
+- If Vercel preview app URL is SSO-gated, validate production route after merge.
+- Use CLI merge path when browser GitHub auth is unavailable but `gh` is authenticated.
+- Record any production smoke results in `docs/SESSION_CHANGELOG.md` for traceability.
+
 ## Required Environment Variables
 Set for Production, Preview, and Development scopes in Vercel:
 - `GOOGLE_CLIENT_ID`

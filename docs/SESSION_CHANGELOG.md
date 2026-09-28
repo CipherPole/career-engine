@@ -27,6 +27,27 @@
   - Added dedicated runbook `docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md` for agent/human reference.
   - Updated `AGENTS.md` and `README.md` to cross-link and enforce the standardized startup and release path.
 
+### Milestone 17: Production Release Verification & Workflow Traceability
+- **Context:** User requested a durable reference process for future updates and explicit confirmation that deployment/merge workflow can be repeated safely.
+- **Implementation:**
+  - Completed PR flow using GitHub CLI with authenticated `gh` session:
+    - Created PR from `feature/linkedin-export-diff` into `main`
+    - Waited for all required checks to pass (`CI Pipeline`, `Paranoid Security & Hygiene Audit`, Vercel checks)
+    - Merged PR and deleted feature branch
+  - Executed post-deploy production smoke checks on `https://career-engine-five.vercel.app`:
+    - `#signin` route verified
+    - `#dashboard` route verified (demo/showcase path)
+    - LinkedIn Optimizer verified
+    - New features verified in production:
+      - One-Time Full Rewrite Checklist
+      - LinkedIn Export Diff Analyzer
+  - Added `docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md` reference execution section documenting exact working command sequence and gate criteria for future sessions.
+
+### Release Note (2026-09-28)
+- Shipped LinkedIn Export Diff Analyzer + rewrite checklist to production.
+- Standardized validated startup gate in `launch.bat` (`npm test` + `npm audit` before serving).
+- Published repeatable startup/release runbook and cross-linked it across core docs for future agent continuity.
+
 ---
 
 ## Session Log: September 19, 2026
