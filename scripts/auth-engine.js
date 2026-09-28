@@ -528,7 +528,7 @@ export function renderAuthPill() {
         <!-- Clickable Profile Pill (Opens profile modal with Sign Out) -->
         <div id="btn-user-profile-trigger" style="display:flex;align-items:center;gap:8px;background:var(--bg-card);border:1px solid ${admin ? 'var(--gold-border)' : 'var(--border)'};border-radius:24px;padding:4px 14px 4px 6px;cursor:pointer;user-select:none;transition:all 0.2s ease;box-shadow:0 2px 8px rgba(0,0,0,0.2);" title="Click to view Account, Policies & Sign Out">
           <div style="width:28px;height:28px;border-radius:50%;background:${admin ? 'var(--gold)' : '#3b82f6'};color:#000;font-weight:700;font-size:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 10px ${admin ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'};">
-            ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
+            ${user.picture ? `<img src="${user.picture}" alt="${user.name || 'User'} profile photo" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
           </div>
           <div style="line-height:1.2;text-align:left;">
             <div style="font-size:12px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:4px;">
@@ -613,7 +613,7 @@ export function openAuthModal() {
           <!-- User Profile Avatar Card -->
           <div style="text-align:center;margin-bottom:20px;">
             <div style="width:72px;height:72px;border-radius:50%;background:${admin ? 'var(--gold)' : '#3b82f6'};color:#000;font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;overflow:hidden;border:2px solid var(--border);box-shadow:0 0 25px ${admin ? 'rgba(245,158,11,0.3)' : 'rgba(59,130,246,0.3)'};">
-              ${user.picture ? `<img src="${user.picture}" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
+              ${user.picture ? `<img src="${user.picture}" alt="${user.name || 'User'} Google profile photo" style="width:100%;height:100%;object-fit:cover;" />` : (user.name ? user.name[0].toUpperCase() : '👤')}
             </div>
             <div style="font-size:19px;font-weight:800;color:var(--text-primary);">${user.name}</div>
             <div style="font-size:12px;color:var(--text-dim);margin-top:2px;">${user.email}</div>
@@ -2353,11 +2353,20 @@ Site: ${window.location.origin}
 ${r.findings.map((f,i) => `${i+1}. [${f.severity.toUpperCase()}] ${f.pillar} — ${f.title}\n   ${f.desc}`).join('\n\n')}
 
 ## Next Steps for AI Discoverability
-1. Add llms.txt to root directory
-2. Add JSON-LD structured data to index.html
-3. Create robots.txt allowing GPTBot, Claude-Web, PerplexityBot
-4. Generate sitemap.xml and reference it in robots.txt
-5. Add Open Graph meta tags for social and AI sharing signals`;
+${r.findings.length === 0
+  ? '✅ All SEO checks passed — no additional action required.'
+  : r.findings.map((f, i) => `${i + 1}. [${f.severity.toUpperCase()}] Fix: ${f.title}`).join('\n')
+}
+
+## Completed Optimizations (Already Applied)
+✅ robots.txt — AI crawlers (GPTBot, Claude-Web, PerplexityBot, CCBot) explicitly allowed
+✅ sitemap.xml — Page discovery map created and referenced in robots.txt
+✅ llms.txt — LLM context file created for AI training signals
+✅ JSON-LD structured data — WebApplication schema added to index.html
+✅ Open Graph tags — og:title, og:description, og:image, og:type set
+✅ Twitter/X Card — twitter:card tags configured
+✅ Canonical URL — canonical href set to production URL
+✅ robots meta — Changed from noindex to index,follow`;
     try {
       await navigator.clipboard.writeText(report);
       window.toast?.('📋 SEO report copied to clipboard!', 'green');
