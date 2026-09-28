@@ -13,6 +13,12 @@
 
 Career Engine is an enterprise-grade, client-first Single Page Application (SPA) powered by pure Vanilla JavaScript, modern CSS3 design tokens, and backed by Vercel serverless micro-endpoints and Neon PostgreSQL. It delivers instant resume drag-and-drop ingestion, real-time ATS gap analysis, interactive skill radar charts, automated career roadmaps, and zero-trust Role-Based Access Control (RBAC).
 
+### Hosting, Deploy, and Storage Roles
+- **Vercel** provides hosting, branch previews, production deploys, and environment variable management.
+- **Neon Postgres** stores persistent application data (`users`, `user_profiles`, `user_states`, `auth_events`).
+- **Browser storage** is used for scoped client workspace state and session convenience.
+- The repository does not currently depend on a separate Vercel data store product; if that changes, the architecture must be updated alongside the workflow docs.
+
 ```mermaid
 graph TD
     User([Candidate / Browser Client]) -->|1. Request /api/auth-config| VercelAPI[Vercel Serverless API]

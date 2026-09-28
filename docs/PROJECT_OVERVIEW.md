@@ -23,6 +23,12 @@ Career Engine is a high-performance, client-first career intelligence platform d
 5. **Continuous Learning & Certification Hub:** Curriculum pathways, hands-on lab projects, and credential tracking.
 6. **Zero-Trust Security & Self-Service Account Purge:** Hardened Google OIDC session management, serverless token validation, and a protective **hover-to-confirm account deletion** feature that completely wipes all cloud and browser data.
 
+### Deployment and Storage Boundary
+- **Vercel** is the hosting, preview, and production deploy platform.
+- **Neon Postgres** is the persistent server-side data store for users, profiles, state, and auth logs.
+- **Browser storage** (`localStorage` / `sessionStorage`) holds scoped client-side workspace state.
+- If a future requirement calls for Vercel-native storage products (KV, Blob, or similar), that should be treated as a separate tracked architecture change.
+
 ---
 
 ## 2. Platform Architecture & Technology Stack

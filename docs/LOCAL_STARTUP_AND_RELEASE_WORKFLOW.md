@@ -3,6 +3,24 @@
 ## Purpose
 This runbook defines the required day-to-day workflow for local startup, UI smoke validation, and release-to-production readiness. It is written for both human contributors and AI agents so sessions remain consistent.
 
+## Stack Reference
+Current production flow:
+1. Edit locally in the repo.
+2. Run `launch.bat` to gate startup behind `npm test` and `npm audit`.
+3. Create a feature branch and push changes to GitHub.
+4. Open a PR into `main`.
+5. GitHub Actions run CI and security checks.
+6. Merge to `main`.
+7. Vercel builds from `main` and deploys production automatically.
+
+Current persistence model:
+- Browser-only state: `localStorage` and `sessionStorage`
+- Server persistence: Neon Postgres via Vercel serverless API routes
+- Vercel role: hosting, previews, build/deploy orchestration, environment variables
+
+Important boundary:
+- This repo does not currently rely on a separate Vercel data store (for example KV or Blob). If that becomes a requirement, it should be added as a separate tracked change.
+
 ## Quick Path
 1. Run validated startup script:
 
@@ -49,6 +67,15 @@ If checks fail, fix issues first, then rerun `launch.bat`.
 5. Merge PR to main.
 6. Verify production deploy on Vercel.
 7. Run production smoke tests.
+
+## Local-to-Production Traceability
+When a user asks for an update, follow this sequence and record it in the session changelog:
+1. Make the change locally.
+2. Validate with `launch.bat`, `npm test`, and `npm audit`.
+3. Push a feature branch.
+4. Open PR, wait for checks, and validate preview/prod.
+5. Merge to `main` to trigger Vercel production deploy.
+6. Document the exact commands and results in `docs/SESSION_CHANGELOG.md`.
 
 ## Proven Reference Execution (2026-09-28)
 This section captures the exact working sequence used to ship the LinkedIn Export Diff Analyzer and workflow hardening updates to production.

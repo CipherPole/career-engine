@@ -48,6 +48,26 @@
 - Standardized validated startup gate in `launch.bat` (`npm test` + `npm audit` before serving).
 - Published repeatable startup/release runbook and cross-linked it across core docs for future agent continuity.
 
+### Milestone 18: Deployment Stack Boundary Clarification
+- **Context:** User requested a durable reference for how local updates become production deploys and how the stack is actually split between hosting and storage.
+- **Implementation:**
+  - Updated `docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md` to explicitly document the full path:
+    - local edit
+    - validated startup gate
+    - feature branch push
+    - PR
+    - GitHub checks
+    - merge to `main`
+    - automatic Vercel production deploy
+  - Added a clear current-stack boundary:
+    - Vercel = hosting, preview, deploy orchestration, env vars
+    - Neon Postgres = persistent application data
+    - Browser storage = scoped client-side workspace state
+  - Updated `docs/PROJECT_OVERVIEW.md` and `docs/ARCHITECTURE.md` with the same boundary so future agents do not confuse hosting with persistence.
+
+### Note For Future Work
+- If the product later adopts Vercel-native storage products (KV, Blob, or similar), that should be treated as a separate architecture change and reflected in the workflow docs before implementation.
+
 ---
 
 ## Session Log: September 19, 2026
