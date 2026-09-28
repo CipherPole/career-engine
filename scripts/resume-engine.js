@@ -203,11 +203,35 @@ export function renderDashboard() {
       </div>
     </div>
 
+    <div class="card mb-24">
+      <div class="card-title"><span class="dot"></span>LinkedIn Import Entry</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.7;">
+        Start a LinkedIn export import from the dashboard. Upload a PDF export or paste export text here, then review and save it in LinkedIn Optimizer.
+      </div>
+      <div class="grid-2 gap-16">
+        <div>
+          <input id="dashboard-li-import-file" class="field" type="file" accept=".pdf,.txt,.md,.docx,.rtf" />
+          <div class="flex gap-8 mt-8">
+            <button class="btn btn-gold btn-sm" id="dashboard-li-import-file-btn">Import File</button>
+            <button class="btn btn-ghost btn-sm" id="dashboard-li-import-open-btn">Open LinkedIn Optimizer</button>
+          </div>
+        </div>
+        <div>
+          <textarea id="dashboard-li-import-text" class="field" rows="5" placeholder="Or paste your LinkedIn export text here..."></textarea>
+          <div class="flex gap-8 mt-8">
+            <button class="btn btn-outline btn-sm" id="dashboard-li-import-text-btn">Analyze Text</button>
+            <button class="btn btn-ghost btn-sm" id="dashboard-li-import-clear-btn">Reset</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Quick Actions -->
     <div class="section-title">Quick Actions</div>
     <div class="grid-3 gap-16 mb-24">
       ${quickAction('📄', 'Export Clean Resume PDF', 'ATS-safe layout, print as PDF', 'resume', 'btn-gold')}
       ${quickAction('🔗', 'Update LinkedIn Headline', 'Generate optimized professional headline', 'linkedin', 'btn-outline')}
+      ${quickAction('📥', 'Import LinkedIn Export', 'Upload a PDF export or paste export text to update your profile source of truth', 'linkedin', 'btn-gold')}
       ${quickAction('💼', 'Find High-Impact Jobs', 'Browse curated role-specific job boards', 'jobs', 'btn-ghost')}
       ${quickAction('🧠', 'View Skill Gaps', 'Identify benchmark skills for target comp', 'skills', 'btn-ghost')}
       ${quickAction('🚀', 'Project Showcase', 'Review technical presentation', 'projects', 'btn-ghost')}
@@ -238,6 +262,37 @@ export function renderDashboard() {
     const bar = document.getElementById('comp-bar');
     if (bar) bar.style.width = `${compPercent}%`;
   }, 300);
+
+  document.getElementById('dashboard-li-import-file-btn')?.addEventListener('click', () => document.getElementById('dashboard-li-import-file')?.click());
+  document.getElementById('dashboard-li-import-file')?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    try {
+      await window.linkedInImportTools?.importFile?.(file);
+      navigate('linkedin');
+    } catch (error) {
+      console.error(error);
+      toast('Could not import that file. Try a LinkedIn PDF export or paste text.', 'red');
+    }
+  });
+  document.getElementById('dashboard-li-import-text-btn')?.addEventListener('click', async () => {
+    const value = document.getElementById('dashboard-li-import-text')?.value || '';
+    try {
+      await window.linkedInImportTools?.importText?.(value);
+      navigate('linkedin');
+    } catch (error) {
+      console.error(error);
+      toast('Could not analyze that text. Try a LinkedIn export paste.', 'red');
+    }
+  });
+  document.getElementById('dashboard-li-import-clear-btn')?.addEventListener('click', () => {
+    const fileInput = document.getElementById('dashboard-li-import-file');
+    const textInput = document.getElementById('dashboard-li-import-text');
+    if (fileInput) fileInput.value = '';
+    if (textInput) textInput.value = '';
+    window.linkedInImportTools?.clear?.();
+  });
+  document.getElementById('dashboard-li-import-open-btn')?.addEventListener('click', () => navigate('linkedin'));
 }
 
 function quickAction(icon, title, desc, page, btnClass) {

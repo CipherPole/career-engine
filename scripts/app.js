@@ -223,6 +223,7 @@ function updateSidebarMetrics() {
   if (gapLabel) gapLabel.textContent = `Compensation Gap: ${formatK(gap)}`;
   if (fill) fill.style.width = `${percent}%`;
 }
+window.updateSidebarMetrics = updateSidebarMetrics;
 
 // ── Toast Notifications ───────────────────────────────────────
 function toast(msg, type = 'gold') {

@@ -6,6 +6,16 @@
 
 ## Session Log: September 28, 2026
 
+### Milestone 19: LinkedIn Import Review & Profile Source of Truth
+- **Context:** User requested a real import flow, not just a diff analyzer, with entry points in both Dashboard and LinkedIn Optimizer. The import needed to accept LinkedIn export PDFs and pasted export text, then promote approved changes into the shared workspace profile.
+- **Implementation:**
+  - Extended `scripts/linkedin-engine.js` with a LinkedIn import panel that accepts PDF/text exports, parses them with the existing resume analyzer, and shows a reviewable current-vs-imported diff.
+  - Added a save step that writes the approved imported profile to `/api/profile`, updates shared app state, and refreshes sidebar metrics so downstream views use the new source of truth.
+  - Added a Dashboard quick action in `scripts/resume-engine.js` so the import workflow is reachable from the home screen as well as LinkedIn Optimizer.
+- **Validation:**
+  - `npm test`
+  - `npm audit`
+
 ### Milestone 15: LinkedIn Export Diff Analyzer & Rewrite Checklist
 - **Context:** User requested implementation mode for LinkedIn profile alignment using exported profile text, with actionable copy blocks and section-level guidance.
 - **Implementation:**

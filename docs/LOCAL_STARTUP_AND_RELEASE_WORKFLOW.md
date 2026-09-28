@@ -58,24 +58,27 @@ Behavior:
 If checks fail, fix issues first, then rerun `launch.bat`.
 
 ## Production Push Workflow
-1. Confirm branch is clean and checks pass locally.
-2. Push branch and open PR to main.
-3. Wait for required GitHub checks:
+1. Confirm the working tree is clean with `git status -sb`.
+2. If any files show `M`, `??`, or other local changes, they are not committed or pushed yet.
+3. Confirm checks pass locally.
+4. Push branch and open PR to main.
+5. Wait for required GitHub checks:
 - CI Pipeline
 - Paranoid Security and Hygiene Audit
-4. Validate Vercel Preview manually.
-5. Merge PR to main.
-6. Verify production deploy on Vercel.
-7. Run production smoke tests.
+6. Validate Vercel Preview manually.
+7. Merge PR to main.
+8. Verify production deploy on Vercel.
+9. Run production smoke tests.
 
 ## Local-to-Production Traceability
 When a user asks for an update, follow this sequence and record it in the session changelog:
 1. Make the change locally.
 2. Validate with `launch.bat`, `npm test`, and `npm audit`.
-3. Push a feature branch.
-4. Open PR, wait for checks, and validate preview/prod.
-5. Merge to `main` to trigger Vercel production deploy.
-6. Document the exact commands and results in `docs/SESSION_CHANGELOG.md`.
+3. Confirm the working tree status with `git status -sb` before saying the work is pushed.
+4. Push a feature branch.
+5. Open PR, wait for checks, and validate preview/prod.
+6. Merge to `main` to trigger Vercel production deploy.
+7. Document the exact commands and results in `docs/SESSION_CHANGELOG.md`.
 
 ## Proven Reference Execution (2026-09-28)
 This section captures the exact working sequence used to ship the LinkedIn Export Diff Analyzer and workflow hardening updates to production.

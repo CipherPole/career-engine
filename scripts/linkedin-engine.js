@@ -4,9 +4,13 @@
 
 'use strict';
 
+import { analyzeResumeText, extractTextFromFile } from './resume-parser.js?v=8';
+
 const CHECKLIST_STORAGE_KEY = 'careerEngine_linkedin_rewrite_checklist_v1';
 
 let latestParsedExport = null;
+let latestImportPayload = null;
+let latestImportSource = '';
 
 const LINKEDIN_SECTIONS = [
   {
@@ -308,6 +312,203 @@ function renderDiffResults(parsed) {
   `;
 }
 
+function cleanLinkedInImportText(raw) {
+  return String(raw || '')
+    .replace(/\u0000/g, '')
+    .replace(/\r\n/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+function normalizeLinkedInImport(parsed, rawText = '', fileName = '') {
+  if (!parsed?.profile) return null;
+
+  const profile = structuredClone(parsed.profile);
+  profile.meta = profile.meta || {};
+  profile.meta.parsedFileName = fileName || profile.meta.parsedFileName || 'LinkedIn export';
+  profile.meta.importSource = rawText ? 'text' : 'file';
+  profile.meta.lastUpdated = new Date().toISOString().slice(0, 10);
+  profile.meta.sourceOfTruth = 'linkedin-import';
+  if (rawText) profile.meta.importPreview = rawText.slice(0, 240);
+
+  return { ...parsed, profile };
+}
+
+function renderImportPreview(payload) {
+  if (!payload?.profile) return '';
+  const profile = payload.profile;
+  const sections = [
+    ['Name', profile.contact?.name || 'Not detected'],
+    ['Headline', profile.meta?.targetTitle || 'Not detected'],
+    ['Summary', profile.summary || 'Not detected'],
+    ['Skills', Array.isArray(profile.skills) ? profile.skills.slice(0, 10).join(', ') : 'Not detected'],
+    ['Experience entries', Array.isArray(profile.experience) ? String(profile.experience.length) : '0'],
+    ['Certifications', Array.isArray(profile.certifications) ? profile.certifications.join(', ') : 'None'],
+  ];
+
+  return `
+    <div class="copy-block mb-16">
+      <div class="copy-block-header">
+        <div>
+          <div class="copy-block-title">Imported Profile Preview</div>
+          <div style="font-size:10px;color:var(--text-dim);">Review before saving to the workspace profile source of truth.</div>
+        </div>
+      </div>
+      <div style="padding:12px 16px;">
+        ${sections.map(([label, value]) => `
+          <div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px;line-height:1.5;">
+            <div style="min-width:150px;color:var(--text-dim);font-weight:600;">${label}</div>
+            <div style="color:var(--text-secondary);white-space:pre-wrap;">${escapeHtml(value)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderImportDiff(payload, currentProfile) {
+  if (!payload?.profile) return '';
+  const imported = payload.profile;
+  const rows = [
+    ['Name', currentProfile?.contact?.name || '', imported.contact?.name || ''],
+    ['Email', currentProfile?.contact?.email || '', imported.contact?.email || ''],
+    ['LinkedIn', currentProfile?.contact?.linkedin || '', imported.contact?.linkedin || ''],
+    ['Summary', currentProfile?.summary || '', imported.summary || ''],
+    ['Skills', Array.isArray(currentProfile?.skills) ? currentProfile.skills.join(', ') : '', Array.isArray(imported.skills) ? imported.skills.join(', ') : ''],
+  ];
+
+  return `
+    <div class="section-title">Import Review</div>
+    ${rows.map(([label, current, next]) => `
+      <div class="copy-block mb-12">
+        <div class="copy-block-header">
+          <div class="copy-block-title">${label}</div>
+        </div>
+        <div class="grid-2 gap-12" style="padding:12px;">
+          <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+            <div style="padding:8px 10px;background:var(--bg-glass);font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border);">Current profile</div>
+            <div style="padding:10px;font-size:12px;color:var(--text-secondary);white-space:pre-wrap;line-height:1.6;max-height:180px;overflow:auto;">${escapeHtml(current || 'No value set')}</div>
+          </div>
+          <div style="border:1px solid var(--gold-border);border-radius:10px;overflow:hidden;">
+            <div style="padding:8px 10px;background:var(--gold-glow);font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border);">Imported export</div>
+            <div style="padding:10px;font-size:12px;color:var(--text-secondary);white-space:pre-wrap;line-height:1.6;max-height:180px;overflow:auto;">${escapeHtml(next || 'No value detected')}</div>
+          </div>
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+async function processLinkedInImport(rawText, sourceLabel = 'LinkedIn export') {
+  const normalized = cleanLinkedInImportText(rawText);
+  if (!normalized) {
+    window.toast?.('Import is empty. Add a LinkedIn PDF export or pasted export text.', 'red');
+    return;
+  }
+
+  const parsed = analyzeResumeText(normalized, sourceLabel);
+  latestImportPayload = normalizeLinkedInImport(parsed, normalized, sourceLabel);
+  latestImportSource = sourceLabel;
+
+  const reviewHolder = document.getElementById('li-import-review');
+  const diffHolder = document.getElementById('li-import-diff');
+  const currentProfile = window._state?.resumeData || {};
+
+  if (reviewHolder) reviewHolder.innerHTML = renderImportPreview(latestImportPayload);
+  if (diffHolder) diffHolder.innerHTML = renderImportDiff(latestImportPayload, currentProfile);
+
+  window.toast?.(`Imported ${sourceLabel}. Review the changes before saving.`, 'green');
+}
+
+async function handleLinkedInImportFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  try {
+    const text = await extractTextFromFile(file);
+    await processLinkedInImport(text, file.name || 'LinkedIn export');
+  } catch (error) {
+    console.error(error);
+    window.toast?.('Could not read that file. Try a PDF export or paste the export text.', 'red');
+  }
+}
+
+async function handleLinkedInImportPaste() {
+  const input = document.getElementById('li-import-textarea');
+  if (!input) return;
+  await processLinkedInImport(input.value, 'Pasted LinkedIn export text');
+}
+
+async function saveLinkedInImport() {
+  if (!latestImportPayload?.profile) {
+    window.toast?.('Import something first before saving.', 'red');
+    return;
+  }
+
+  const response = await fetch('/api/profile', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(latestImportPayload.profile),
+  });
+
+  if (!response.ok) {
+    const message = await response.text();
+    throw new Error(message || 'Failed to save LinkedIn import');
+  }
+
+  const savedProfile = await response.json();
+  window._state = window._state || {};
+  window._state.resumeData = savedProfile;
+  const userEmail = savedProfile?.contact?.email ? savedProfile.contact.email.toLowerCase() : '';
+  if (userEmail) {
+    localStorage.setItem(`careerEngine_profile_${userEmail}`, JSON.stringify(savedProfile));
+  }
+  localStorage.setItem('careerEngine_active_profile', JSON.stringify(savedProfile));
+  window.updateSidebarMetrics?.();
+  renderLinkedInOptimizer();
+  window.toast?.('Imported LinkedIn export saved to your profile source of truth.', 'green');
+}
+
+function clearLinkedInImport() {
+  latestImportPayload = null;
+  latestImportSource = '';
+  const fileInput = document.getElementById('li-import-file');
+  const textInput = document.getElementById('li-import-textarea');
+  const reviewHolder = document.getElementById('li-import-review');
+  const diffHolder = document.getElementById('li-import-diff');
+  if (fileInput) fileInput.value = '';
+  if (textInput) textInput.value = '';
+  if (reviewHolder) {
+    reviewHolder.innerHTML = `
+      <div class="empty-state" style="padding:20px;">
+        <div class="empty-title">No LinkedIn export imported yet</div>
+        <div class="empty-desc">Upload a PDF export or paste raw export text to begin the review.</div>
+      </div>
+    `;
+  }
+  if (diffHolder) {
+    diffHolder.innerHTML = `
+      <div class="empty-state" style="padding:20px;">
+        <div class="empty-title">Nothing to compare yet</div>
+        <div class="empty-desc">Import a LinkedIn export first to compare it against your current profile.</div>
+      </div>
+    `;
+  }
+}
+
+window.linkedInImportTools = {
+  importText: (text) => processLinkedInImport(text, 'Pasted LinkedIn export text'),
+  importFile: async (file) => {
+    const text = await extractTextFromFile(file);
+    await processLinkedInImport(text, file?.name || 'LinkedIn export');
+  },
+  save: saveLinkedInImport,
+  clear: clearLinkedInImport,
+};
+
 function bindChecklistEvents() {
   const checks = document.querySelectorAll('[data-li-check]');
   checks.forEach(box => {
@@ -405,6 +606,41 @@ export function renderLinkedInOptimizer() {
     <div id="li-checklist-holder">${renderRewriteChecklist()}</div>
 
     <div class="card mb-24">
+      <div class="card-title"><span class="dot"></span>LinkedIn Import to Profile Source of Truth</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.7;">
+        Import a LinkedIn export PDF or paste the export text. Review the differences, then save the approved profile back into the workspace source of truth.
+      </div>
+      <div class="grid-2 gap-16">
+        <div>
+          <input id="li-import-file" class="field" type="file" accept=".pdf,.txt,.md,.docx,.rtf" />
+          <div class="flex gap-8 mt-8">
+            <button class="btn btn-gold btn-sm" id="btn-import-li-file">Import File</button>
+            <button class="btn btn-ghost btn-sm" id="btn-clear-li-import">Reset Import</button>
+          </div>
+        </div>
+        <div>
+          <textarea id="li-import-textarea" class="field" rows="5" placeholder="Or paste your LinkedIn export text here..."></textarea>
+          <div class="flex gap-8 mt-8">
+            <button class="btn btn-outline btn-sm" id="btn-import-li-text">Analyze Pasted Text</button>
+            <button class="btn btn-ghost btn-sm" id="btn-save-li-import">Save Approved Profile</button>
+          </div>
+        </div>
+      </div>
+      <div id="li-import-review" class="mt-16">
+        <div class="empty-state" style="padding:20px;">
+          <div class="empty-title">No LinkedIn export imported yet</div>
+          <div class="empty-desc">Upload a PDF export or paste raw export text to begin the review.</div>
+        </div>
+      </div>
+      <div id="li-import-diff" class="mt-16">
+        <div class="empty-state" style="padding:20px;">
+          <div class="empty-title">Nothing to compare yet</div>
+          <div class="empty-desc">Import a LinkedIn export first to compare it against your current profile.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-24">
       <div class="card-title"><span class="dot"></span>LinkedIn Export Diff Analyzer</div>
       <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.7;">
         Paste raw text from your LinkedIn export PDF, then generate current-vs-recommended diffs.
@@ -427,6 +663,16 @@ export function renderLinkedInOptimizer() {
     ${LINKEDIN_SECTIONS.map(sec => copyBlockHTML(sec)).join('')}
   `;
 
+  document.getElementById('btn-import-li-file')?.addEventListener('click', () => document.getElementById('li-import-file')?.click());
+  document.getElementById('li-import-file')?.addEventListener('change', handleLinkedInImportFile);
+  document.getElementById('btn-import-li-text')?.addEventListener('click', handleLinkedInImportPaste);
+  document.getElementById('btn-save-li-import')?.addEventListener('click', () => {
+    saveLinkedInImport().catch(error => {
+      console.error(error);
+      window.toast?.('Could not save the imported profile. Check auth and try again.', 'red');
+    });
+  });
+  document.getElementById('btn-clear-li-import')?.addEventListener('click', clearLinkedInImport);
   document.getElementById('btn-analyze-li-export')?.addEventListener('click', runLinkedInExportAnalysis);
   document.getElementById('btn-clear-li-export')?.addEventListener('click', clearLinkedInExportAnalysis);
   bindChecklistEvents();
