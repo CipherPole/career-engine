@@ -15,6 +15,7 @@ Essential Reference Documentation:
 - Technical Specifications & ERD: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 - Session History & Changelog: [docs/SESSION_CHANGELOG.md](docs/SESSION_CHANGELOG.md)
 - Strategic Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
+- Local Startup & Release Runbook: [docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md](docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md)
 
 UI requirement:
 - Before making UI changes, read docs/UI_PROGRAMMING_STANDARDS.md.
@@ -50,6 +51,16 @@ git status
 git diff --staged
 
 If any check fails, do not commit.
+
+## Required Local Startup Flow
+Always launch locally via `launch.bat`.
+
+Validated startup behavior:
+1) Runs `npm test`
+2) Runs `npm audit`
+3) Starts local server only if both pass
+
+If either check fails, startup is blocked until resolved.
 
 ## Commit Standard
 - Keep commits focused and small

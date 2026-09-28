@@ -166,7 +166,12 @@ Because Career Engine uses modern ES Modules, run with a local web server:
 # Or run any static server:
 npx serve -l 4444 .
 ```
-Navigate to `http://localhost:4444` in Chrome or Edge.
+
+Recommended:
+- Use `launch.bat` (validated startup gate).
+- It runs `npm test` and `npm audit` before starting local server at `http://localhost:8080`.
+
+Navigate to `http://localhost:8080` in Chrome or Edge when using `launch.bat`.
 
 ---
 
@@ -204,6 +209,7 @@ To enable full cloud persistence in development or preview environments, configu
 - **[docs/SESSION_CHANGELOG.md](docs/SESSION_CHANGELOG.md):** Chronological log of development milestones, bugfixes, and architectural decisions.
 - **[docs/ROADMAP.md](docs/ROADMAP.md):** RICE-scored strategic backlog and upcoming feature priorities.
 - **[AGENTS.md](AGENTS.md):** Required operational rules for AI agents and human contributors.
+- **[docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md](docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md):** Single runbook for validated local startup, UI smoke checks, and production push sequence.
 - **[docs/UI_PROGRAMMING_STANDARDS.md](docs/UI_PROGRAMMING_STANDARDS.md):** Visual excellence, animation principles, and CSS design tokens.
 - **[docs/CODE_REVIEW_SECURITY_POLICY.md](docs/CODE_REVIEW_SECURITY_POLICY.md):** Zero-credential git hygiene and security scanning rules.
 
