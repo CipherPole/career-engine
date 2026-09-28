@@ -187,7 +187,7 @@ async function loadData() {
           ],
           skills: ['AWS', 'Docker', 'Kubernetes', 'CI/CD', 'Python', 'Linux'],
           certifications: [],
-          education: [{ degree: 'B.S. in Computer Science / Engineering', institution: 'University', year: 'Completed' }],
+          education: [],
           accomplishments: ['Streamlined delivery workflows and elevated deployment predictability.']
         };
       }

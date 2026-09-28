@@ -568,18 +568,10 @@ function extractEducationEntries(fullText) {
   matches.forEach(m => {
     education.push({
       degree: m.trim(),
-      institution: 'University / Accredited Institution',
-      year: 'Graduated'
+      institution: '',
+      year: ''
     });
   });
-
-  if (education.length === 0) {
-    education.push({
-      degree: 'B.S. in Computer Science / Related Field',
-      institution: 'Accredited University',
-      year: 'Completed'
-    });
-  }
 
   return education.slice(0, 3);
 }

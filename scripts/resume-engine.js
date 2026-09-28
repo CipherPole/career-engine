@@ -5,6 +5,8 @@
 'use strict';
 
 import { isOwner, getCurrentUser } from './auth-engine.js?v=8';
+import { extractTextFromFile, analyzeResumeText } from './resume-parser.js?v=8';
+import { openResumeReviewModal } from './onboarding-wizard.js?v=8';
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -334,6 +336,29 @@ export function renderResumeStudio() {
       ` : ''}
     </div>
 
+    <div class="card mb-20">
+      <div class="card-title"><span class="dot"></span>Resume Reimport</div>
+      <div style="font-size:12px;color:var(--text-secondary);line-height:1.7;margin-bottom:10px;">
+        Upload a fresh resume PDF or paste resume text to replace any stale profile data before generating the studio view.
+      </div>
+      <div class="grid-2 gap-16">
+        <div>
+          <input id="resume-reimport-file" class="field" type="file" accept=".pdf,.txt,.md,.docx,.rtf" />
+          <div class="flex gap-8 mt-8">
+            <button class="btn btn-gold btn-sm" id="btn-resume-reimport-file">Reimport File</button>
+            <button class="btn btn-ghost btn-sm" id="btn-resume-reimport-clear">Clear</button>
+          </div>
+        </div>
+        <div>
+          <textarea id="resume-reimport-text" class="field" rows="5" placeholder="Or paste your resume text here..."></textarea>
+          <div class="flex gap-8 mt-8">
+            <button class="btn btn-outline btn-sm" id="btn-resume-reimport-text">Analyze Text</button>
+            <button class="btn btn-ghost btn-sm" id="btn-resume-reimport-open">Open Resume Import</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div class="tab-bar">
       <button class="tab-btn active" id="tab-optimized" onclick="switchResumeTab('optimized')">✅ Optimized Resume</button>
       <button class="tab-btn" id="tab-ats" onclick="switchResumeTab('ats')">🔍 ATS Keyword Analyzer</button>
@@ -342,6 +367,50 @@ export function renderResumeStudio() {
 
     <div id="resume-tab-content"></div>
   `;
+
+  document.getElementById('btn-resume-reimport-file')?.addEventListener('click', async () => {
+    const input = document.getElementById('resume-reimport-file');
+    const file = input?.files?.[0];
+    if (!file) {
+      window.toast?.('Choose a resume file first.', 'gold');
+      return;
+    }
+    try {
+      const { text, fileName } = await extractTextFromFile(file);
+      const parsed = analyzeResumeText(text, fileName || file.name || 'resume');
+      openResumeReviewModal(parsed);
+    } catch (error) {
+      console.error(error);
+      window.toast?.('Could not read that file. Try a PDF, TXT, DOCX, or paste the text.', 'red');
+    }
+  });
+
+  document.getElementById('btn-resume-reimport-text')?.addEventListener('click', () => {
+    const text = document.getElementById('resume-reimport-text')?.value?.trim() || '';
+    if (!text) {
+      window.toast?.('Paste resume text first.', 'gold');
+      return;
+    }
+    const parsed = analyzeResumeText(text, 'pasted-resume.txt');
+    openResumeReviewModal(parsed);
+  });
+
+  document.getElementById('btn-resume-reimport-clear')?.addEventListener('click', () => {
+    const fileInput = document.getElementById('resume-reimport-file');
+    const textInput = document.getElementById('resume-reimport-text');
+    if (fileInput) fileInput.value = '';
+    if (textInput) textInput.value = '';
+  });
+
+  document.getElementById('btn-resume-reimport-open')?.addEventListener('click', () => {
+    openResumeReviewModal({
+      profile: window._state?.resumeData || {},
+      missingFields: [],
+      recommendedItems: [],
+      diagnostics: {},
+    });
+  });
+
   switchResumeTab('optimized');
 }
 
@@ -430,7 +499,7 @@ function optimizedResumeHTML() {
       <h2>Education</h2>
       <ul>
         ${education.map(edu => `
-          <li><strong>${escapeHtml(edu.degree || 'Degree')}</strong> &nbsp;|&nbsp; ${escapeHtml(edu.institution || 'University')}${edu.year ? ' (' + escapeHtml(edu.year) + ')' : ''}</li>
+          <li><strong>${escapeHtml(edu.degree || 'Degree')}</strong>${edu.institution ? ` &nbsp;|&nbsp; ${escapeHtml(edu.institution)}` : ''}${edu.year ? ` (${escapeHtml(edu.year)})` : ''}</li>
         `).join('')}
       </ul>
     </div>
