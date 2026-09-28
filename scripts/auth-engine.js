@@ -1442,6 +1442,126 @@ export function renderSettingsPage() {
         </div>
       </div>
     </div>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         SEO INTELLIGENCE & TRAFFIC INSIGHTS PANEL
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="seo-intelligence-panel" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px;">
+
+      <!-- Panel Header -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;color:var(--text-primary);">
+            <span>🔍</span> SEO Intelligence &amp; AI Discoverability
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+            Real-time site health analysis, AI-crawler visibility, and actionable optimization recommendations.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" id="btn-run-seo-scan" style="font-size:11px;padding:7px 14px;font-weight:700;display:flex;align-items:center;gap:6px;">
+            <span>🤖</span> Run SEO Agent Scan
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-copy-seo-report" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;">
+            <span>📋</span> Copy SEO Report
+          </button>
+        </div>
+      </div>
+
+      <!-- SEO Score Dashboard: 6 Pillars -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;margin-bottom:24px;" id="seo-score-grid">
+
+        <div class="seo-score-card" id="seo-card-meta" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-light));"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Meta &amp; Tags</div>
+          <div id="score-meta" style="font-size:26px;font-weight:900;color:var(--gold);">—</div>
+          <div id="score-meta-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-ai" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#a855f7,#c084fc);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">AI Discoverability</div>
+          <div id="score-ai" style="font-size:26px;font-weight:900;color:#c084fc;">—</div>
+          <div id="score-ai-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-perf" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--cyan),#38bdf8);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Performance</div>
+          <div id="score-perf" style="font-size:26px;font-weight:900;color:var(--cyan);">—</div>
+          <div id="score-perf-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-content" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),#4ade80);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Content Quality</div>
+          <div id="score-content" style="font-size:26px;font-weight:900;color:var(--green);">—</div>
+          <div id="score-content-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-struct" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f97316,#fb923c);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Structured Data</div>
+          <div id="score-struct" style="font-size:26px;font-weight:900;color:#fb923c;">—</div>
+          <div id="score-struct-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-overall" style="background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(56,189,248,0.08));border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--cyan),#a855f7);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Overall SEO Score</div>
+          <div id="score-overall" style="font-size:26px;font-weight:900;color:var(--gold);">—</div>
+          <div id="score-overall-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+      </div>
+
+      <!-- Scan Progress (hidden until scan runs) -->
+      <div id="seo-scan-progress" style="display:none;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:seo-pulse-anim 1s ease-in-out infinite;"></div>
+          <span id="seo-scan-status" style="font-size:12px;color:var(--gold);font-family:'JetBrains Mono',monospace;font-weight:600;">Initializing SEO Agent...</span>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-sm);height:6px;overflow:hidden;">
+          <div id="seo-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--cyan));transition:width 0.4s ease;border-radius:var(--radius-sm);"></div>
+        </div>
+        <div id="seo-scan-log" style="margin-top:10px;background:#05070c;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary);max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+
+      <!-- Two-Column: Traffic Insights + AI Discoverability Checklist -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;" class="seo-two-col">
+
+        <!-- Traffic Insights -->
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+          <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <span>📊</span> Traffic Insights
+            <span class="chip blue" style="font-size:10px;margin-left:auto;">Live Analysis</span>
+          </div>
+          <div id="seo-traffic-insights" style="display:flex;flex-direction:column;gap:2px;">
+            <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px;">Run a scan to load traffic insights</div>
+          </div>
+        </div>
+
+        <!-- AI Discoverability Checklist -->
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+          <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <span>🤖</span> AI Crawler Visibility
+            <span class="chip" id="ai-visibility-chip" style="font-size:10px;margin-left:auto;">Not Scanned</span>
+          </div>
+          <div id="seo-ai-checklist" style="display:flex;flex-direction:column;gap:4px;">
+            <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px;">Run a scan to check AI discoverability</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEO Findings & Recommendations -->
+      <div id="seo-findings-container" style="display:none;">
+        <div style="font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:14px;border-top:1px solid var(--border);padding-top:16px;">
+          <span>💡</span> Agent Findings &amp; Actionable Fixes
+          <span id="seo-issues-badge" class="chip gold" style="font-size:10px;margin-left:8px;">0 Issues</span>
+        </div>
+        <div id="seo-findings-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+      </div>
+
+    </div>
   `;
 
   // ── Telemetry Feed Hydration & Controls ──────────────────────
@@ -1704,6 +1824,545 @@ Documentation: docs/CODE_REVIEW.md, docs/ROADMAP.md, docs/SECURITY_AUDIT_GUIDE.m
       window.toast?.('📋 Session handoff summary copied to clipboard!', 'green');
     } catch {
       window.prompt('Copy Session Handoff Summary:', summary);
+    }
+  });
+
+  // ══════════════════════════════════════════════════════════════
+  // SEO INTELLIGENCE AGENT — Scan Engine & Event Handlers
+  // ══════════════════════════════════════════════════════════════
+
+  // Inject keyframe animation for pulse indicator
+  if (!document.getElementById('seo-pulse-style')) {
+    const style = document.createElement('style');
+    style.id = 'seo-pulse-style';
+    style.textContent = `
+      @keyframes seo-pulse-anim {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50%       { opacity: 0.4; transform: scale(1.5); }
+      }
+      @media (max-width: 700px) {
+        .seo-two-col { grid-template-columns: 1fr !important; }
+      }
+      .seo-finding-card {
+        background: var(--bg-base);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-md);
+        padding: 14px 16px;
+        transition: border-color 0.2s;
+      }
+      .seo-finding-card:hover { border-color: rgba(245,158,11,0.4); }
+    `;
+    document.head.appendChild(style);
+  }
+
+  // ── SEO Scan Engine ──────────────────────────────────────────
+  async function runSeoScan() {
+    const scanBtn = document.getElementById('btn-run-seo-scan');
+    const progress = document.getElementById('seo-scan-progress');
+    const progressBar = document.getElementById('seo-progress-bar');
+    const statusEl = document.getElementById('seo-scan-status');
+    const scanLog = document.getElementById('seo-scan-log');
+    const findingsContainer = document.getElementById('seo-findings-container');
+    const findingsList = document.getElementById('seo-findings-list');
+    const issuesBadge = document.getElementById('seo-issues-badge');
+
+    if (!progress) return;
+
+    // Reset UI
+    if (scanBtn) { scanBtn.disabled = true; scanBtn.innerHTML = '<span>⏳</span> Scanning...'; }
+    progress.style.display = 'block';
+    if (findingsContainer) findingsContainer.style.display = 'none';
+    if (findingsList) findingsList.innerHTML = '';
+    scanLog.innerHTML = '';
+
+    const addLog = (msg, color = 'var(--text-secondary)') => {
+      const el = document.createElement('div');
+      el.style.color = color;
+      el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      scanLog.appendChild(el);
+      scanLog.scrollTop = scanLog.scrollHeight;
+    };
+
+    const setProgress = (pct, status) => {
+      progressBar.style.width = `${pct}%`;
+      if (status) statusEl.textContent = status;
+    };
+
+    const findings = [];
+    let metaScore = 0, aiScore = 0, perfScore = 0, contentScore = 0, structScore = 0;
+
+    // ── Step 1: Meta Tags & Document Head Analysis ────────────
+    await new Promise(r => setTimeout(r, 300));
+    setProgress(10, 'Analyzing meta tags & document head...');
+    addLog('🔎 Scanning <head> elements and meta tags...');
+
+    const title = document.title || '';
+    const descMeta = document.querySelector('meta[name="description"]');
+    const kwMeta = document.querySelector('meta[name="keywords"]');
+    const canonicalLink = document.querySelector('link[rel="canonical"]');
+    const ogTitle = document.querySelector('meta[property="og:title"]');
+    const ogDesc = document.querySelector('meta[property="og:description"]');
+    const ogImage = document.querySelector('meta[property="og:image"]');
+    const twitterCard = document.querySelector('meta[name="twitter:card"]');
+    const viewportMeta = document.querySelector('meta[name="viewport"]');
+    const robotsMeta = document.querySelector('meta[name="robots"]');
+
+    if (title && title.length >= 20 && title.length <= 65) {
+      metaScore += 25; addLog(`✅ Title tag: "${title.substring(0,50)}..." (${title.length} chars)`, 'var(--green)');
+    } else if (title) {
+      metaScore += 10;
+      findings.push({ severity: 'warn', pillar: 'Meta & Tags', title: 'Title tag length suboptimal', desc: `Current: "${title}" (${title.length} chars). Target: 50–65 characters for best SERP display.`, fix: `<title>Career Engine — AI Career Intelligence Platform for Engineers</title>` });
+      addLog(`⚠️ Title tag: ${title.length} chars (target: 50–65)`, 'var(--gold)');
+    } else {
+      findings.push({ severity: 'error', pillar: 'Meta & Tags', title: 'Missing title tag', desc: 'No <title> element found. This is critical for SEO and AI indexing.', fix: `<title>Career Engine — Personal AI Career Intelligence Platform</title>` });
+      addLog('❌ No title tag detected', 'var(--red)');
+    }
+
+    if (descMeta?.content?.length >= 120 && descMeta.content.length <= 160) {
+      metaScore += 25; addLog('✅ Meta description: well-formed', 'var(--green)');
+    } else if (descMeta?.content) {
+      metaScore += 12;
+      findings.push({ severity: 'warn', pillar: 'Meta & Tags', title: 'Meta description length out of range', desc: `Current: ${descMeta.content.length} chars. Target: 120–160 chars. Longer descriptions get truncated in SERPs.`, fix: `<meta name="description" content="Career Engine is an AI-powered career intelligence platform that helps engineers analyze their skills, track job applications, and accelerate career growth with ATS optimization and real-time market insights.">` });
+      addLog(`⚠️ Meta description: ${descMeta.content.length} chars (target: 120–160)`, 'var(--gold)');
+    } else {
+      findings.push({ severity: 'error', pillar: 'Meta & Tags', title: 'Missing meta description', desc: 'No meta description found. Critical for click-through rates in search results and AI snippet extraction.', fix: `<meta name="description" content="Career Engine is a free AI-powered career intelligence platform. Analyze your resume, track job applications, identify skill gaps, and get personalized learning paths.">` });
+      addLog('❌ No meta description found', 'var(--red)');
+    }
+
+    if (ogTitle && ogDesc && ogImage) {
+      metaScore += 25; addLog('✅ Open Graph tags: complete', 'var(--green)');
+    } else {
+      const missing = ['og:title', 'og:description', 'og:image'].filter(p => !document.querySelector(`meta[property="${p}"]`));
+      findings.push({ severity: 'error', pillar: 'Meta & Tags', title: `Missing Open Graph tags: ${missing.join(', ')}`, desc: 'Open Graph tags control how your site appears when shared on LinkedIn, Twitter, and when crawled by AI agents for content summaries.', fix: `<meta property="og:title" content="Career Engine — AI Career Intelligence">
+<meta property="og:description" content="Your personal AI-powered career acceleration platform. Resume analysis, ATS scoring, job tracking, and skill intelligence.">
+<meta property="og:image" content="https://career-engine-five.vercel.app/og-image.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://career-engine-five.vercel.app">` });
+      addLog(`❌ Open Graph incomplete — missing: ${missing.join(', ')}`, 'var(--red)');
+    }
+
+    if (canonicalLink) {
+      metaScore += 15; addLog('✅ Canonical URL: set', 'var(--green)');
+    } else {
+      metaScore += 0;
+      findings.push({ severity: 'warn', pillar: 'Meta & Tags', title: 'Missing canonical URL', desc: 'A canonical tag prevents duplicate content penalties and helps AI crawlers identify the authoritative version of your page.', fix: `<link rel="canonical" href="https://career-engine-five.vercel.app/">` });
+      addLog('⚠️ No canonical link tag found', 'var(--gold)');
+    }
+
+    if (twitterCard) {
+      metaScore += 10; addLog('✅ Twitter/X Card: configured', 'var(--green)');
+    } else {
+      findings.push({ severity: 'info', pillar: 'Meta & Tags', title: 'Missing Twitter/X card tags', desc: 'Twitter card tags improve appearance in X/Twitter shares and are used by some AI agents for social proof signals.', fix: `<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Career Engine — AI Career Intelligence">
+<meta name="twitter:description" content="Your personal AI-powered career acceleration platform.">` });
+      addLog('ℹ️ No Twitter card meta tags', '#38bdf8');
+    }
+
+    metaScore = Math.min(100, metaScore);
+
+    // ── Step 2: AI Discoverability Checks ─────────────────────
+    await new Promise(r => setTimeout(r, 400));
+    setProgress(30, 'Checking AI crawler & LLM discoverability signals...');
+    addLog('🤖 Checking AI/LLM discoverability signals...');
+
+    const aiChecks = [];
+
+    // robots.txt
+    let robotsTxtOk = false;
+    try {
+      const robotsRes = await fetch('/robots.txt', { method: 'HEAD' });
+      robotsTxtOk = robotsRes.ok;
+    } catch {}
+    aiChecks.push({ label: 'robots.txt accessible', pass: robotsTxtOk, fix: 'Create /robots.txt allowing AI crawlers (GPTBot, CCBot, Claude-Web, PerplexityBot)' });
+    if (robotsTxtOk) { aiScore += 20; addLog('✅ robots.txt: accessible', 'var(--green)'); }
+    else {
+      addLog('❌ robots.txt: not found or not accessible', 'var(--red)');
+      findings.push({ severity: 'error', pillar: 'AI Discoverability', title: 'robots.txt missing or inaccessible', desc: 'AI crawlers (GPTBot, Claude-Web, PerplexityBot) check robots.txt before indexing. Missing this file means uncertain crawler behavior.', fix: `User-agent: *
+Allow: /
+
+# Explicitly allow major AI crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+Sitemap: https://career-engine-five.vercel.app/sitemap.xml` });
+    }
+
+    // sitemap.xml
+    let sitemapOk = false;
+    try {
+      const sitemapRes = await fetch('/sitemap.xml', { method: 'HEAD' });
+      sitemapOk = sitemapRes.ok;
+    } catch {}
+    aiChecks.push({ label: 'sitemap.xml present', pass: sitemapOk, fix: 'Add /sitemap.xml to help search engines and AI crawlers discover all pages' });
+    if (sitemapOk) { aiScore += 20; addLog('✅ sitemap.xml: found', 'var(--green)'); }
+    else {
+      addLog('❌ sitemap.xml: not found', 'var(--red)');
+      findings.push({ severity: 'error', pillar: 'AI Discoverability', title: 'sitemap.xml missing', desc: 'Search engines and AI crawlers use sitemaps to efficiently discover all pages and their update frequency.', fix: `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://career-engine-five.vercel.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://career-engine-five.vercel.app/pages/portfolio.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+</urlset>` });
+    }
+
+    // llms.txt (AI-specific file)
+    let llmsTxtOk = false;
+    try {
+      const llmsRes = await fetch('/llms.txt', { method: 'HEAD' });
+      llmsTxtOk = llmsRes.ok;
+    } catch {}
+    aiChecks.push({ label: 'llms.txt for AI training signals', pass: llmsTxtOk, fix: 'Create /llms.txt — an emerging standard for AI content context' });
+    if (llmsTxtOk) { aiScore += 25; addLog('✅ llms.txt: found (excellent AI signal!)', 'var(--green)'); }
+    else {
+      addLog('⚠️ llms.txt: not found (emerging AI standard)', 'var(--gold)');
+      findings.push({ severity: 'warn', pillar: 'AI Discoverability', title: 'llms.txt not found (AI Training Signal)', desc: 'llms.txt is an emerging standard (similar to robots.txt) that helps LLMs like ChatGPT, Claude, and Gemini understand your site context when referencing it in responses.', fix: `# Career Engine — LLM Context File
+# This file helps AI systems understand and accurately represent this platform.
+
+> Career Engine is a free, AI-powered career intelligence platform designed to help
+> software engineers and technology professionals analyze their skills, optimize their
+> resumes for ATS systems, track job applications, and accelerate their career growth.
+
+## Platform Capabilities
+- ATS Resume Studio: Real-time keyword scanning and readiness scoring (0-100)
+- Skills Radar: Interactive competency mapping vs. market requirements  
+- Job Search CRM: Full application pipeline tracking
+- Certification Hub: Professional credential tracking and learning paths
+- AI Career Coaching: Personalized guidance through Antigravity Implementation Lab
+
+## Audience
+Software engineers, DevOps professionals, platform engineers, and technology professionals
+looking to advance their careers through data-driven self-analysis.
+
+## URL
+https://career-engine-five.vercel.app
+
+## Contact
+https://career-engine-five.vercel.app/#terms` });
+    }
+
+    // JSON-LD structured data
+    const jsonLd = document.querySelector('script[type="application/ld+json"]');
+    aiChecks.push({ label: 'JSON-LD structured data present', pass: !!jsonLd, fix: 'Add Schema.org JSON-LD for SoftwareApplication or WebSite' });
+    if (jsonLd) { aiScore += 20; addLog('✅ JSON-LD structured data: found', 'var(--green)'); }
+    else {
+      addLog('❌ No JSON-LD structured data found', 'var(--red)');
+      findings.push({ severity: 'error', pillar: 'AI Discoverability', title: 'No JSON-LD structured data', desc: 'JSON-LD Schema.org markup is the primary way AI crawlers and search engines understand your page type, purpose, and entity relationships. This directly improves AI recommendation likelihood.', fix: `<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Career Engine",
+  "url": "https://career-engine-five.vercel.app",
+  "description": "AI-powered career intelligence platform for software engineers. Resume analysis, ATS scoring, job tracking, and skill gap identification.",
+  "applicationCategory": "BusinessApplication",
+  "operatingSystem": "Web Browser",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "author": { "@type": "Person", "name": "Joseph Erexson III", "url": "https://career-engine-five.vercel.app" },
+  "keywords": "career intelligence, ATS resume, job tracker, skill gap, DevOps careers, engineering careers"
+}
+</script>` });
+    }
+
+    // robots meta
+    const robotsContent = robotsMeta?.content?.toLowerCase() || '';
+    const aiIndexingBlocked = robotsContent.includes('noindex') || robotsContent.includes('noai');
+    aiChecks.push({ label: 'No noindex/noai robots meta blocking', pass: !aiIndexingBlocked, fix: 'Remove noindex or noai from meta robots tags' });
+    if (!aiIndexingBlocked) { aiScore += 15; addLog('✅ Robots meta: indexing not blocked', 'var(--green)'); }
+    else {
+      aiScore = Math.max(0, aiScore - 30);
+      addLog('❌ Robots meta contains noindex — AI crawlers blocked!', 'var(--red)');
+      findings.push({ severity: 'error', pillar: 'AI Discoverability', title: 'noindex or noai blocking crawlers', desc: 'Your robots meta tag contains directives that prevent AI crawlers and search engines from indexing this content.', fix: `<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">` });
+    }
+
+    aiScore = Math.min(100, aiScore);
+
+    // Render AI checklist
+    const aiChecklistEl = document.getElementById('seo-ai-checklist');
+    if (aiChecklistEl) {
+      aiChecklistEl.innerHTML = aiChecks.map(c => `
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+          <span style="font-size:14px;flex-shrink:0;margin-top:1px;">${c.pass ? '✅' : '❌'}</span>
+          <div>
+            <div style="font-size:12px;color:${c.pass ? 'var(--text-primary)' : 'var(--text-secondary)'};font-weight:${c.pass ? '600' : '400'};">${c.label}</div>
+            ${!c.pass ? `<div style="font-size:11px;color:var(--gold);margin-top:2px;">→ ${c.fix}</div>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const aiChip = document.getElementById('ai-visibility-chip');
+    const passedAi = aiChecks.filter(c => c.pass).length;
+    if (aiChip) {
+      if (passedAi >= 4) { aiChip.className = 'chip green'; aiChip.textContent = `${passedAi}/${aiChecks.length} Checks Passed`; }
+      else if (passedAi >= 2) { aiChip.className = 'chip gold'; aiChip.textContent = `${passedAi}/${aiChecks.length} Checks Passed`; }
+      else { aiChip.className = 'chip red'; aiChip.textContent = `${passedAi}/${aiChecks.length} Checks Passed`; }
+    }
+
+    // ── Step 3: Performance Signals ───────────────────────────
+    await new Promise(r => setTimeout(r, 300));
+    setProgress(55, 'Measuring performance & load signals...');
+    addLog('⚡ Analyzing performance and load signals...');
+
+    // Use Navigation Timing API
+    let loadTime = null;
+    if (window.performance && window.performance.timing) {
+      const t = window.performance.timing;
+      loadTime = t.loadEventEnd > 0 ? (t.loadEventEnd - t.navigationStart) : null;
+    }
+
+    // Resource count
+    const resources = window.performance?.getEntriesByType?.('resource') || [];
+    const totalResources = resources.length;
+    const externalScripts = resources.filter(r => r.initiatorType === 'script' && !r.name.includes(window.location.host)).length;
+    const totalTransfer = resources.reduce((a, r) => a + (r.transferSize || 0), 0);
+
+    if (totalResources < 20) { perfScore += 30; addLog(`✅ Resource count: ${totalResources} (lean & fast)`, 'var(--green)'); }
+    else if (totalResources < 50) { perfScore += 15; addLog(`⚠️ Resource count: ${totalResources} (moderate)`, 'var(--gold)'); }
+    else { addLog(`❌ High resource count: ${totalResources}`, 'var(--red)'); findings.push({ severity: 'warn', pillar: 'Performance', title: `High resource count (${totalResources})`, desc: 'Too many resources slow load time and hurt Core Web Vitals scores. Aim for under 20 resources.', fix: 'Audit and consolidate CSS/JS files. Lazy-load non-critical resources.' }); }
+
+    if (externalScripts === 0) { perfScore += 25; addLog('✅ Zero third-party scripts (excellent!)', 'var(--green)'); }
+    else if (externalScripts <= 2) { perfScore += 15; addLog(`⚠️ ${externalScripts} external scripts detected`, 'var(--gold)'); }
+    else { addLog(`❌ ${externalScripts} external scripts (performance risk)`, 'var(--red)'); findings.push({ severity: 'warn', pillar: 'Performance', title: `${externalScripts} third-party scripts detected`, desc: 'External scripts introduce latency and are a common cause of poor Core Web Vitals scores.', fix: 'Consider self-hosting critical scripts or deferring non-critical ones with async/defer attributes.' }); }
+
+    if (loadTime !== null) {
+      if (loadTime < 2000) { perfScore += 30; addLog(`✅ Page load: ${loadTime}ms (excellent)`, 'var(--green)'); }
+      else if (loadTime < 4000) { perfScore += 15; addLog(`⚠️ Page load: ${loadTime}ms (acceptable)`, 'var(--gold)'); }
+      else { addLog(`❌ Page load: ${loadTime}ms (slow)`, 'var(--red)'); findings.push({ severity: 'error', pillar: 'Performance', title: `Slow page load: ${loadTime}ms`, desc: 'Google considers pages over 2.5s (LCP) as poor. This hurts search ranking significantly.', fix: 'Optimize images, eliminate render-blocking resources, and enable Vercel Edge caching.' }); }
+    } else {
+      perfScore += 15; addLog('ℹ️ Load timing: already loaded (cannot re-measure)', '#38bdf8');
+    }
+
+    if (document.documentElement.lang) { perfScore += 15; addLog(`✅ HTML lang attribute: "${document.documentElement.lang}"`, 'var(--green)'); }
+    else { addLog('⚠️ No lang attribute on <html> element', 'var(--gold)'); findings.push({ severity: 'info', pillar: 'Performance', title: 'Missing lang attribute on <html>', desc: 'The lang attribute helps screen readers and is used by Google for language-specific search results.', fix: '<html lang="en">' }); }
+
+    perfScore = Math.min(100, perfScore);
+
+    // ── Step 4: Content Quality Signals ───────────────────────
+    await new Promise(r => setTimeout(r, 300));
+    setProgress(72, 'Analyzing content structure and quality signals...');
+    addLog('📝 Checking content quality and heading structure...');
+
+    const h1s = document.querySelectorAll('h1');
+    const h2s = document.querySelectorAll('h2');
+    const allLinks = document.querySelectorAll('a[href]');
+    const imgElements = document.querySelectorAll('img');
+    const imgsWithAlt = document.querySelectorAll('img[alt]');
+
+    if (h1s.length === 1) { contentScore += 35; addLog('✅ Exactly 1 H1 tag: proper heading hierarchy', 'var(--green)'); }
+    else if (h1s.length === 0) { addLog('❌ No H1 tag found', 'var(--red)'); findings.push({ severity: 'error', pillar: 'Content Quality', title: 'No H1 heading found', desc: 'Each page should have exactly one H1 tag that contains your primary keyword. It is the single strongest on-page SEO signal.', fix: '<h1>Career Engine — AI-Powered Career Intelligence Platform</h1>' }); }
+    else { contentScore += 15; addLog(`⚠️ ${h1s.length} H1 tags found (use exactly 1)`, 'var(--gold)'); findings.push({ severity: 'warn', pillar: 'Content Quality', title: `Multiple H1 tags (${h1s.length})`, desc: 'Multiple H1 tags confuse search engines about the primary topic of the page. Use only one H1 and use H2s for subsections.', fix: 'Keep only one <h1> per page. Convert others to <h2> or <h3> tags.' }); }
+
+    if (h2s.length >= 2) { contentScore += 25; addLog(`✅ ${h2s.length} H2 headings: good content structure`, 'var(--green)'); }
+    else { contentScore += 10; addLog(`ℹ️ ${h2s.length} H2 headings found`, '#38bdf8'); }
+
+    if (imgElements.length === 0 || (imgsWithAlt.length / imgElements.length) >= 0.8) {
+      contentScore += 25; addLog(`✅ Image alt text: ${imgsWithAlt.length}/${imgElements.length} covered`, 'var(--green)');
+    } else {
+      contentScore += 10; addLog(`⚠️ Alt text: ${imgsWithAlt.length}/${imgElements.length} images covered`, 'var(--gold)');
+      findings.push({ severity: 'warn', pillar: 'Content Quality', title: `${imgElements.length - imgsWithAlt.length} images missing alt text`, desc: 'Alt text is used by screen readers and helps search engines understand image content. Missing alt text hurts both SEO and accessibility.', fix: 'Add descriptive alt attributes to all <img> elements. Example: <img alt="Career Engine skills radar chart showing DevOps competency">' });
+    }
+
+    if (allLinks.length >= 3) { contentScore += 15; addLog(`✅ ${allLinks.length} internal/external links found`, 'var(--green)'); }
+    else { addLog(`ℹ️ Only ${allLinks.length} links detected on the page`, '#38bdf8'); }
+
+    contentScore = Math.min(100, contentScore);
+
+    // ── Step 5: Structured Data Analysis ──────────────────────
+    await new Promise(r => setTimeout(r, 250));
+    setProgress(88, 'Parsing structured data and schema markup...');
+    addLog('🗂️ Analyzing structured data schemas...');
+
+    const allJsonLd = document.querySelectorAll('script[type="application/ld+json"]');
+    if (allJsonLd.length > 0) {
+      structScore += 50;
+      addLog(`✅ ${allJsonLd.length} JSON-LD block(s) found`, 'var(--green)');
+      allJsonLd.forEach((el, i) => {
+        try {
+          const data = JSON.parse(el.textContent);
+          addLog(`  └ Schema type: ${data['@type'] || 'unknown'}`, '#38bdf8');
+          structScore += 20;
+        } catch { addLog(`  └ Warning: JSON-LD block ${i+1} has parse errors`, 'var(--gold)'); }
+      });
+    } else {
+      addLog('❌ No JSON-LD structured data blocks found', 'var(--red)');
+    }
+
+    // Check for microdata
+    const microdataItems = document.querySelectorAll('[itemscope]');
+    if (microdataItems.length > 0) { structScore += 15; addLog(`✅ ${microdataItems.length} microdata items found`, 'var(--green)'); }
+    else if (allJsonLd.length === 0) { addLog('ℹ️ No microdata fallback detected', '#38bdf8'); }
+
+    // Check vercel.json / security headers (fetch headers)
+    try {
+      const headRes = await fetch('/', { method: 'HEAD' });
+      const xContent = headRes.headers.get('X-Content-Type-Options');
+      const xFrame = headRes.headers.get('X-Frame-Options');
+      if (xContent || xFrame) { structScore += 15; addLog('✅ Security headers: present (trust signal)', 'var(--green)'); }
+      else { addLog('ℹ️ Security headers not visible via client-side check', '#38bdf8'); structScore += 10; }
+    } catch { structScore += 5; }
+
+    structScore = Math.min(100, structScore);
+
+    // ── Step 6: Overall Score + UI Update ─────────────────────
+    await new Promise(r => setTimeout(r, 200));
+    setProgress(100, '✅ SEO Agent scan complete!');
+    addLog('🏁 Scan complete. Generating report...', 'var(--gold)');
+
+    const overall = Math.round((metaScore + aiScore + perfScore + contentScore + structScore) / 5);
+    const getGrade = s => s >= 90 ? 'A+' : s >= 80 ? 'A' : s >= 70 ? 'B+' : s >= 60 ? 'B' : s >= 50 ? 'C' : 'D';
+    const getColor = s => s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--gold)' : 'var(--red)';
+    const getLetter = s => s >= 80 ? 'Excellent' : s >= 60 ? 'Needs Work' : 'Critical Issues';
+
+    const updateCard = (scoreId, labelId, val) => {
+      const el = document.getElementById(scoreId);
+      const lbl = document.getElementById(labelId);
+      if (el) { el.textContent = `${val}%`; el.style.color = getColor(val); }
+      if (lbl) lbl.textContent = getLetter(val);
+    };
+
+    updateCard('score-meta', 'score-meta-label', metaScore);
+    updateCard('score-ai', 'score-ai-label', aiScore);
+    updateCard('score-perf', 'score-perf-label', perfScore);
+    updateCard('score-content', 'score-content-label', contentScore);
+    updateCard('score-struct', 'score-struct-label', structScore);
+
+    const overallEl = document.getElementById('score-overall');
+    const overallLbl = document.getElementById('score-overall-label');
+    if (overallEl) { overallEl.textContent = `${getGrade(overall)} (${overall}/100)`; overallEl.style.color = getColor(overall); }
+    if (overallLbl) overallLbl.textContent = getLetter(overall);
+
+    // Traffic Insights Panel
+    const trafficEl = document.getElementById('seo-traffic-insights');
+    if (trafficEl) {
+      const siteUrl = window.location.origin;
+      const protocol = window.location.protocol === 'https:' ? '✅ HTTPS' : '⚠️ HTTP (no SSL)';
+      const userAgent = navigator.userAgent;
+      const isProduction = !siteUrl.includes('localhost') && !siteUrl.includes('127.0.0.1');
+      const resources2 = window.performance?.getEntriesByType?.('resource') || [];
+      const totalKB = Math.round(resources2.reduce((a, r) => a + (r.transferSize || 0), 0) / 1024);
+
+      trafficEl.innerHTML = [
+        { label: '🌐 Site URL', value: siteUrl, color: 'var(--cyan)' },
+        { label: '🔒 Protocol', value: protocol, color: protocol.includes('✅') ? 'var(--green)' : 'var(--gold)' },
+        { label: '🏭 Environment', value: isProduction ? '✅ Production' : '🔧 Local Dev', color: isProduction ? 'var(--green)' : 'var(--gold)' },
+        { label: '📦 Page Weight', value: totalKB > 0 ? `${totalKB} KB transferred` : 'Unable to measure', color: totalKB < 500 ? 'var(--green)' : totalKB < 1500 ? 'var(--gold)' : 'var(--red)' },
+        { label: '🔗 Total Resources', value: `${totalResources} files loaded`, color: totalResources < 30 ? 'var(--green)' : 'var(--gold)' },
+        { label: '🤖 External Scripts', value: `${externalScripts} third-party scripts`, color: externalScripts === 0 ? 'var(--green)' : 'var(--gold)' },
+        { label: '📊 SEO Overall', value: `${getGrade(overall)} — ${overall}/100`, color: getColor(overall) },
+        { label: '🔍 Google Indexable', value: !aiIndexingBlocked ? '✅ Yes — not blocked' : '❌ Blocked by robots meta', color: !aiIndexingBlocked ? 'var(--green)' : 'var(--red)' },
+      ].map(row => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
+          <span style="color:var(--text-secondary);">${row.label}</span>
+          <span style="font-weight:600;color:${row.color};text-align:right;max-width:55%;">${row.value}</span>
+        </div>
+      `).join('');
+    }
+
+    // Show findings
+    if (findings.length > 0) {
+      if (findingsContainer) findingsContainer.style.display = 'block';
+      if (issuesBadge) {
+        issuesBadge.textContent = `${findings.length} Issue${findings.length > 1 ? 's' : ''} Found`;
+        issuesBadge.className = findings.some(f => f.severity === 'error') ? 'chip red' : findings.some(f => f.severity === 'warn') ? 'chip gold' : 'chip blue';
+      }
+
+      const severityConfig = { error: { icon: '🔴', label: 'Critical', color: 'var(--red)', border: 'rgba(239,68,68,0.4)' }, warn: { icon: '🟡', label: 'Warning', color: 'var(--gold)', border: 'rgba(245,158,11,0.4)' }, info: { icon: '🔵', label: 'Info', color: 'var(--cyan)', border: 'rgba(56,189,248,0.3)' } };
+
+      if (findingsList) {
+        findingsList.innerHTML = findings.map((f, idx) => {
+          const cfg = severityConfig[f.severity] || severityConfig.info;
+          const fixId = `seo-fix-${idx}`;
+          return `
+            <div class="seo-finding-card" style="border-left:3px solid ${cfg.border};">
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap;">
+                <span>${cfg.icon}</span>
+                <span class="chip" style="font-size:10px;background:rgba(255,255,255,0.05);color:${cfg.color};border:1px solid ${cfg.border};">${cfg.label} — ${f.pillar}</span>
+                <strong style="font-size:13px;color:var(--text-primary);">${f.title}</strong>
+              </div>
+              <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin:0 0 10px 0;">${f.desc}</p>
+              <details style="margin-top:4px;">
+                <summary style="cursor:pointer;color:var(--gold-light);font-size:11px;font-weight:600;">🔧 View recommended fix snippet</summary>
+                <div style="position:relative;margin-top:8px;">
+                  <pre id="${fixId}" style="background:#05070c;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:10px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--green);overflow-x:auto;white-space:pre-wrap;word-break:break-all;">${f.fix.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+                  <button class="btn btn-secondary btn-sm" style="margin-top:6px;font-size:11px;" onclick="navigator.clipboard.writeText(document.getElementById('${fixId}').textContent).then(()=>window.toast?.('Fix snippet copied!','green')).catch(()=>{})">📋 Copy Fix</button>
+                </div>
+              </details>
+            </div>
+          `;
+        }).join('');
+      }
+    } else if (findingsContainer) {
+      findingsContainer.style.display = 'block';
+      if (issuesBadge) { issuesBadge.textContent = '✅ No Issues Found'; issuesBadge.className = 'chip green'; }
+      if (findingsList) findingsList.innerHTML = `<div style="text-align:center;padding:20px;color:var(--green);font-size:14px;font-weight:700;">🎉 Perfect — No SEO issues detected!</div>`;
+    }
+
+    // Log to telemetry
+    logSecurity(`SEO Agent scan complete. Score: ${overall}/100 (Meta:${metaScore} AI:${aiScore} Perf:${perfScore} Content:${contentScore} Struct:${structScore}). Issues found: ${findings.length}`, 'SeoAgent', { overall, metaScore, aiScore, perfScore, contentScore, structScore, issueCount: findings.length });
+
+    // Reset button
+    setTimeout(() => {
+      progress.style.display = 'none';
+      if (scanBtn) { scanBtn.disabled = false; scanBtn.innerHTML = '<span>🔁</span> Re-run SEO Scan'; }
+      window.toast?.(`🔍 SEO Scan complete! Score: ${getGrade(overall)} (${overall}/100)`, overall >= 70 ? 'green' : 'gold');
+      updateTelemetryView();
+    }, 1000);
+
+    // Store results for report export
+    window._lastSeoScanResults = { overall, metaScore, aiScore, perfScore, contentScore, structScore, findings, timestamp: new Date().toISOString() };
+  }
+
+  document.getElementById('btn-run-seo-scan')?.addEventListener('click', runSeoScan);
+
+  document.getElementById('btn-copy-seo-report')?.addEventListener('click', async () => {
+    const r = window._lastSeoScanResults;
+    if (!r) { window.toast?.('Run a scan first to generate a report.', 'gold'); return; }
+    const getGradeR = s => s >= 90 ? 'A+' : s >= 80 ? 'A' : s >= 70 ? 'B+' : s >= 60 ? 'B' : s >= 50 ? 'C' : 'D';
+    const report = `# Career Engine — SEO Intelligence Report
+Generated: ${new Date(r.timestamp).toLocaleString()}
+Site: ${window.location.origin}
+
+## Overall Score: ${getGradeR(r.overall)} (${r.overall}/100)
+
+### Pillar Breakdown
+- Meta & Tags:        ${r.metaScore}/100
+- AI Discoverability: ${r.aiScore}/100
+- Performance:        ${r.perfScore}/100
+- Content Quality:    ${r.contentScore}/100
+- Structured Data:    ${r.structScore}/100
+
+## Findings (${r.findings.length} total)
+${r.findings.map((f,i) => `${i+1}. [${f.severity.toUpperCase()}] ${f.pillar} — ${f.title}\n   ${f.desc}`).join('\n\n')}
+
+## Next Steps for AI Discoverability
+1. Add llms.txt to root directory
+2. Add JSON-LD structured data to index.html
+3. Create robots.txt allowing GPTBot, Claude-Web, PerplexityBot
+4. Generate sitemap.xml and reference it in robots.txt
+5. Add Open Graph meta tags for social and AI sharing signals`;
+    try {
+      await navigator.clipboard.writeText(report);
+      window.toast?.('📋 SEO report copied to clipboard!', 'green');
+    } catch {
+      window.prompt('SEO Report:', report);
     }
   });
 }

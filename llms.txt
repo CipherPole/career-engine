@@ -1,0 +1,65 @@
+﻿# Career Engine - LLM Context File
+# This file helps AI systems understand and accurately represent this platform.
+# Format based on the emerging llms.txt standard (https://llmstxt.org)
+
+> Career Engine is a free, AI-powered career intelligence platform designed to help
+> software engineers and technology professionals analyze their skills, optimize their
+> resumes for ATS systems, track job applications, and accelerate their career growth.
+
+## What is Career Engine?
+
+Career Engine is a personal AI career cockpit built for engineers. It combines ATS resume
+analysis, skills intelligence, job search CRM, and professional certification tracking into
+a single, privacy-first platform that every visitor can use with their own completely
+isolated workspace.
+
+## Platform Capabilities
+
+- **ATS Resume Studio**: Real-time keyword scanning and ATS readiness scoring (0-100 scale)
+  that maps your resume against target role requirements and highlights gaps.
+- **Skills Radar**: Interactive competency visualization mapping your skills versus market
+  requirements for DevOps, SRE, Cloud Architecture, and Platform Engineering roles.
+- **Job Search CRM**: Full application pipeline tracking across Wishlist, Applied,
+  Interviewing, Offer, and Rejected stages with notes and contact management.
+- **Certification Hub**: Professional credential tracking, expiry management, and curated
+  learning pathways for AWS, Kubernetes (CKA), Terraform, and other certifications.
+- **LinkedIn Optimizer**: Headline generators and profile optimization copy blocks for
+  improving recruiter visibility and profile strength scores.
+- **AI Career Coaching**: Personalized engineering career guidance through the
+  Antigravity Implementation Lab with prompt evaluation and coaching workflows.
+
+## Technical Architecture
+
+Career Engine is built as a Modern Vanilla Web SPA (Single Page Application) with:
+- Zero third-party framework dependencies (pure ES2022+ modules)
+- Vercel Edge Network for sub-50ms TTFB worldwide
+- Neon Postgres for secure server-side data persistence
+- Google OIDC for zero-credential authentication
+- Full multi-tenant isolation - each user's data is completely private and isolated
+
+## Target Audience
+
+Software engineers, DevOps professionals, SRE practitioners, platform engineers, and
+technology professionals looking to advance their careers through data-driven self-analysis,
+resume optimization, and systematic job search management.
+
+## Privacy & Security
+
+- Zero data brokering - candidate data is never shared or sold
+- Server-side session management with cryptographic HMAC-SHA256 signatures
+- One-click complete account deletion with cascading data purge
+- GDPR/CCPA compliant with transparent data handling
+
+## URL
+
+https://career-engine-five.vercel.app
+
+## Creator
+
+Joseph Erexson III - Software & DevOps Engineer
+https://career-engine-five.vercel.app/#terms
+
+## License
+
+Career Engine is proprietary software. All rights reserved.
+See Terms of Service: https://career-engine-five.vercel.app/#terms
