@@ -6,6 +6,30 @@
 
 ## Session Log: September 28, 2026
 
+### Milestone 20: SEO Intelligence & AI Discoverability Panel
+- **Context:** User requested an SEO rating and traffic insight section in the admin console so they can understand the site's search and AI discoverability posture, with an on-demand agent scan for actionable improvements.
+- **Implementation:**
+  - Added a full **SEO Intelligence Panel** to `scripts/auth-engine.js` > `renderSettingsPage()`, positioned below the Action Logs section.
+  - **6-Pillar Score Dashboard:** Each pillar (Meta & Tags, AI Discoverability, Performance, Content Quality, Structured Data, Overall) rendered as colored score cards with gradient top bars.
+  - **SEO Agent Scan Engine:** On-demand `runSeoScan()` async function that walks through all 5 pillars, logs progress to an animated terminal-style feed, and computes scores using live DOM inspection and network probes.
+  - **Traffic Insights Panel:** Post-scan panel showing site URL, HTTPS status, environment, page weight (KB), resource count, external scripts count, and indexability status.
+  - **AI Crawler Visibility Checklist:** Fetches `/robots.txt`, `/sitemap.xml`, `/llms.txt` via HEAD requests; inspects for JSON-LD structured data and `noindex` meta tags; renders a live pass/fail checklist.
+  - **Agent Findings & Recommendations:** Each issue (critical/warning/info) rendered as an expandable card with description and a syntax-highlighted fix snippet + "Copy Fix" button.
+  - **Export Report:** "Copy SEO Report" generates a complete markdown report with pillar breakdown and next steps.
+  - Created `robots.txt` explicitly allowing GPTBot, ChatGPT-User, Claude-Web, Anthropic-AI, PerplexityBot, CCBot.
+  - Created `sitemap.xml` covering index, portfolio, and resume pages.
+  - Created `llms.txt` — emerging AI standard context file for LLMs.
+  - Updated `index.html` `<head>`: removed `noindex`, added `index,follow` robots, expanded meta description, added canonical URL, Open Graph tags, Twitter/X Card tags, and JSON-LD `WebApplication` Schema.org structured data block.
+- **Files Changed:**
+  - `scripts/auth-engine.js` — SEO panel HTML + scan engine + event handlers
+  - `index.html` — SEO meta overhaul
+  - `robots.txt` (new) — AI-inclusive crawler permissions
+  - `sitemap.xml` (new) — page discovery map
+  - `llms.txt` (new) — AI context file
+- **Validation:**
+  - `npm test` — PASS (0 vulnerabilities)
+  - `npm audit` — PASS (0 vulnerabilities)
+
 ### Milestone 19: LinkedIn Import Review & Profile Source of Truth
 - **Context:** User requested a real import flow, not just a diff analyzer, with entry points in both Dashboard and LinkedIn Optimizer. The import needed to accept LinkedIn export PDFs and pasted export text, then promote approved changes into the shared workspace profile.
 - **Implementation:**
