@@ -30,6 +30,25 @@ Guidelines:
 - Avoid unrelated refactors in same commit
 - Keep docs updated with behavior changes
 
+## Local Startup Workflow (Validated)
+Use the repo launcher so local startup always runs required checks first:
+
+launch.bat
+
+What this now does:
+1) Runs `npm test` (Paranoid Security and Hygiene audit)
+2) Runs `npm audit` (dependency vulnerabilities)
+3) Starts local server at `http://localhost:8080` only if both checks pass
+
+If either check fails, startup is blocked.
+
+### Required Local UI Smoke Check After Startup
+Before committing UI-facing changes, verify:
+1) Sign-in page loads at `http://localhost:8080`
+2) Dashboard loads from demo or authenticated route
+3) LinkedIn Optimizer page renders
+4) New UI module or panel added in the change is visible and interactive
+
 ## Step 3: Required Local Validation
 Run all checks before staging final commit:
 

@@ -4,6 +4,31 @@
 
 ---
 
+## Session Log: September 28, 2026
+
+### Milestone 15: LinkedIn Export Diff Analyzer & Rewrite Checklist
+- **Context:** User requested implementation mode for LinkedIn profile alignment using exported profile text, with actionable copy blocks and section-level guidance.
+- **Implementation:**
+  - Extended `scripts/linkedin-engine.js` with a new **LinkedIn Export Diff Analyzer** panel.
+  - Added parser logic to ingest pasted LinkedIn export text and map key sections (headline, summary, experience, skills, certifications).
+  - Added section-level current-vs-recommended diff rendering with status indicators (`match`, `partial`, `missing`, `outdated`).
+  - Added persistent **One-Time Full Rewrite Checklist** in local storage for manual completion tracking.
+  - Preserved existing copy-block workflow while layering analyzer and checklist above it.
+
+### Milestone 16: Validated Local Startup Workflow Standardization
+- **Context:** User requested startup reliability and repeatable launch verification so future sessions and agents do not bypass required checks.
+- **Implementation:**
+  - Upgraded `launch.bat` into a validated startup gate:
+    - Runs `npm test`
+    - Runs `npm audit`
+    - Starts local server only when both pass
+    - Blocks startup on failure
+  - Updated `docs/ENGINEERING_WORKFLOW.md` with mandatory local startup and UI smoke checks.
+  - Added dedicated runbook `docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md` for agent/human reference.
+  - Updated `AGENTS.md` and `README.md` to cross-link and enforce the standardized startup and release path.
+
+---
+
 ## Session Log: September 19, 2026
 
 ### Milestone 14: Two-Phase Sign-In Gateway & Zero Data Leakage Enforcement

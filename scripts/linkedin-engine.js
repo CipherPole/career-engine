@@ -4,6 +4,10 @@
 
 'use strict';
 
+const CHECKLIST_STORAGE_KEY = 'careerEngine_linkedin_rewrite_checklist_v1';
+
+let latestParsedExport = null;
+
 const LINKEDIN_SECTIONS = [
   {
     id: 'headline',
@@ -115,6 +119,244 @@ Industries: Technology, Financial Services, Healthcare Tech, Consulting`
   }
 ];
 
+const REWRITE_CHECKLIST = [
+  'Update headline',
+  'Update About / Summary',
+  'Update current role title and bullets',
+  'Reorder and add top skills',
+  'Enable Open to Work (recruiter-only)',
+  'Add 2-3 Featured items',
+  'Confirm certifications and education'
+];
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getChecklistState() {
+  try {
+    const raw = localStorage.getItem(CHECKLIST_STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if (parsed && typeof parsed === 'object') {
+      return parsed;
+    }
+  } catch {}
+  const defaults = {};
+  REWRITE_CHECKLIST.forEach(item => {
+    defaults[item] = false;
+  });
+  return defaults;
+}
+
+function saveChecklistState(state) {
+  localStorage.setItem(CHECKLIST_STORAGE_KEY, JSON.stringify(state));
+}
+
+function renderRewriteChecklist() {
+  const state = getChecklistState();
+  const doneCount = REWRITE_CHECKLIST.filter(item => state[item]).length;
+
+  return `
+    <div class="card mb-20">
+      <div class="card-title"><span class="dot"></span>One-Time Full Rewrite Checklist</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;">${doneCount}/${REWRITE_CHECKLIST.length} complete</div>
+      <div style="display:grid;gap:8px;">
+        ${REWRITE_CHECKLIST.map(item => `
+          <label style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-secondary);">
+            <input type="checkbox" data-li-check="${escapeHtml(item)}" ${state[item] ? 'checked' : ''} />
+            <span>${escapeHtml(item)}</span>
+          </label>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function parseLines(raw) {
+  return raw
+    .split(/\r?\n/)
+    .map(line => line.trim())
+    .filter(Boolean);
+}
+
+function extractBetween(text, startRegex, endRegex) {
+  const start = text.search(startRegex);
+  if (start < 0) return '';
+  const tail = text.slice(start);
+  const afterStart = tail.replace(startRegex, '');
+  const endMatch = afterStart.match(endRegex);
+  if (!endMatch) return afterStart.trim();
+  const idx = endMatch.index || 0;
+  return afterStart.slice(0, idx).trim();
+}
+
+function parseLinkedInExport(raw) {
+  const lines = parseLines(raw);
+  const nameIndex = lines.findIndex(line => /^[A-Z][a-z]+\s+[A-Z]/.test(line));
+  let headline = '';
+
+  if (nameIndex >= 0 && lines[nameIndex + 1]) {
+    headline = lines[nameIndex + 1];
+  }
+
+  const summary = extractBetween(raw, /\bSummary\b\s*/i, /\bExperience\b\s*/i);
+  const experience = extractBetween(raw, /\bExperience\b\s*/i, /\bEducation\b\s*/i);
+  const topSkillsRaw = extractBetween(raw, /\bTop Skills\b\s*/i, /\bLanguages\b|\bCertifications\b|\bJoseph\b/i);
+  const certsRaw = extractBetween(raw, /\bCertifications\b\s*/i, /\bJoseph\b|\bExperience\b/i);
+
+  const topSkills = parseLines(topSkillsRaw).slice(0, 12);
+  const certifications = parseLines(certsRaw).slice(0, 20);
+
+  const bofaExperienceMatch = experience.match(/Bank of America[\s\S]*?(?=\n[A-Z][A-Za-z/&\-\s]+\n\d|\nEducation|\nPage\s+\d+|$)/i);
+  const bofaExperience = bofaExperienceMatch ? bofaExperienceMatch[0].trim() : '';
+
+  return {
+    headline: headline.trim(),
+    summary: summary.trim(),
+    experience: experience.trim(),
+    bofaExperience,
+    topSkills,
+    certifications,
+  };
+}
+
+function tokenize(text) {
+  return (text || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .split(/\s+/)
+    .filter(token => token.length > 2);
+}
+
+function keywordOverlapRatio(current, recommended) {
+  const currentTokens = new Set(tokenize(current));
+  const recTokens = Array.from(new Set(tokenize(recommended)));
+  if (!recTokens.length) return 0;
+  const overlap = recTokens.filter(token => currentTokens.has(token)).length;
+  return overlap / recTokens.length;
+}
+
+function statusFromTexts(current, recommended) {
+  if (!current || !current.trim()) return 'missing';
+  const ratio = keywordOverlapRatio(current, recommended);
+  if (ratio >= 0.72) return 'match';
+  if (ratio >= 0.35) return 'partial';
+  return 'outdated';
+}
+
+function statusChip(status) {
+  const map = {
+    match: { label: 'MATCH', color: 'var(--green)' },
+    partial: { label: 'PARTIAL', color: 'var(--blue)' },
+    missing: { label: 'MISSING', color: 'var(--red)' },
+    outdated: { label: 'OUTDATED', color: 'var(--gold)' },
+  };
+  const cfg = map[status] || map.outdated;
+  return `<span style="font-size:10px;font-weight:700;color:${cfg.color};">${cfg.label}</span>`;
+}
+
+function getCurrentSectionText(sectionId, parsed) {
+  if (!parsed) return '';
+  if (sectionId === 'headline') return parsed.headline;
+  if (sectionId === 'about') return parsed.summary;
+  if (sectionId === 'experience-bofa') return parsed.bofaExperience || parsed.experience;
+  if (sectionId === 'skills') return parsed.topSkills.join(', ');
+  if (sectionId === 'featured') return '';
+  if (sectionId === 'open-to-work') return '';
+  return '';
+}
+
+function renderDiffResults(parsed) {
+  const rows = LINKEDIN_SECTIONS.map(section => {
+    const current = getCurrentSectionText(section.id, parsed);
+    const status = statusFromTexts(current, section.content);
+    const currentLen = current.length;
+    const limitMeta = section.maxChars ? `${currentLen}/${section.maxChars}` : `${currentLen}`;
+
+    return `
+      <div class="copy-block mb-12">
+        <div class="copy-block-header">
+          <div>
+            <div class="copy-block-title">${section.title}</div>
+            <div style="font-size:10px;color:var(--text-dim);">Current size: ${limitMeta}</div>
+          </div>
+          <div>${statusChip(status)}</div>
+        </div>
+        <div class="grid-2 gap-12" style="padding:12px;">
+          <div style="border:1px solid var(--border);border-radius:10px;overflow:hidden;">
+            <div style="padding:8px 10px;background:var(--bg-glass);font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border);">Current (from export)</div>
+            <div style="padding:10px;font-size:12px;color:var(--text-secondary);white-space:pre-wrap;line-height:1.6;max-height:180px;overflow:auto;">${escapeHtml(current || 'No section found in export')}</div>
+          </div>
+          <div style="border:1px solid var(--gold-border);border-radius:10px;overflow:hidden;">
+            <div style="padding:8px 10px;background:var(--gold-glow);font-size:11px;color:var(--text-dim);border-bottom:1px solid var(--border);">Recommended</div>
+            <div style="padding:10px;font-size:12px;color:var(--text-secondary);white-space:pre-wrap;line-height:1.6;max-height:180px;overflow:auto;">${escapeHtml(section.content)}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  return `
+    <div class="section-title">Diff Report — Current vs Recommended</div>
+    ${rows}
+  `;
+}
+
+function bindChecklistEvents() {
+  const checks = document.querySelectorAll('[data-li-check]');
+  checks.forEach(box => {
+    box.addEventListener('change', () => {
+      const key = box.getAttribute('data-li-check');
+      if (!key) return;
+      const state = getChecklistState();
+      state[key] = !!box.checked;
+      saveChecklistState(state);
+      const holder = document.getElementById('li-checklist-holder');
+      if (holder) {
+        holder.innerHTML = renderRewriteChecklist();
+        bindChecklistEvents();
+      }
+    });
+  });
+}
+
+function runLinkedInExportAnalysis() {
+  const input = document.getElementById('li-export-input');
+  const out = document.getElementById('li-diff-results');
+  if (!input || !out) return;
+
+  const raw = input.value.trim();
+  if (!raw) {
+    window.toast?.('Paste your LinkedIn export text first.', 'red');
+    return;
+  }
+
+  latestParsedExport = parseLinkedInExport(raw);
+  out.innerHTML = renderDiffResults(latestParsedExport);
+  window.toast?.('LinkedIn export analyzed. Review section gaps below.', 'green');
+}
+
+function clearLinkedInExportAnalysis() {
+  const input = document.getElementById('li-export-input');
+  const out = document.getElementById('li-diff-results');
+  if (input) input.value = '';
+  if (out) {
+    out.innerHTML = `
+      <div class="empty-state" style="padding:20px;">
+        <div class="empty-title">No export analyzed yet</div>
+        <div class="empty-desc">Paste your LinkedIn export text and click Analyze to generate section-by-section diffs.</div>
+      </div>
+    `;
+  }
+  latestParsedExport = null;
+}
+
 export function renderLinkedInOptimizer() {
   const content = document.getElementById('page-content');
 
@@ -160,10 +402,34 @@ export function renderLinkedInOptimizer() {
       </div>
     </div>
 
+    <div id="li-checklist-holder">${renderRewriteChecklist()}</div>
+
+    <div class="card mb-24">
+      <div class="card-title"><span class="dot"></span>LinkedIn Export Diff Analyzer</div>
+      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:10px;line-height:1.7;">
+        Paste raw text from your LinkedIn export PDF, then generate current-vs-recommended diffs.
+      </div>
+      <textarea id="li-export-input" class="field" rows="10" placeholder="Paste exported LinkedIn text here..."></textarea>
+      <div class="flex gap-8 mt-8">
+        <button class="btn btn-gold btn-sm" id="btn-analyze-li-export">Analyze Export</button>
+        <button class="btn btn-ghost btn-sm" id="btn-clear-li-export">Clear</button>
+      </div>
+      <div id="li-diff-results" class="mt-16">
+        <div class="empty-state" style="padding:20px;">
+          <div class="empty-title">No export analyzed yet</div>
+          <div class="empty-desc">Paste your LinkedIn export text and click Analyze to generate section-by-section diffs.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Copy Blocks -->
     <div class="section-title">📋 Optimized Copy Blocks — Click to Copy Each Section</div>
     ${LINKEDIN_SECTIONS.map(sec => copyBlockHTML(sec)).join('')}
   `;
+
+  document.getElementById('btn-analyze-li-export')?.addEventListener('click', runLinkedInExportAnalysis);
+  document.getElementById('btn-clear-li-export')?.addEventListener('click', clearLinkedInExportAnalysis);
+  bindChecklistEvents();
 }
 
 function copyBlockHTML(sec) {
