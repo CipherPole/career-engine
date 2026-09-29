@@ -6,6 +6,26 @@
 
 ## Session Log: September 28, 2026
 
+### Milestone 22: Interactive Engineering Backlog & Agent Prompt Launcher (v2.8.2)
+- **Context:** System administrator requested a dedicated backlog section under System in the production Admin Console (`#settings`) covering Part 2 items and mock data migrations. The administrator needs to sign in anytime (including tomorrow), review all pending work items, click "Copy Agent Work Prompt" to hand off to an AI coding agent with complete context and instructions, and add new backlog tasks that persist in Neon Postgres.
+- **Implementation:**
+  - **State API (`api/state.js`):** Added `'engineering_backlog'` to `ALLOWED_STATE_KEYS`, enabling serverless cloud synchronization in Neon Postgres (`user_states` table).
+  - **Interactive Backlog Launcher (`scripts/auth-engine.js`):**
+    - Updated the "Backlog & Ratings" tab in `#settings` into an interactive **Engineering Backlog & AI Prompt Launcher**.
+    - Pre-seeded with 8 comprehensive engineering tasks (including the 5 Part 2 mock-data migration items: Learning Paths, Certification Verifications, Projects Portfolio, Job Market Recommendations, and Real-time ATS Scorer).
+    - Added priority filter chips (`ALL`, `P0 Immediate`, `P1 Next Up`, `P2 Future`) with live item counts.
+    - Added collapsible "Add Backlog Item" form allowing administrators to create custom tasks with title, priority, target files, and prompt instructions.
+    - Added "📋 Copy Agent Work Prompt" button for each card that formats a rich, structured Markdown task prompt (with context, architecture rules, target files, and step-by-step requirements) directly to the clipboard and gives instant visual feedback.
+    - Added "🚀 Dispatch to Issue Tracker" action that seamlessly creates an active ticket in the Feedback & Issue Intelligence Center (`#admin-feedback-panel`).
+    - Added "🗑️ Delete" action with cloud sync to remove completed or obsolete items.
+    - Implemented cloud state synchronization (`loadEngineeringBacklog()` and `saveEngineeringBacklog()`) with Neon Postgres and `localStorage` cache fallback.
+  - **Navigation Integration:**
+    - Profile Modal (`openAuthModal`): added `🎯 Engineering Backlog & Prompts` button that navigates directly to `#settings`, switches to the backlog tab, and smoothly scrolls to view.
+    - Sidebar (`index.html`): added `Backlog & Prompts` nav item under the System section with an `AGENT` badge.
+- **Validation:**
+  - `npm test` — PASS (0 vulnerabilities detected across 74 files)
+  - `npm audit` — PASS (0 vulnerabilities)
+
 ### Milestone 21.1: Production SEO Scan Cloud Persistence & Automatic Hydration
 - **Context:** Administrator noticed that after running an SEO Agent Scan, the SEO Intelligence Panel scores reverted to `—` upon page navigation or reload because scan results were kept only in ephemeral browser memory and not persisted to the database.
 - **Implementation:**

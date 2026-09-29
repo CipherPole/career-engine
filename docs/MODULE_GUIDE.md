@@ -24,7 +24,9 @@ e:\resume/
 │   ├── auth-session.js         # Session creation (POST) and termination (DELETE)
 │   ├── me.js                   # Authenticated user identity endpoint (GET)
 │   ├── profile.js              # User profile retrieval (GET), update (PUT), and deletion (DELETE)
-│   ├── state.js                # Scoped user state persistence (jobs, training, certs) (GET/PUT)
+│   ├── state.js                # Scoped user state persistence (jobs, training, certs, seo_scan, engineering_backlog) (GET/PUT)
+│   ├── feedback.js             # User feedback submission endpoint (POST)
+│   ├── admin-feedback.js       # Admin feedback management and status triage endpoint (GET/PATCH)
 │   ├── admin-auth-events.js    # Admin-only audit log reader (GET)
 │   └── _lib/                   # Shared serverless utilities
 │       ├── db.js               # Neon Postgres pool, schema migration, and data queries
@@ -113,11 +115,12 @@ All frontend code is written in pure Vanilla ES2022+ modules. When importing acr
     3. Cleans up all client `localStorage` and `sessionStorage` keys associated with the user's email.
     4. Removes `careerEngine_has_visited` so the user can re-register cleanly if desired.
     5. Redirects to `#signin` with a clean slate.
-  - `renderSettingsPage()`: Renders the Admin Console (`#settings`) for `jerexson3@gmail.com`. Contains three major sub-sections:
+  - `renderSettingsPage()`: Renders the Admin Console (`#settings`) for `jerexson3@gmail.com`. Contains major sub-sections:
     1. **OAuth & Security Cards** — Google Client ID configuration and session diagnostics.
     2. **Action Logs & Diagnostic Trace Route** — Live server auth events merged with client ring buffer, filterable by category and level.
-    3. **SEO Intelligence & AI Discoverability Panel** — Full on-demand SEO scan engine (see below).
-    4. **Project Evolution, Strategic Roadmap & Security Health** — Release history, backlog, and CLI audit commands.
+    3. **Project Evolution, Strategic Roadmap & Security Health** — Audited release history, CLI security scanner, and the interactive **Engineering Backlog & AI Prompt Launcher** with priority filters, copy-prompt generator, dispatch to issue tracker, and cloud state sync (`/api/state?key=engineering_backlog`).
+    4. **SEO Intelligence & AI Discoverability Panel** — Full on-demand SEO scan engine and traffic insights with cloud persistence (`/api/state?key=seo_scan`).
+    5. **User Feedback & Issues Intelligence Center** — Admin triage table for incoming bug reports, suggestions, questions, and AI analysis prompts.
   - `loadAdminAuthEvents(container)`: Fetches recent server events from `/api/admin-auth-events` and renders color-coded badges (`USER_DELETED` = Red, `USER_CREATED` = Purple, `USER_SIGNIN` = Blue).
   - **SEO Intelligence Panel** (rendered inside `renderSettingsPage`):
     - **6-Pillar Score Cards:** Displays live scores for Meta & Tags (gold), AI Discoverability (purple), Performance (cyan), Content Quality (green), Structured Data (orange), and an Overall grade card. All start as `—` until a scan runs.

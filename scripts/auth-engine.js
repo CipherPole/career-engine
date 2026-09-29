@@ -657,6 +657,9 @@ export function openAuthModal() {
               <button class="btn btn-secondary w-full" id="btn-modal-open-feedback" style="justify-content:center;padding:10px;font-weight:700;display:flex;align-items:center;gap:6px;border-color:rgba(245,158,11,0.4);color:var(--gold-light);">
                 📬 User Feedback &amp; Issues Tracker
               </button>
+              <button class="btn btn-secondary w-full" id="btn-modal-open-backlog" style="justify-content:center;padding:10px;font-weight:700;display:flex;align-items:center;gap:6px;border-color:rgba(59,130,246,0.4);color:#60a5fa;">
+                🎯 Engineering Backlog &amp; Prompts
+              </button>
             ` : ''}
             <button class="btn btn-secondary w-full" id="btn-modal-open-dashboard" style="justify-content:center;padding:10px;">
               🏠 My Skills Dashboard & Radar
@@ -742,6 +745,15 @@ export function openAuthModal() {
     window.navigate?.('settings');
     setTimeout(() => {
       document.getElementById('admin-feedback-panel')?.scrollIntoView({ behavior: 'smooth' });
+    }, 250);
+  });
+
+  document.getElementById('btn-modal-open-backlog')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    window.navigate?.('settings');
+    setTimeout(() => {
+      document.querySelector('.roadmap-tab-btn[data-tab="roadmap-backlog"]')?.click();
+      document.getElementById('tab-roadmap-backlog')?.scrollIntoView({ behavior: 'smooth' });
     }, 250);
   });
 
@@ -1273,7 +1285,7 @@ export function renderSettingsPage() {
           ⭐ Release History & Delivered Work (v1.0 – v2.4)
         </button>
         <button class="chip roadmap-tab-btn" data-tab="roadmap-backlog" style="cursor:pointer;font-size:12px;padding:6px 14px;">
-          🎯 Strategic Backlog & Priority Ratings
+          🎯 Engineering Backlog &amp; Prompts (<span id="backlog-count-badge">8</span>)
         </button>
         <button class="chip roadmap-tab-btn" data-tab="roadmap-security" style="cursor:pointer;font-size:12px;padding:6px 14px;">
           🛡️ Security Commands & CLI Specs
@@ -1360,83 +1372,74 @@ export function renderSettingsPage() {
       </div>
 
       <!-- Tab 2: Backlog & Ratings -->
-      <div id="tab-roadmap-backlog" class="roadmap-tab-pane" style="display:none;flex-direction:column;gap:12px;">
-        <!-- P0 -->
-        <div style="background:var(--bg-base);border:1px solid rgba(245,158,11,0.3);border-left:4px solid var(--gold);border-radius:var(--radius-md);padding:16px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="chip gold" style="font-weight:800;">P0 IMMEDIATE</span>
-              <strong style="font-size:14px;color:var(--text-primary);">AI Bullet Point Tailoring & ATS Live Match Scorer</strong>
+      <div id="tab-roadmap-backlog" class="roadmap-tab-pane" style="display:none;flex-direction:column;gap:14px;">
+
+        <!-- Backlog Header Bar -->
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+          <div>
+            <div style="font-size:15px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+              <span>🎯</span> Engineering Backlog &amp; AI Prompt Launcher
             </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="chip green" style="font-size:10px;">Rating: 9.8 / 10</span>
-              <span class="chip blue" style="font-size:10px;">Ready for Pickup</span>
+            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">
+              Prioritized enhancements, mock-data migrations, and feature specs. Click "📋 Copy Agent Work Prompt" to immediately hand off an item to an AI pair programmer.
             </div>
           </div>
-          <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin:0 0 8px 0;">
-            Paste target job descriptions to calculate TF-IDF keyword overlap in real-time, generate high-impact STAR resume bullets, and highlight missing high-frequency tech stacks.
-          </p>
-          <div style="font-size:11px;color:var(--gold-light);font-family:'JetBrains Mono',monospace;">
-            Impact: High (5/5) • Effort: 4–6 hrs • Target: scripts/resume-engine.js
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <button class="btn btn-gold btn-sm" id="btn-show-add-backlog" style="font-size:11px;padding:6px 12px;font-weight:700;display:flex;align-items:center;gap:6px;">
+              <span>➕</span> Add Backlog Item
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-refresh-backlog" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:6px;">
+              <span>🔄</span> Refresh Backlog
+            </button>
           </div>
         </div>
 
-        <!-- P1 PDF -->
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-left:4px solid var(--cyan);border-radius:var(--radius-md);padding:16px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="chip blue" style="font-weight:800;">P1 NEXT UP</span>
-              <strong style="font-size:14px;color:var(--text-primary);">Client-Side Native PDF & DOCX Export Engine</strong>
+        <!-- Add Custom Backlog Form (Collapsible) -->
+        <div id="form-add-backlog" style="display:none;background:var(--bg-base);border:1px solid var(--gold-border);border-radius:var(--radius-md);padding:16px;">
+          <div style="font-size:13px;font-weight:700;color:var(--gold-light);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+            <span>➕</span> Add New Work Item to Backlog
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 140px;gap:10px;margin-bottom:10px;">
+            <div>
+              <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Task Title</label>
+              <input id="input-bl-title" class="input" style="font-size:11px;padding:6px 10px;width:100%;margin-top:2px;" placeholder="e.g. Implement Custom Dark Mode Palette" />
             </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="chip green" style="font-size:10px;">Rating: 9.2 / 10</span>
-              <span class="chip blue" style="font-size:10px;">Ready for Pickup</span>
+            <div>
+              <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Priority</label>
+              <select id="input-bl-priority" class="select w-full" style="font-size:11px;padding:6px 10px;margin-top:2px;">
+                <option value="P0">P0 IMMEDIATE</option>
+                <option value="P1" selected>P1 NEXT UP</option>
+                <option value="P2">P2 FUTURE</option>
+              </select>
             </div>
           </div>
-          <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin:0 0 8px 0;">
-            1-click instant PDF generation with custom margins, ATS-friendly single-column layouts, and sanitized file naming without relying on the browser print dialog.
-          </p>
-          <div style="font-size:11px;color:var(--cyan);font-family:'JetBrains Mono',monospace;">
-            Impact: High (4.5/5) • Effort: 3–4 hrs • Target: scripts/pdf-engine.js
+          <div style="margin-bottom:10px;">
+            <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Target Files</label>
+            <input id="input-bl-target" class="input" style="font-size:11px;padding:6px 10px;width:100%;margin-top:2px;" placeholder="e.g. scripts/resume-engine.js, styles/main.css" />
+          </div>
+          <div style="margin-bottom:12px;">
+            <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Agent Instructions &amp; Description</label>
+            <textarea id="input-bl-desc" class="input" style="font-size:11px;padding:8px 10px;width:100%;min-height:75px;resize:vertical;margin-top:2px;" placeholder="Detailed requirements and context for the AI agent..."></textarea>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-gold btn-sm" id="btn-save-new-backlog" style="font-size:11px;padding:6px 14px;font-weight:700;">💾 Save to Cloud Backlog</button>
+            <button class="btn btn-secondary btn-sm" id="btn-cancel-add-backlog" style="font-size:11px;padding:6px 12px;">Cancel</button>
           </div>
         </div>
 
-        <!-- P1 Comp -->
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-left:4px solid var(--green);border-radius:var(--radius-md);padding:16px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="chip green" style="font-weight:800;">P1 NEXT UP</span>
-              <strong style="font-size:14px;color:var(--text-primary);">Compensation & Offer Negotiation Scenario Modeling</strong>
-            </div>
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="chip green" style="font-size:10px;">Rating: 9.0 / 10</span>
-              <span class="chip blue" style="font-size:10px;">Ready for Pickup</span>
-            </div>
-          </div>
-          <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin:0 0 8px 0;">
-            Multi-offer equity comparison simulator with custom 4-year vesting schedules, bull/bear stock appreciation models, and state tax adjustments.
-          </p>
-          <div style="font-size:11px;color:var(--green);font-family:'JetBrains Mono',monospace;">
-            Impact: High (4/5) • Effort: 2–3 hrs • Target: scripts/comp-engine.js
-          </div>
+        <!-- Filter Chips -->
+        <div style="display:flex;gap:6px;flex-wrap:wrap;" id="backlog-filter-chips">
+          <button class="chip active bl-filter-btn" data-filter="ALL" style="cursor:pointer;font-size:11px;">All Backlog Items (<span id="count-bl-all">0</span>)</button>
+          <button class="chip bl-filter-btn" data-filter="P0" style="cursor:pointer;font-size:11px;">P0 Immediate (<span id="count-bl-p0">0</span>)</button>
+          <button class="chip bl-filter-btn" data-filter="P1" style="cursor:pointer;font-size:11px;">P1 Next Up (<span id="count-bl-p1">0</span>)</button>
+          <button class="chip bl-filter-btn" data-filter="P2" style="cursor:pointer;font-size:11px;">P2 Future (<span id="count-bl-p2">0</span>)</button>
         </div>
 
-        <!-- P2 Cloud Sync & E2E -->
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-left:4px solid #c084fc;border-radius:var(--radius-md);padding:16px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
-            <div style="display:flex;align-items:center;gap:8px;">
-              <span class="chip purple" style="font-weight:800;">P2 FUTURE</span>
-              <strong style="font-size:14px;color:var(--text-primary);">Encrypted Cloud Sync & Automated Playwright Suite</strong>
-            </div>
-            <span class="chip" style="font-size:10px;">Backlog</span>
-          </div>
-          <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin:0 0 8px 0;">
-            End-to-end client-side encrypted backup (AES-GCM) with optional Supabase/Firebase integration, and automated CI regression testing for OAuth popups and routing.
-          </p>
-          <div style="font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">
-            Impact: Med-High (4.5/5) • Effort: 6–8 hrs
-          </div>
+        <!-- Dynamic Backlog Items List -->
+        <div id="admin-backlog-list" style="display:flex;flex-direction:column;gap:12px;">
+          <!-- Dynamically populated from Neon Postgres -->
         </div>
+
       </div>
 
       <!-- Tab 3: Security Commands & CLI -->
@@ -2933,4 +2936,507 @@ ${r.findings.length === 0
 
   // Initial Feedback Hydration
   refreshFeedbackDashboard();
+
+  // ── ENGINEERING BACKLOG & PROMPT LAUNCHER LOGIC ──────────────
+  const DEFAULT_ENGINEERING_BACKLOG = [
+    {
+      id: 'bl-cover-outreach',
+      priority: 'P0',
+      priorityClass: 'gold',
+      title: 'Dynamic Outreach Templates & Cover Letter Cloud Persistence',
+      target: 'scripts/app.js, api/state.js',
+      impact: 'High (5/5) • Effort: 2–3 hrs',
+      status: 'Ready for Pickup',
+      desc: 'Replace hardcoded outreach templates in scripts/app.js ("Joseph Erexson III", "Bank of America", "7+ years") with dynamic profile fields (State.resumeData.contact.name, targetTitle, and recent company). Allow users to save generated cover letters to Neon Postgres via api/state?key=cover_letters.',
+      prompt: `# 🤖 Career Engine — Engineering Work Order
+
+**Task:** Migrate Hardcoded Outreach Templates to Dynamic Profile Data & Add Cloud Persistence
+**Target Files:** \`scripts/app.js\`, \`api/state.js\`
+
+### Problem
+In \`scripts/app.js\` (\`renderCoverLetterPage\`), the Recruiter Outreach templates ("LinkedIn Connection Request" and "Follow-Up After Application") contain hardcoded strings referencing "Joseph Erexson III", "Bank of America", and "7+ years". Additionally, generated cover letters are not saved to the database.
+
+### Objectives
+1. Update \`renderCoverLetterPage\` to read \`State.resumeData\` (contact name, target title, most recent employer, and top 3 skills).
+2. Dynamically interpolate the candidate's real name and background into the outreach templates. If no company is listed, fall back to safe generic placeholders.
+3. Add \`'cover_letters'\` to \`ALLOWED_STATE_KEYS\` in \`api/state.js\`.
+4. Allow users to save generated cover letters with a title and date, syncing to \`PUT /api/state?key=cover_letters\` in Neon Postgres.
+5. Follow \`docs/UI_PROGRAMMING_STANDARDS.md\` and verify pre-commit checks (\`npm test\`, \`npm audit\`).`
+    },
+    {
+      id: 'bl-linkedin-adaptive',
+      priority: 'P0',
+      priorityClass: 'gold',
+      title: 'Profile-Adaptive LinkedIn Content & Cloud Checklist Sync',
+      target: 'scripts/linkedin-engine.js, api/state.js',
+      impact: 'High (5/5) • Effort: 3–4 hrs',
+      status: 'Ready for Pickup',
+      desc: 'In scripts/linkedin-engine.js, LINKEDIN_SECTIONS currently hardcodes Joseph\'s personal career summary and Bank of America achievements. For non-owner users, dynamically generate recommended LinkedIn copy from their uploaded resume/profile. Add "linkedin_state" to api/state.js so the 8-point rewrite checklist syncs to Neon Postgres.',
+      prompt: `# 🤖 Career Engine — Engineering Work Order
+
+**Task:** Profile-Adaptive LinkedIn Content & Checklist Server Persistence
+**Target Files:** \`scripts/linkedin-engine.js\`, \`api/state.js\`
+
+### Problem
+\`scripts/linkedin-engine.js\` has static fallback copy blocks specifically for Bank of America / Unity Recovery. New candidates who have not yet run an import see someone else's career narrative. Also, the 8-point rewrite checklist is stored only in localStorage.
+
+### Objectives
+1. Modify \`scripts/linkedin-engine.js\` so \`LINKEDIN_SECTIONS\` dynamically generates headline, about, and experience drafts using the candidate's active \`State.resumeData\` (headline from target title + top competencies; about summary from resume summary + achievements).
+2. Allow viewing Joseph's profile as an optional "Showcase Exemplar" tab or toggle, while keeping the candidate's own workspace isolated.
+3. Add \`'linkedin_state'\` to \`ALLOWED_STATE_KEYS\` in \`api/state.js\`.
+4. Sync checklist progress and custom drafts to Neon Postgres via \`api/state?key=linkedin_state\`.
+5. Verify \`npm test\` and \`npm audit\`.`
+    },
+    {
+      id: 'bl-github-portfolio',
+      priority: 'P1',
+      priorityClass: 'blue',
+      title: 'Multi-Tenant GitHub Portfolio & Custom Project Showcase',
+      target: 'scripts/project-showcase.js, api/state.js',
+      impact: 'Med-High (4/5) • Effort: 3–4 hrs',
+      status: 'Ready for Pickup',
+      desc: 'In scripts/project-showcase.js, GITHUB_USER is hardcoded to "CipherPole" and reads static data/projects.json. Allow candidates to provide their own GitHub username, query the GitHub API dynamically, and add custom portfolio cards synced to Neon Postgres via api/state?key=projects.',
+      prompt: `# 🤖 Career Engine — Engineering Work Order
+
+**Task:** Dynamic GitHub Handle & Custom Portfolio Project Management
+**Target Files:** \`scripts/project-showcase.js\`, \`api/state.js\`
+
+### Problem
+\`scripts/project-showcase.js\` hardcodes \`GITHUB_USER = 'CipherPole'\` and reads only static \`data/projects.json\`. New candidates cannot view their own GitHub repositories or add custom portfolio projects.
+
+### Objectives
+1. Read the candidate's GitHub handle from \`State.resumeData.contact.github\` (or prompt for their GitHub username in the GitHub tab).
+2. Query \`https://api.github.com/users/\${handle}/repos\` dynamically for the active candidate.
+3. Add an "➕ Add Project" modal allowing candidates to showcase their personal repositories or live apps.
+4. Add \`'projects'\` to \`ALLOWED_STATE_KEYS\` in \`api/state.js\` and sync candidate projects to Neon Postgres.
+5. Verify \`npm test\` and \`npm audit\`.`
+    },
+    {
+      id: 'bl-implementation-lab',
+      priority: 'P1',
+      priorityClass: 'blue',
+      title: 'Implementation Lab Prompt History & Rubric Cloud Sync',
+      target: 'scripts/implementation-engine.js, api/state.js',
+      impact: 'Medium (3.5/5) • Effort: 2 hrs',
+      status: 'Ready for Pickup',
+      desc: 'scripts/implementation-engine.js evaluates AI coding prompts against a 6-dimension rubric, but stores ratings and prompt history only in browser localStorage. Add "implementation_lab" to api/state.js to sync prompt scores and drafts to Neon Postgres.',
+      prompt: `# 🤖 Career Engine — Engineering Work Order
+
+**Task:** Sync Implementation Lab Prompt History & Rubric to Server Database
+**Target Files:** \`scripts/implementation-engine.js\`, \`api/state.js\`
+
+### Problem
+\`scripts/implementation-engine.js\` stores prompt evaluation ratings and prompt history in \`localStorage\` only (\`careerEngine_implementation_lab_v1\`).
+
+### Objectives
+1. Add \`'implementation_lab'\` to \`ALLOWED_STATE_KEYS\` in \`api/state.js\`.
+2. Update \`loadState()\` and \`saveState()\` in \`scripts/implementation-engine.js\` to query and persist state via \`/api/state?key=implementation_lab\`.
+3. Retain \`localStorage\` as an offline-first fallback.
+4. Verify \`npm test\` and \`npm audit\`.`
+    },
+    {
+      id: 'bl-job-query-builder',
+      priority: 'P1',
+      priorityClass: 'blue',
+      title: 'Dynamic Role & Salary Deep-Link Generator for Job Boards',
+      target: 'scripts/tracker-engine.js',
+      impact: 'Medium (3.5/5) • Effort: 2 hrs',
+      status: 'Ready for Pickup',
+      desc: 'In scripts/tracker-engine.js, JOB_BOARDS contains static URLs hardcoded for DevOps Lead ($150k+). Add a compact filter bar at the top of the Job Boards tab to dynamically generate deep links for LinkedIn, Indeed, Glassdoor, and Levels.fyi using candidate targetTitle and targetComp.',
+      prompt: `# 🤖 Career Engine — Engineering Work Order
+
+**Task:** Dynamic Role & Salary Deep-Link Generator for Job Boards
+**Target Files:** \`scripts/tracker-engine.js\`
+
+### Problem
+In \`scripts/tracker-engine.js\`, \`JOB_BOARDS\` contains fixed URLs hardcoded for DevOps Lead ($150k+). A candidate targeting SRE, Cloud Architect, or Full-Stack Lead cannot customize search parameters.
+
+### Objectives
+1. Add a compact search filter bar at the top of the Job Boards tab: \`Target Role\`, \`Location (Remote / City)\`, \`Minimum Salary\`.
+2. Pre-fill these inputs from \`State.resumeData.meta.targetTitle\` and \`targetComp\`.
+3. Dynamically generate one-click deep links for LinkedIn Jobs, Indeed, Levels.fyi, Glassdoor, and Wellfound using encoded query parameters.
+4. Verify \`npm test\` and \`npm audit\`.`
+    },
+    {
+      id: 'bl-ai-bullet-tailor',
+      priority: 'P0',
+      priorityClass: 'gold',
+      title: 'AI Bullet Point Tailoring & ATS Live Match Scorer',
+      target: 'scripts/resume-engine.js',
+      impact: 'High (5/5) • Effort: 4–6 hrs',
+      status: 'Ready for Pickup',
+      desc: 'Paste target job descriptions to calculate TF-IDF keyword overlap in real-time, generate high-impact STAR resume bullets, and highlight missing high-frequency tech stacks directly in Resume Studio.',
+      prompt: `# 🤖 Career Engine — Engineering Work Order
+
+**Task:** AI Bullet Point Tailoring & Live ATS Match Scorer
+**Target Files:** \`scripts/resume-engine.js\`
+
+### Objectives
+1. Implement real-time TF-IDF keyword overlap comparison between target JD and candidate resume.
+2. Generate suggested STAR (Situation, Task, Action, Result) bullet improvements.
+3. Highlight missing critical skills in the resume studio view.
+4. Follow zero-dependency Vanilla JS rules and verify \`npm test\` and \`npm audit\`.`
+    },
+    {
+      id: 'bl-native-pdf',
+      priority: 'P1',
+      priorityClass: 'blue',
+      title: 'Client-Side Native PDF & DOCX Export Engine',
+      target: 'scripts/pdf-engine.js',
+      impact: 'High (4.5/5) • Effort: 3–4 hrs',
+      status: 'Ready for Pickup',
+      desc: '1-click instant PDF and DOCX generation with custom margins, ATS-friendly single-column layout, and sanitized file naming without relying exclusively on the browser print dialog.',
+      prompt: `# 🤖 Career Engine — Engineering Work Order
+
+**Task:** Native PDF & DOCX Export Engine
+**Target Files:** \`scripts/pdf-engine.js\`, \`scripts/resume-engine.js\`
+
+### Objectives
+1. Implement client-side PDF export with precise margins and clean ATS formatting.
+2. Provide sanitized file naming: \`[Name]_[Role]_Resume.pdf\`.
+3. Support plain text / markdown / DOCX download options.
+4. Verify \`npm test\` and \`npm audit\`.`
+    },
+    {
+      id: 'bl-comp-modeling',
+      priority: 'P1',
+      priorityClass: 'green',
+      title: 'Compensation & Offer Negotiation Scenario Modeling',
+      target: 'scripts/comp-engine.js',
+      impact: 'High (4/5) • Effort: 2–3 hrs',
+      status: 'Ready for Pickup',
+      desc: 'Multi-offer equity comparison simulator with custom 4-year vesting schedules, bull/bear stock appreciation models, and state tax adjustments.',
+      prompt: `# 🤖 Career Engine — Engineering Work Order
+
+**Task:** Compensation & Offer Negotiation Scenario Modeling
+**Target Files:** \`scripts/comp-engine.js\`
+
+### Objectives
+1. Build interactive compensation simulator comparing base, bonus, and RSUs/options.
+2. Model 4-year vesting schedules and cost-of-living differentials.
+3. Provide counter-offer generation scripts tailored to executive compensation benchmarks.
+4. Verify \`npm test\` and \`npm audit\`.`
+    }
+  ];
+
+  let engineeringBacklogItems = [];
+  let currentBacklogFilter = 'ALL';
+
+  async function loadEngineeringBacklog() {
+    let items = null;
+    try {
+      const raw = localStorage.getItem('careerEngine_engineering_backlog');
+      if (raw) items = JSON.parse(raw);
+    } catch {}
+
+    try {
+      const res = await fetch('/api/state?key=engineering_backlog', { credentials: 'include' });
+      if (res.ok) {
+        const body = await res.json();
+        if (Array.isArray(body?.state) && body.state.length > 0) {
+          items = body.state;
+          try { localStorage.setItem('careerEngine_engineering_backlog', JSON.stringify(items)); } catch {}
+        }
+      }
+    } catch (err) {}
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      items = [...DEFAULT_ENGINEERING_BACKLOG];
+      saveEngineeringBacklog(items);
+    }
+
+    engineeringBacklogItems = items;
+    renderBacklogList();
+  }
+
+  async function saveEngineeringBacklog(items) {
+    engineeringBacklogItems = items;
+    try {
+      localStorage.setItem('careerEngine_engineering_backlog', JSON.stringify(items));
+    } catch {}
+    try {
+      await fetch('/api/state?key=engineering_backlog', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ state: items }),
+      });
+    } catch (err) {
+      console.warn('Failed saving engineering backlog to server:', err);
+    }
+  }
+
+  function renderBacklogList() {
+    const listEl = document.getElementById('admin-backlog-list');
+    if (!listEl) return;
+
+    const total = engineeringBacklogItems.length;
+    const p0Count = engineeringBacklogItems.filter(i => i.priority === 'P0').length;
+    const p1Count = engineeringBacklogItems.filter(i => i.priority === 'P1').length;
+    const p2Count = engineeringBacklogItems.filter(i => i.priority === 'P2').length;
+
+    // Update count badges
+    const badgeAll = document.getElementById('count-bl-all');
+    const badgeP0 = document.getElementById('count-bl-p0');
+    const badgeP1 = document.getElementById('count-bl-p1');
+    const badgeP2 = document.getElementById('count-bl-p2');
+    const badgeTab = document.getElementById('backlog-count-badge');
+
+    if (badgeAll) badgeAll.textContent = total;
+    if (badgeP0) badgeP0.textContent = p0Count;
+    if (badgeP1) badgeP1.textContent = p1Count;
+    if (badgeP2) badgeP2.textContent = p2Count;
+    if (badgeTab) badgeTab.textContent = total;
+
+    const filtered = engineeringBacklogItems.filter(i => {
+      return currentBacklogFilter === 'ALL' || i.priority === currentBacklogFilter;
+    });
+
+    if (filtered.length === 0) {
+      listEl.innerHTML = `
+        <div style="text-align:center;padding:32px;color:var(--text-dim);background:var(--bg-base);border-radius:var(--radius-md);border:1px dashed var(--border);">
+          <div style="font-size:24px;margin-bottom:6px;">✨</div>
+          <div>No backlog items in this priority filter.</div>
+        </div>
+      `;
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(item => {
+      const pColor = item.priority === 'P0' ? 'var(--gold)' : item.priority === 'P1' ? 'var(--cyan)' : '#c084fc';
+      const pBorder = item.priority === 'P0' ? 'var(--gold)' : item.priority === 'P1' ? 'var(--cyan)' : '#c084fc';
+      const isCustom = !DEFAULT_ENGINEERING_BACKLOG.some(d => d.id === item.id);
+
+      return `
+        <div class="backlog-card" id="card-${item.id}" style="background:var(--bg-base);border:1px solid var(--border);border-left:4px solid ${pBorder};border-radius:var(--radius-md);padding:16px;">
+          <!-- Top Row -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="chip ${item.priorityClass || (item.priority === 'P0' ? 'gold' : item.priority === 'P1' ? 'blue' : 'purple')}" style="font-weight:800;font-size:11px;">
+                ${item.priority} ${item.priority === 'P0' ? 'IMMEDIATE' : item.priority === 'P1' ? 'NEXT UP' : 'FUTURE'}
+              </span>
+              <strong style="font-size:14px;color:var(--text-primary);">${escapeHtml(item.title)}</strong>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="chip ${item.status === 'Dispatched' ? 'green' : 'blue'}" style="font-size:10px;">${item.status || 'Ready for Pickup'}</span>
+              ${isCustom ? `
+                <button class="btn btn-ghost btn-sm btn-delete-bl" data-id="${item.id}" style="font-size:10px;padding:3px 6px;color:var(--red);" title="Delete custom backlog item">✕</button>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Description -->
+          <p style="font-size:12px;color:var(--text-secondary);line-height:1.5;margin:0 0 10px 0;">
+            ${escapeHtml(item.desc)}
+          </p>
+
+          <!-- Target & Impact -->
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px;font-size:11px;">
+            <div style="color:var(--text-dim);">
+              Target: <code style="color:var(--gold-light);">${escapeHtml(item.target || 'scripts/')}</code>
+            </div>
+            <div style="color:${pColor};font-family:'JetBrains Mono',monospace;">
+              ${escapeHtml(item.impact || 'Standard Effort')}
+            </div>
+          </div>
+
+          <!-- Collapsible Prompt Box -->
+          <div class="bl-prompt-box" id="prompt-box-${item.id}" style="display:none;margin-bottom:12px;background:#05070c;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <span style="font-size:11px;font-weight:700;color:var(--green);">🤖 Full AI Agent Work Prompt</span>
+              <span class="chip" style="font-size:9px;">Markdown</span>
+            </div>
+            <pre style="margin:0;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-primary);white-space:pre-wrap;max-height:180px;overflow-y:auto;line-height:1.4;">${escapeHtml(item.prompt || item.desc)}</pre>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,0.04);padding-top:10px;">
+            <button class="btn btn-gold btn-sm btn-bl-copy-prompt" data-id="${item.id}" style="font-size:11px;padding:6px 12px;font-weight:700;display:flex;align-items:center;gap:6px;">
+              <span>📋</span> Copy Agent Work Prompt
+            </button>
+            <button class="btn btn-secondary btn-sm btn-bl-dispatch-ticket" data-id="${item.id}" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:6px;color:#c084fc;border-color:rgba(168,85,247,0.35);">
+              <span>🚀</span> Dispatch to Issue Tracker
+            </button>
+            <button class="btn btn-ghost btn-sm btn-bl-toggle-preview" data-id="${item.id}" style="font-size:11px;padding:6px 10px;">
+              👁️ View Prompt
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Bind Backlog Actions
+  const backlogContainer = document.getElementById('tab-roadmap-backlog');
+  backlogContainer?.addEventListener('click', async (e) => {
+    // 1. Copy Prompt
+    const btnCopy = e.target.closest('.btn-bl-copy-prompt');
+    if (btnCopy) {
+      const id = btnCopy.dataset.id;
+      const item = engineeringBacklogItems.find(i => i.id === id);
+      if (!item) return;
+
+      const pText = item.prompt || item.desc;
+      try {
+        await navigator.clipboard.writeText(pText);
+      } catch {
+        window.prompt('Agent Work Prompt:', pText);
+      }
+      window.toast?.(`📋 Agent Work Prompt for "${item.title}" copied! Paste to AI agent to begin work.`, 'green');
+      return;
+    }
+
+    // 2. Dispatch to Issue Tracker
+    const btnDispatch = e.target.closest('.btn-bl-dispatch-ticket');
+    if (btnDispatch) {
+      const id = btnDispatch.dataset.id;
+      const item = engineeringBacklogItems.find(i => i.id === id);
+      if (!item) return;
+
+      btnDispatch.disabled = true;
+      btnDispatch.innerHTML = '<span>⏳</span> Dispatching...';
+
+      try {
+        const res = await submitFeedback({
+          type: item.priority === 'P0' ? 'bug' : 'suggestion',
+          subject: `[Backlog ${item.priority}] ${item.title}`,
+          message: `${item.desc}\n\nTarget Files: ${item.target}\n\nImpact: ${item.impact}`,
+          userName: 'System Admin (Backlog)',
+          userEmail: OWNER_EMAIL,
+        });
+
+        if (res.ok) {
+          // If prompt exists, update it in admin feedback tracker
+          if (item.prompt && res.id) {
+            await updateAdminFeedbackStatus(res.id, {
+              status: 'open',
+              aiPrompt: item.prompt,
+            });
+          }
+          item.status = 'Dispatched';
+          await saveEngineeringBacklog(engineeringBacklogItems);
+          renderBacklogList();
+          window.toast?.(`🚀 Work order dispatched as Ticket #${res.id} in Issue Tracker!`, 'green');
+          refreshFeedbackDashboard();
+        }
+      } catch (err) {
+        window.toast?.('Failed to dispatch item.', 'red');
+      } finally {
+        btnDispatch.disabled = false;
+        btnDispatch.innerHTML = '<span>🚀</span> Dispatch to Issue Tracker';
+      }
+      return;
+    }
+
+    // 3. Toggle Prompt Preview
+    const btnToggle = e.target.closest('.btn-bl-toggle-preview');
+    if (btnToggle) {
+      const id = btnToggle.dataset.id;
+      const box = document.getElementById(`prompt-box-${id}`);
+      if (box) {
+        const isHidden = box.style.display === 'none';
+        box.style.display = isHidden ? 'block' : 'none';
+        btnToggle.textContent = isHidden ? '🙈 Hide Prompt' : '👁️ View Prompt';
+      }
+      return;
+    }
+
+    // 4. Delete custom item
+    const btnDel = e.target.closest('.btn-delete-bl');
+    if (btnDel) {
+      const id = btnDel.dataset.id;
+      if (confirm('Delete this custom backlog item?')) {
+        engineeringBacklogItems = engineeringBacklogItems.filter(i => i.id !== id);
+        await saveEngineeringBacklog(engineeringBacklogItems);
+        renderBacklogList();
+        window.toast?.('Backlog item deleted.', 'gold');
+      }
+      return;
+    }
+  });
+
+  // Filter chips in Backlog
+  document.querySelectorAll('.bl-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.bl-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentBacklogFilter = btn.dataset.filter;
+      renderBacklogList();
+    });
+  });
+
+  // Add Item Toggle
+  document.getElementById('btn-show-add-backlog')?.addEventListener('click', () => {
+    const form = document.getElementById('form-add-backlog');
+    if (form) {
+      form.style.display = form.style.display === 'none' ? 'block' : 'none';
+      if (form.style.display === 'block') {
+        document.getElementById('input-bl-title')?.focus();
+      }
+    }
+  });
+
+  document.getElementById('btn-cancel-add-backlog')?.addEventListener('click', () => {
+    const form = document.getElementById('form-add-backlog');
+    if (form) form.style.display = 'none';
+  });
+
+  // Save New Custom Backlog Item
+  document.getElementById('btn-save-new-backlog')?.addEventListener('click', async () => {
+    const title = document.getElementById('input-bl-title')?.value.trim();
+    const priority = document.getElementById('input-bl-priority')?.value || 'P1';
+    const target = document.getElementById('input-bl-target')?.value.trim() || 'scripts/';
+    const desc = document.getElementById('input-bl-desc')?.value.trim();
+
+    if (!title || !desc) {
+      window.toast?.('Title and Description are required.', 'red');
+      return;
+    }
+
+    const newItem = {
+      id: `custom-${Date.now()}`,
+      priority,
+      priorityClass: priority === 'P0' ? 'gold' : priority === 'P1' ? 'blue' : 'purple',
+      title,
+      target,
+      impact: 'Custom User Specification',
+      status: 'Ready for Pickup',
+      desc,
+      prompt: `# 🤖 Career Engine — Engineering Work Order
+
+**Task:** ${title}
+**Priority:** ${priority}
+**Target Files:** \`${target}\`
+
+### Description & Objectives
+${desc}
+
+### Execution Plan
+1. Review relevant files and architecture guidelines in \`docs/MODULE_GUIDE.md\`.
+2. Implement solution adhering to zero-dependency Vanilla JS rules.
+3. Validate pre-commit hygiene with \`npm test\` and \`npm audit\`.`
+    };
+
+    engineeringBacklogItems.unshift(newItem);
+    await saveEngineeringBacklog(engineeringBacklogItems);
+
+    // Reset form
+    document.getElementById('input-bl-title').value = '';
+    document.getElementById('input-bl-target').value = '';
+    document.getElementById('input-bl-desc').value = '';
+    document.getElementById('form-add-backlog').style.display = 'none';
+
+    renderBacklogList();
+    window.toast?.('💾 Custom backlog item saved to cloud and ready for copy!', 'green');
+  });
+
+  // Refresh Backlog Button
+  document.getElementById('btn-refresh-backlog')?.addEventListener('click', async () => {
+    await loadEngineeringBacklog();
+    window.toast?.('🔄 Backlog refreshed from cloud.', 'cyan');
+  });
+
+  // Initial Backlog Hydration
+  loadEngineeringBacklog();
 }
+
