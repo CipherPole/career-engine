@@ -64,6 +64,22 @@ async function ensureSchema() {
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
     `;
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS feedback (
+        id BIGSERIAL PRIMARY KEY,
+        user_id BIGINT NULL REFERENCES users(id) ON DELETE SET NULL,
+        user_email TEXT,
+        user_name TEXT,
+        type TEXT NOT NULL DEFAULT 'feedback',
+        subject TEXT NOT NULL,
+        message TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'open',
+        ai_prompt TEXT,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `;
   })();
 
   return schemaReadyPromise;
@@ -230,6 +246,63 @@ async function deleteUserAccount(userId) {
   return true;
 }
 
+async function createFeedback({ userId = null, userEmail = '', userName = '', type = 'feedback', subject = '', message = '' }) {
+  await ensureSchema();
+  const sql = getSql();
+  const rows = await sql`
+    INSERT INTO feedback (user_id, user_email, user_name, type, subject, message, status, updated_at)
+    VALUES (${userId}, ${userEmail}, ${userName}, ${type}, ${subject}, ${message}, 'open', NOW())
+    RETURNING id, user_id, user_email, user_name, type, subject, message, status, ai_prompt, created_at, updated_at;
+  `;
+  return rows[0];
+}
+
+async function getAllFeedback(limit = 100) {
+  await ensureSchema();
+  const sql = getSql();
+  const safeLimit = Math.min(Math.max(Number(limit) || 100, 1), 300);
+  const rows = await sql`
+    SELECT id, user_id, user_email, user_name, type, subject, message, status, ai_prompt, created_at, updated_at
+    FROM feedback
+    ORDER BY created_at DESC
+    LIMIT ${safeLimit};
+  `;
+  return rows;
+}
+
+async function updateFeedbackStatus(id, { status, aiPrompt }) {
+  await ensureSchema();
+  const sql = getSql();
+  const safeStatus = ['open', 'in_progress', 'reported', 'completed'].includes(status) ? status : undefined;
+
+  if (safeStatus && aiPrompt !== undefined) {
+    const rows = await sql`
+      UPDATE feedback
+      SET status = ${safeStatus}, ai_prompt = ${aiPrompt}, updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, user_id, user_email, user_name, type, subject, message, status, ai_prompt, created_at, updated_at;
+    `;
+    return rows[0] || null;
+  } else if (safeStatus) {
+    const rows = await sql`
+      UPDATE feedback
+      SET status = ${safeStatus}, updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, user_id, user_email, user_name, type, subject, message, status, ai_prompt, created_at, updated_at;
+    `;
+    return rows[0] || null;
+  } else if (aiPrompt !== undefined) {
+    const rows = await sql`
+      UPDATE feedback
+      SET ai_prompt = ${aiPrompt}, updated_at = NOW()
+      WHERE id = ${id}
+      RETURNING id, user_id, user_email, user_name, type, subject, message, status, ai_prompt, created_at, updated_at;
+    `;
+    return rows[0] || null;
+  }
+  return null;
+}
+
 module.exports = {
   ensureSchema,
   upsertUserFromGoogle,
@@ -242,4 +315,8 @@ module.exports = {
   logAuthEvent,
   getRecentAuthEvents,
   deleteUserAccount,
+  createFeedback,
+  getAllFeedback,
+  updateFeedbackStatus,
 };
+

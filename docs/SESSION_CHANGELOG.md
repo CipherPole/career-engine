@@ -6,6 +6,42 @@
 
 ## Session Log: September 28, 2026
 
+### Milestone 21: User Feedback Chatbot & Issue Intelligence Center (v2.8.0)
+- **Context:** User requested a two-part feedback and issue reporting system: a user-facing chatbot widget for questions and reporting feedback/bugs, plus an Admin Console section under System with live lifecycle management (Open → In Progress upon AI analysis → Reported upon prompt copy → Completed) so engineers and agents can keep track of work items.
+- **Implementation:**
+  - **Database Migration (`api/_lib/db.js`):** Added `feedback` table schema with `id`, `user_id` (foreign key ON DELETE SET NULL), `user_email`, `user_name`, `type`, `subject`, `message`, `status`, `ai_prompt`, `created_at`, `updated_at`. Added `createFeedback()`, `getAllFeedback()`, `updateFeedbackStatus()`.
+  - **Feedback API (`api/feedback.js`):** Public/authenticated `POST` route accepting `{ type, subject, message, userName, userEmail }`, attaching user session if present, storing ticket in Neon Postgres, and returning created row.
+  - **Admin Feedback API (`api/admin-feedback.js`):** RBAC-protected `GET` (returns feedback items sorted by date) and `PATCH` (updates status and/or stores generated `aiPrompt`).
+  - **Client Chatbot & Feedback Engine (`scripts/feedback-engine.js`):**
+    - Floating launcher button (`#ce-chat-trigger`) with pulse indicator and glassmorphic slide-up panel (`#ce-chat-widget`).
+    - Smart Assistant FAQ matching queries against knowledge base for ATS scoring, Skill Gap radar, Job Tracker CRM, privacy guarantees, and roadmap.
+    - Direct submission form with category selector (Bug, Suggestion, Question, Feedback) and pre-filled user details for signed-in users.
+    - AI Coding Agent work order prompt generator (`generateAgentWorkPrompt`) generating comprehensive Markdown task prompts.
+  - **Admin Feedback Intelligence Dashboard (`scripts/auth-engine.js`):**
+    - Mounted in `#settings` with live counters: Total, Open, In Progress, Reported, Completed.
+    - Tab filters (`All`, `Open`, `In Progress`, `Reported`, `Completed`) and real-time search.
+    - "Analyse with AI" action: generates agent prompt and sets status to `in_progress`.
+    - "Copy Prompt (Mark Reported)" action: copies prompt to clipboard and transitions status to `reported`.
+    - "Mark as Completed" and "Re-Open" action buttons + direct status dropdown selector.
+    - Quick test report generator button for verifying end-to-end prompt generation.
+  - **UI Integration & Navigation:**
+    - Profile Modal (`openAuthModal`): added quick-action button for admins directing straight to feedback tracker.
+    - Sidebar (`index.html`): added `Feedback & Issues` nav item under the System section.
+    - CSS styling (`styles/main.css`): glassmorphic floating chat widget, status chips, responsive mobile layout.
+- **Files Changed:**
+  - `api/_lib/db.js` — feedback table schema and DB helpers
+  - `api/feedback.js` (new) — public/user submission endpoint
+  - `api/admin-feedback.js` (new) — admin management endpoint
+  - `scripts/feedback-engine.js` (new) — chatbot widget, FAQ engine, prompt generator
+  - `scripts/auth-engine.js` — admin dashboard, prompt copy listener, profile modal button
+  - `scripts/app.js` — chatbot widget mount on DOMContentLoaded
+  - `index.html` — sidebar nav item, CSS & JS cache-buster bumped to v9
+  - `styles/main.css` — chatbot widget and feedback card styling
+  - `docs/MODULE_GUIDE.md`, `docs/ROADMAP.md`, `docs/SESSION_CHANGELOG.md` — system documentation
+- **Validation:**
+  - `npm test` — PASS (0 vulnerabilities detected across 74 files)
+  - `npm audit` — PASS (0 vulnerabilities)
+
 ### Milestone 20: SEO Intelligence & AI Discoverability Panel
 - **Context:** User requested an SEO rating and traffic insight section in the admin console so they can understand the site's search and AI discoverability posture, with an on-demand agent scan for actionable improvements.
 - **Implementation:**
