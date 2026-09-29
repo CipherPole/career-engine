@@ -138,16 +138,20 @@
       <div id="sidebar-system-section" data-role="admin">
         <div class="nav-section-label">System</div>
         <div class="nav-item" data-page="settings">
-          <span class="nav-icon">⚙️</span> Settings & Google Auth
+          <span class="nav-icon">⚙️</span> Settings &amp; Security
           <span class="nav-badge gold">ADMIN</span>
         </div>
-        <div class="nav-item" id="sidebar-nav-feedback" onclick="window.navigate?.('settings'); setTimeout(() => document.getElementById('admin-feedback-panel')?.scrollIntoView({behavior:'smooth'}), 250);" style="cursor:pointer;">
+        <div class="nav-item" data-page="backlog">
+          <span class="nav-icon">🎯</span> Backlog &amp; Prompts
+          <span class="nav-badge blue">AGENT</span>
+        </div>
+        <div class="nav-item" data-page="feedback">
           <span class="nav-icon">📬</span> Feedback &amp; Issues
           <span class="nav-badge gold">LIVE</span>
         </div>
-        <div class="nav-item" id="sidebar-nav-backlog" onclick="window.navigate?.('settings'); setTimeout(() => { document.querySelector('.roadmap-tab-btn[data-tab=\'roadmap-backlog\']')?.click(); document.getElementById('tab-roadmap-backlog')?.scrollIntoView({behavior:'smooth'}); }, 250);" style="cursor:pointer;">
-          <span class="nav-icon">🎯</span> Backlog &amp; Prompts
-          <span class="nav-badge blue">AGENT</span>
+        <div class="nav-item" data-page="seo">
+          <span class="nav-icon">🔍</span> SEO &amp; Discoverability
+          <span class="nav-badge green">AI</span>
         </div>
       </div>
     </nav>
