@@ -3,8 +3,8 @@
 **Project:** Career Engine (Personal AI Career & Skill Intelligence Platform)  
 **Maintained by:** Joseph Erexson III (`jerexson3@gmail.com`)  
 **Target Repository:** `CipherPole/career-engine`  
-**Current Release:** v2.6.0 (Stable & Deployed)  
-**Last Updated:** September 19, 2026
+**Current Release:** v2.7.0 (Stable & Deployed)  
+**Last Updated:** September 28, 2026
 
 ---
 
@@ -12,6 +12,7 @@
 
 | Version | Release Date | Milestone Title | Key Features & Delivered Scope | Impact Rating |
 | :--- | :--- | :--- | :--- | :---: |
+| **v2.7.0** | Sep 2026 | **SEO Intelligence & AI Discoverability Engine** | • Admin console SEO Intelligence Panel with 6-pillar live scoring (Meta, AI Discoverability, Performance, Content Quality, Structured Data, Overall).<br>• On-demand SEO Agent Scan with animated progress feed and actionable fix cards.<br>• AI Crawler Visibility checklist probing `robots.txt`, `sitemap.xml`, `llms.txt`, JSON-LD, and robots meta.<br>• Traffic Insights panel (HTTPS, environment, page weight, resource count, indexability).<br>• Created `robots.txt` explicitly allowing GPTBot, Claude-Web, PerplexityBot, CCBot, Anthropic-AI.<br>• Created `sitemap.xml` for search engine page discovery.<br>• Created `llms.txt` — emerging AI context standard for LLM training signal.<br>• Full `index.html` SEO overhaul: removed `noindex`, added canonical URL, Open Graph, Twitter/X Card, JSON-LD `WebApplication` schema.<br>• Fixed title (63 chars), meta description (157 chars), semantic hidden H1, and alt text on all avatar images. | **9.8 / 10** |
 | **v2.6.0** | Sep 2026 | **Zero Data Leakage & Hover-to-Confirm Account Purge** | • Strict multi-tenant data isolation preventing owner profile leakage into new accounts.<br>• Verified Google email binding with readonly `[✅ Google Verified]` badge.<br>• 3-Second Hover-to-Confirm Account Deletion with animated progress fill.<br>• Neon Postgres cascading user deletion (`users` $\rightarrow$ `user_profiles`, `user_states`).<br>• Complete client-side cache wipe (`careerEngine_has_visited` & email-scoped storage).<br>• Real-time Admin Action Logs with dynamic event levels (Red = Delete, Purple = Create, Blue = Signin). | **10.0 / 10** |
 | **v2.5.0** | Sep 2026 | **Two-Phase Onboarding & Client Resume Parser** | • Decoupled clean Sign-In Gate (Phase 1) from Resume Upload Screen (Phase 2).<br>• Interactive 4-step progress tracker (`Google Verified` $\rightarrow$ `Upload` $\rightarrow$ `Review` $\rightarrow$ `Create`).<br>• Client-side PDF/TXT resume parser and keyword extraction (`scripts/resume-parser.js`).<br>• Review modal with real-time skill refinement and safe profile defaults. | **9.9 / 10** |
 | **v2.4.0** | Sep 2026 | **Legal Compliance & Security Baseline** | • Integrated comprehensive Terms of Service (`#terms`) & User Agreement (`#agreement`).<br>• Explicit intellectual property protection and anti-scraping policy.<br>• Consolidated single Sign-Out UX inside User Profile Modal.<br>• Automated `npm run audit` zero-vulnerability CI scanner.<br>• Zero-dependency `package.json` manifest with pre-commit hygiene enforcement. | **9.9 / 10** |
@@ -36,6 +37,7 @@ Score = (Reach × Impact × Confidence) / Effort
 | **P0** | **AI Bullet Point Tailoring & ATS Live Scorer** | High (5/5) | Med (2/5) | 90% | **9.8 / 10** | **Ready for Pickup** |
 | **P1** | **Client-Side Native PDF & DOCX Export Engine** | High (4.5/5) | Med (2.5/5) | 95% | **9.2 / 10** | **Ready for Pickup** |
 | **P1** | **Compensation & Offer Negotiation Simulator** | High (4/5) | Low (1.5/5) | 90% | **9.0 / 10** | **Ready for Pickup** |
+| **P1** | **SEO Score Maintenance & Periodic Re-scan** | Med (3/5) | Low (0.5/5) | 100% | **8.8 / 10** | **Ongoing — Run each session** |
 | **P2** | **Encrypted Cloud Sync & Multi-Device Backup** | High (4.5/5) | High (4/5) | 80% | **8.4 / 10** | **Backlog** |
 | **P2** | **Automated E2E Playwright Regression Suite** | Med (3.5/5) | Med (2/5) | 95% | **8.1 / 10** | **Backlog** |
 | **P3** | **Offline PWA Service Worker & App Manifest** | Med (3/5) | Low (1/5) | 90% | **7.8 / 10** | **Backlog** |
@@ -75,5 +77,7 @@ Score = (Reach × Impact × Confidence) / Effort
 When starting a new session on this repository:
 1. Review `docs/SESSION_CHANGELOG.md` and `docs/ROADMAP.md` to see the latest status.
 2. Check the Admin System Settings (`#settings`) in your browser to inspect recent telemetry and verify that OAuth and RBAC are functioning properly.
-3. Pick up the highest uncompleted item (**P0: AI Bullet Point Tailoring & ATS Live Scorer**).
-4. Run `npm run audit` before committing any code to guarantee the zero-vulnerability standard is preserved.
+3. **Run the SEO Agent Scan** (Admin Console → SEO Intelligence panel → "Run SEO Agent Scan") and verify the Overall score is at or above the last recorded baseline. If new findings appear, consult `docs/SEO_GUIDE.md` for the remediation workflow.
+4. Pick up the highest uncompleted item (**P0: AI Bullet Point Tailoring & ATS Live Scorer**).
+5. Run `npm run audit` before committing any code to guarantee the zero-vulnerability standard is preserved.
+6. After completing work, update `docs/SESSION_CHANGELOG.md` with a milestone entry and push the feature branch following the workflow in `docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md`.
