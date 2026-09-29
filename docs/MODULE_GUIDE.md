@@ -226,6 +226,18 @@ All frontend code is written in pure Vanilla ES2022+ modules. When importing acr
 
 ---
 
+### 2.11 `scripts/feedback-engine.js`
+- **Role:** Interactive AI Assistant Chatbot, user feedback submission engine, and Admin AI work order prompt generator.
+- **Key Features:**
+  - **`initFeedbackChatbot()`**: Mounts floating trigger button (`#ce-chat-trigger`) and slide-up glassmorphic panel (`#ce-chat-widget`) accessible across all pages.
+  - **FAQ Knowledge Base & Smart Assistant**: Instant keyword matching for ATS resume scoring, Skill Gap radar, job tracking CRM, privacy/security guarantees, and strategic roadmap.
+  - **Direct Ticket Submission**: Form collecting Category (Bug, Suggestion, Question, Feedback), Name, Email, Subject, and detailed message.
+  - **`submitFeedback()`**: Dispatches payload to `POST /api/feedback` with graceful local storage fallback for offline operation.
+  - **`fetchAdminFeedback()` & `updateAdminFeedbackStatus()`**: Admin helpers for querying and transitioning ticket states (`open` → `in_progress` → `reported` → `completed`).
+  - **`generateAgentWorkPrompt(item)`**: Constructs complete Markdown engineering work order prompts formatted for coding agents.
+
+---
+
 ## 3. Serverless API Endpoints (`api/`)
 
 All backend functions run on the Vercel Serverless Node.js runtime and reside in the `/api` directory.
@@ -305,6 +317,25 @@ All backend functions run on the Vercel Serverless Node.js runtime and reside in
 
 ---
 
+### 3.7 `api/feedback.js`
+- **Method:** `POST`
+- **Purpose:** Public and authenticated endpoint for candidate issue reports, bug submissions, feature suggestions, and questions.
+- **Payload:** `{ type, subject, message, userName, userEmail }`
+- **Persistence:** Inserts into Neon Postgres `feedback` table with default status `'open'`. If user is signed in, links `user_id`.
+- **Response:** `{ ok: true, id, feedback }`
+
+---
+
+### 3.8 `api/admin-feedback.js`
+- **Methods:** `GET`, `PATCH`
+- **Purpose:** Administrator-only endpoint for lifecycle tracking of user feedback items.
+- **Security Guard:** Verifies admin session role.
+- **`GET`:** Returns all feedback items sorted by `created_at DESC` with optional `?limit=100`.
+- **`PATCH`:** Accepts `{ id, status, aiPrompt }` to transition feedback through the lifecycle (`open` → `in_progress` → `reported` → `completed`).
+
+
+---
+
 ## 4. Serverless Core Utilities (`api/_lib/`)
 
 ### 4.1 `api/_lib/db.js`
@@ -317,6 +348,7 @@ All backend functions run on the Vercel Serverless Node.js runtime and reside in
     - `user_profiles` (user_id REFERENCES users(id) ON DELETE CASCADE, profile_json, created_at, updated_at)
     - `user_states` (user_id REFERENCES users(id) ON DELETE CASCADE, state_key, state_json, created_at, updated_at)
     - `auth_events` (id, user_id REFERENCES users(id) ON DELETE SET NULL, email, role, event_type, is_new_user, metadata, created_at)
+    - `feedback` (id, user_id REFERENCES users(id) ON DELETE SET NULL, user_email, user_name, type, subject, message, status, ai_prompt, created_at, updated_at)
 - **Key Functions:**
   - `upsertUserFromGoogle(identity)`
   - `getUserById(id)`
@@ -327,6 +359,9 @@ All backend functions run on the Vercel Serverless Node.js runtime and reside in
   - `logAuthEvent({ userId, email, role, eventType, isNewUser, metadata })`
   - `getRecentAuthEvents(limit)`
   - `deleteUserAccount(userId)`: Verifies user is not the platform owner, then executes `DELETE FROM users WHERE id = ${userId}`.
+  - `createFeedback({ userId, userEmail, userName, type, subject, message })`
+  - `getAllFeedback(limit)`
+  - `updateFeedbackStatus(id, { status, aiPrompt })`
 
 ---
 

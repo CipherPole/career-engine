@@ -18,6 +18,12 @@ import {
   LOG_LEVELS,
   LOG_CATEGORIES,
 } from './telemetry-engine.js?v=8';
+import {
+  fetchAdminFeedback,
+  updateAdminFeedbackStatus,
+  generateAgentWorkPrompt,
+  submitFeedback,
+} from './feedback-engine.js?v=8';
 
 export const OWNER_EMAIL = 'jerexson3@gmail.com';
 const SESSION_STORAGE_KEY = 'careerEngine_session_v2';
@@ -648,6 +654,9 @@ export function openAuthModal() {
               <button class="btn btn-gold w-full" id="btn-modal-open-settings" style="justify-content:center;padding:10px;font-weight:700;">
                 ⚙️ Open Administrator Console & Action Logs
               </button>
+              <button class="btn btn-secondary w-full" id="btn-modal-open-feedback" style="justify-content:center;padding:10px;font-weight:700;display:flex;align-items:center;gap:6px;border-color:rgba(245,158,11,0.4);color:var(--gold-light);">
+                📬 User Feedback &amp; Issues Tracker
+              </button>
             ` : ''}
             <button class="btn btn-secondary w-full" id="btn-modal-open-dashboard" style="justify-content:center;padding:10px;">
               🏠 My Skills Dashboard & Radar
@@ -726,6 +735,14 @@ export function openAuthModal() {
   document.getElementById('btn-modal-open-settings')?.addEventListener('click', () => {
     modal.classList.remove('open');
     window.navigate?.('settings');
+  });
+
+  document.getElementById('btn-modal-open-feedback')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    window.navigate?.('settings');
+    setTimeout(() => {
+      document.getElementById('admin-feedback-panel')?.scrollIntoView({ behavior: 'smooth' });
+    }, 250);
   });
 
   document.getElementById('btn-modal-open-dashboard')?.addEventListener('click', () => {
@@ -1562,6 +1579,84 @@ export function renderSettingsPage() {
       </div>
 
     </div>
+
+    <!-- ════════════════════════════════════════════════════════════════
+         USER FEEDBACK & ISSUE INTELLIGENCE CENTER
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="admin-feedback-panel" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px;">
+
+      <!-- Panel Header -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;color:var(--text-primary);">
+            <span>📬</span> Feedback &amp; Issue Intelligence Center
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+            Real-time candidate reports, automated AI prompt generation for coding agents, and lifecycle tracking: Open → In Progress → Reported → Completed.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" id="btn-refresh-feedback" style="font-size:11px;padding:7px 14px;font-weight:700;display:flex;align-items:center;gap:6px;">
+            <span>🔄</span> Refresh Feedback
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-create-sample-feedback" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;" title="Creates a sample bug report to test AI analysis and agent prompt workflow">
+            <span>🧪</span> Add Test Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Lifecycle Metrics Bar -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:12px;margin-bottom:20px;">
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;">Total Reports</div>
+          <div id="fb-stat-total" style="font-size:22px;font-weight:900;color:var(--text-primary);margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">All-time submissions</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--gold);text-transform:uppercase;font-weight:700;">🟡 Open For Work</div>
+          <div id="fb-stat-open" style="font-size:22px;font-weight:900;color:var(--gold);margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Awaiting AI triage</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--cyan);text-transform:uppercase;font-weight:700;">⚡ In Progress</div>
+          <div id="fb-stat-progress" style="font-size:22px;font-weight:900;color:var(--cyan);margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">AI prompt generated</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:#c084fc;text-transform:uppercase;font-weight:700;">📋 Reported to Agent</div>
+          <div id="fb-stat-reported" style="font-size:22px;font-weight:900;color:#c084fc;margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Prompt copied for work</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--green);text-transform:uppercase;font-weight:700;">✅ Completed</div>
+          <div id="fb-stat-completed" style="font-size:22px;font-weight:900;color:var(--green);margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Resolved in release</div>
+        </div>
+      </div>
+
+      <!-- Filter Controls & Search -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="chip admin-fb-tab-btn active" data-tab="ALL" style="cursor:pointer;font-size:11px;">All Items</button>
+          <button class="chip admin-fb-tab-btn" data-tab="open" style="cursor:pointer;font-size:11px;">🟡 Open (<span id="fb-badge-open">0</span>)</button>
+          <button class="chip admin-fb-tab-btn" data-tab="in_progress" style="cursor:pointer;font-size:11px;">⚡ In Progress (<span id="fb-badge-progress">0</span>)</button>
+          <button class="chip admin-fb-tab-btn" data-tab="reported" style="cursor:pointer;font-size:11px;">📋 Reported (<span id="fb-badge-reported">0</span>)</button>
+          <button class="chip admin-fb-tab-btn" data-tab="completed" style="cursor:pointer;font-size:11px;">✅ Completed (<span id="fb-badge-completed">0</span>)</button>
+        </div>
+        <div style="min-width:200px;">
+          <input type="text" id="admin-fb-search" class="input" placeholder="🔍 Search reports..." style="font-size:11px;padding:6px 12px;width:100%;border-radius:var(--radius-sm);" />
+        </div>
+      </div>
+
+      <!-- Feedback Items Feed -->
+      <div id="admin-feedback-feed" style="display:flex;flex-direction:column;gap:12px;">
+        <div style="text-align:center;padding:32px;color:var(--text-dim);">
+          <div style="font-size:24px;margin-bottom:8px;">⏳</div>
+          <div>Loading user feedback and issue reports...</div>
+        </div>
+      </div>
+
+    </div>
   `;
 
   // ── Telemetry Feed Hydration & Controls ──────────────────────
@@ -2374,4 +2469,363 @@ ${r.findings.length === 0
       window.prompt('SEO Report:', report);
     }
   });
+
+  // ── USER FEEDBACK & ISSUE INTELLIGENCE LOGIC ──────────────────
+  let adminFeedbackItems = [];
+  let currentFbTab = 'ALL';
+  let fbSearchTerm = '';
+
+  function escapeHtml(str) {
+    return String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  async function refreshFeedbackDashboard() {
+    const feed = document.getElementById('admin-feedback-feed');
+    if (feed) {
+      feed.innerHTML = `
+        <div style="text-align:center;padding:24px;color:var(--text-dim);">
+          <div style="font-size:20px;margin-bottom:6px;">🔄</div>
+          <div>Refreshing feedback and issue tickets...</div>
+        </div>
+      `;
+    }
+
+    try {
+      adminFeedbackItems = await fetchAdminFeedback(200);
+      renderFeedbackList();
+    } catch (err) {
+      if (feed) {
+        feed.innerHTML = `
+          <div style="text-align:center;padding:24px;color:var(--red);">
+            Failed to load feedback items.
+          </div>
+        `;
+      }
+    }
+  }
+
+  function renderFeedbackList() {
+    const feed = document.getElementById('admin-feedback-feed');
+    if (!feed) return;
+
+    const total = adminFeedbackItems.length;
+    const openCount = adminFeedbackItems.filter(f => f.status === 'open').length;
+    const progCount = adminFeedbackItems.filter(f => f.status === 'in_progress').length;
+    const reportedCount = adminFeedbackItems.filter(f => f.status === 'reported').length;
+    const completedCount = adminFeedbackItems.filter(f => f.status === 'completed').length;
+
+    // Update stats counters
+    const elTotal = document.getElementById('fb-stat-total');
+    const elOpen = document.getElementById('fb-stat-open');
+    const elProg = document.getElementById('fb-stat-progress');
+    const elRep = document.getElementById('fb-stat-reported');
+    const elComp = document.getElementById('fb-stat-completed');
+
+    if (elTotal) elTotal.textContent = total;
+    if (elOpen) elOpen.textContent = openCount;
+    if (elProg) elProg.textContent = progCount;
+    if (elRep) elRep.textContent = reportedCount;
+    if (elComp) elComp.textContent = completedCount;
+
+    // Badges in tabs
+    const bOpen = document.getElementById('fb-badge-open');
+    const bProg = document.getElementById('fb-badge-progress');
+    const bRep = document.getElementById('fb-badge-reported');
+    const bComp = document.getElementById('fb-badge-completed');
+    if (bOpen) bOpen.textContent = openCount;
+    if (bProg) bProg.textContent = progCount;
+    if (bRep) bRep.textContent = reportedCount;
+    if (bComp) bComp.textContent = completedCount;
+
+    // Filter items
+    const filtered = adminFeedbackItems.filter(item => {
+      const matchTab = currentFbTab === 'ALL' || item.status === currentFbTab;
+      const term = fbSearchTerm.toLowerCase();
+      const matchSearch = !term ||
+        (item.subject && item.subject.toLowerCase().includes(term)) ||
+        (item.message && item.message.toLowerCase().includes(term)) ||
+        (item.user_name && item.user_name.toLowerCase().includes(term)) ||
+        (item.user_email && item.user_email.toLowerCase().includes(term));
+      return matchTab && matchSearch;
+    });
+
+    if (filtered.length === 0) {
+      feed.innerHTML = `
+        <div style="text-align:center;padding:36px;color:var(--text-dim);background:var(--bg-base);border-radius:var(--radius-md);border:1px dashed var(--border);">
+          <div style="font-size:28px;margin-bottom:8px;">✨</div>
+          <div style="font-weight:600;font-size:13px;color:var(--text-secondary);">No feedback items found.</div>
+          <div style="font-size:11px;margin-top:4px;">No reports match the current filter or search criteria.</div>
+        </div>
+      `;
+      return;
+    }
+
+    const typeConfig = {
+      bug: { label: '🐛 Bug Report', bg: 'rgba(239,68,68,0.15)', color: '#f87171', border: 'rgba(239,68,68,0.35)' },
+      suggestion: { label: '💡 Suggestion', bg: 'rgba(59,130,246,0.15)', color: '#60a5fa', border: 'rgba(59,130,246,0.35)' },
+      question: { label: '❓ Question', bg: 'rgba(168,85,247,0.15)', color: '#c084fc', border: 'rgba(168,85,247,0.35)' },
+      feedback: { label: '💬 Feedback', bg: 'rgba(245,158,11,0.15)', color: 'var(--gold-light)', border: 'var(--gold-border)' },
+    };
+
+    const statusConfig = {
+      open: { label: '🟡 Open for Work', class: 'chip gold' },
+      in_progress: { label: '⚡ In Progress', class: 'chip blue' },
+      reported: { label: '📋 Reported to Agent', class: 'chip', style: 'background:rgba(168,85,247,0.15);color:#c084fc;border:1px solid rgba(168,85,247,0.35);font-weight:700;' },
+      completed: { label: '✅ Completed', class: 'chip green' },
+    };
+
+    feed.innerHTML = filtered.map(item => {
+      const tConf = typeConfig[item.type] || typeConfig.feedback;
+      const sConf = statusConfig[item.status] || statusConfig.open;
+      const dateStr = item.created_at ? new Date(item.created_at).toLocaleString() : 'Recent';
+      const hasPrompt = Boolean(item.ai_prompt);
+
+      return `
+        <div class="feedback-card" id="fb-card-${item.id}" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;position:relative;">
+          <!-- Top Row: Type, Status & Submitter -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+              <span class="chip" style="background:${tConf.bg};color:${tConf.color};border:1px solid ${tConf.border};font-weight:700;font-size:11px;">
+                ${tConf.label}
+              </span>
+              <span class="${sConf.class}" ${sConf.style ? `style="${sConf.style}"` : ''} style="font-weight:700;font-size:11px;">
+                ${sConf.label}
+              </span>
+              <span style="font-size:11px;color:var(--text-dim);font-family:'JetBrains Mono',monospace;">#${item.id}</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-secondary);">
+              <strong>${escapeHtml(item.user_name || 'Candidate')}</strong> (${escapeHtml(item.user_email || 'guest')}) • <span>${dateStr}</span>
+            </div>
+          </div>
+
+          <!-- Subject & Message -->
+          <div style="font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:6px;">
+            ${escapeHtml(item.subject)}
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;background:rgba(255,255,255,0.02);padding:10px 14px;border-radius:var(--radius-sm);border-left:3px solid var(--border-strong);margin-bottom:12px;">
+            ${escapeHtml(item.message)}
+          </div>
+
+          <!-- AI Generated Prompt Box (if present) -->
+          ${hasPrompt ? `
+            <div style="margin-bottom:14px;background:#05070c;border:1px solid rgba(168,85,247,0.3);border-radius:var(--radius-sm);padding:12px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <div style="font-size:11px;font-weight:700;color:#c084fc;display:flex;align-items:center;gap:6px;">
+                  <span>🤖</span> AI Agent Work Order Prompt (Ready for Copy & Handoff)
+                </div>
+                <span class="chip purple" style="font-size:9px;">Generated</span>
+              </div>
+              <textarea readonly style="width:100%;min-height:130px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);font-family:'JetBrains Mono',monospace;font-size:11px;padding:8px;resize:vertical;line-height:1.4;">${escapeHtml(item.ai_prompt)}</textarea>
+            </div>
+          ` : ''}
+
+          <!-- Action Buttons Bar -->
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;border-top:1px solid rgba(255,255,255,0.04);padding-top:10px;">
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <button class="btn btn-gold btn-sm btn-fb-analyse" data-id="${item.id}" style="font-size:11px;padding:6px 12px;font-weight:700;display:flex;align-items:center;gap:6px;">
+                <span>🤖</span> ${hasPrompt ? 'Re-Analyse with AI' : 'Analyse with AI'}
+              </button>
+
+              ${hasPrompt ? `
+                <button class="btn btn-secondary btn-sm btn-fb-copy-prompt" data-id="${item.id}" style="font-size:11px;padding:6px 12px;font-weight:700;display:flex;align-items:center;gap:6px;border-color:rgba(168,85,247,0.4);color:#c084fc;">
+                  <span>📋</span> Copy Prompt (Mark Reported)
+                </button>
+              ` : ''}
+
+              ${item.status !== 'completed' ? `
+                <button class="btn btn-secondary btn-sm btn-fb-complete" data-id="${item.id}" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:6px;color:var(--green);border-color:rgba(16,185,129,0.35);">
+                  <span>✅</span> Mark as Completed
+                </button>
+              ` : `
+                <button class="btn btn-secondary btn-sm btn-fb-reopen" data-id="${item.id}" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:6px;color:var(--gold);">
+                  <span>🟡</span> Re-Open Ticket
+                </button>
+              `}
+            </div>
+
+            <!-- Quick Status Picker -->
+            <div style="display:flex;align-items:center;gap:6px;font-size:11px;">
+              <span style="color:var(--text-dim);">Move status:</span>
+              <select class="input fb-status-select" data-id="${item.id}" style="padding:4px 8px;font-size:11px;height:auto;border-radius:4px;">
+                <option value="open" ${item.status === 'open' ? 'selected' : ''}>Open</option>
+                <option value="in_progress" ${item.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                <option value="reported" ${item.status === 'reported' ? 'selected' : ''}>Reported</option>
+                <option value="completed" ${item.status === 'completed' ? 'selected' : ''}>Completed</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // Bind Feedback Actions
+  const feedContainer = document.getElementById('admin-feedback-feed');
+  feedContainer?.addEventListener('click', async (e) => {
+    // 1. Analyse with AI
+    const btnAnalyse = e.target.closest('.btn-fb-analyse');
+    if (btnAnalyse) {
+      const id = btnAnalyse.dataset.id;
+      const item = adminFeedbackItems.find(f => String(f.id) === String(id));
+      if (!item) return;
+
+      btnAnalyse.disabled = true;
+      btnAnalyse.innerHTML = '<span>⏳</span> Analysing...';
+
+      // Generate prompt
+      const generatedPrompt = generateAgentWorkPrompt(item);
+
+      // Transition status to in_progress
+      const updated = await updateAdminFeedbackStatus(id, {
+        status: 'in_progress',
+        aiPrompt: generatedPrompt,
+      });
+
+      if (updated) {
+        item.status = 'in_progress';
+        item.ai_prompt = generatedPrompt;
+        window.toast?.('🤖 AI work prompt generated! Ticket marked as In Progress.', 'cyan');
+      }
+      renderFeedbackList();
+      return;
+    }
+
+    // 2. Copy Prompt & Mark as Reported
+    const btnCopy = e.target.closest('.btn-fb-copy-prompt');
+    if (btnCopy) {
+      const id = btnCopy.dataset.id;
+      const item = adminFeedbackItems.find(f => String(f.id) === String(id));
+      if (!item || !item.ai_prompt) return;
+
+      try {
+        await navigator.clipboard.writeText(item.ai_prompt);
+      } catch {
+        window.prompt('Agent Prompt:', item.ai_prompt);
+      }
+
+      // Transition status to reported
+      const updated = await updateAdminFeedbackStatus(id, {
+        status: 'reported',
+      });
+
+      if (updated) {
+        item.status = 'reported';
+      }
+      window.toast?.('📋 Prompt copied & ticket marked as Reported!', 'green');
+      renderFeedbackList();
+      return;
+    }
+
+    // 3. Mark as Completed
+    const btnComp = e.target.closest('.btn-fb-complete');
+    if (btnComp) {
+      const id = btnComp.dataset.id;
+      const item = adminFeedbackItems.find(f => String(f.id) === String(id));
+      if (!item) return;
+
+      const updated = await updateAdminFeedbackStatus(id, {
+        status: 'completed',
+      });
+      if (updated) item.status = 'completed';
+      window.toast?.('✅ Ticket marked as Completed & Resolved!', 'green');
+      renderFeedbackList();
+      return;
+    }
+
+    // 4. Re-open
+    const btnReopen = e.target.closest('.btn-fb-reopen');
+    if (btnReopen) {
+      const id = btnReopen.dataset.id;
+      const item = adminFeedbackItems.find(f => String(f.id) === String(id));
+      if (!item) return;
+
+      const updated = await updateAdminFeedbackStatus(id, {
+        status: 'open',
+      });
+      if (updated) item.status = 'open';
+      window.toast?.('🟡 Ticket re-opened.', 'gold');
+      renderFeedbackList();
+      return;
+    }
+  });
+
+  // Direct Status Select Dropdown
+  feedContainer?.addEventListener('change', async (e) => {
+    if (e.target.classList.contains('fb-status-select')) {
+      const id = e.target.dataset.id;
+      const newStatus = e.target.value;
+      const item = adminFeedbackItems.find(f => String(f.id) === String(id));
+      if (!item) return;
+
+      const updated = await updateAdminFeedbackStatus(id, { status: newStatus });
+      if (updated) item.status = newStatus;
+      window.toast?.(`Status updated to: ${newStatus}`, 'cyan');
+      renderFeedbackList();
+    }
+  });
+
+  // Refresh feedback button
+  document.getElementById('btn-refresh-feedback')?.addEventListener('click', () => {
+    refreshFeedbackDashboard();
+    window.toast?.('🔄 Feedback list refreshed', 'cyan');
+  });
+
+  // Add sample test item button
+  document.getElementById('btn-create-sample-feedback')?.addEventListener('click', async () => {
+    const testCases = [
+      {
+        type: 'bug',
+        subject: 'Job tracker status cards do not refresh after drag-and-drop',
+        message: 'When moving an application from Applied to Technical Screen in the tracker CRM, the counter at the top sometimes lags until manual refresh.',
+      },
+      {
+        type: 'suggestion',
+        subject: 'Export resume analysis to Markdown and JSON format',
+        message: 'Could we get an export option to download the full ATS resume scorecard and recommendations as a raw markdown report?',
+      },
+      {
+        type: 'question',
+        subject: 'How are the Lead Platform Engineer salary brackets calculated?',
+        message: 'Are the target salary bands ($145k-$200k) based on national averages or tier-1 tech hub ranges?',
+      }
+    ];
+
+    const pick = testCases[Math.floor(Math.random() * testCases.length)];
+    const res = await submitFeedback({
+      type: pick.type,
+      subject: pick.subject,
+      message: pick.message,
+      userName: 'Sample QA Tester',
+      userEmail: 'qa-tester@career-engine.local',
+    });
+
+    if (res.ok) {
+      window.toast?.(`🧪 Test report #${res.id} created! Click 'Analyse with AI' to test prompt generation.`, 'green');
+      await refreshFeedbackDashboard();
+    }
+  });
+
+  // Tab Filtering
+  document.querySelectorAll('.admin-fb-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.admin-fb-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFbTab = btn.dataset.tab;
+      renderFeedbackList();
+    });
+  });
+
+  // Search Filtering
+  document.getElementById('admin-fb-search')?.addEventListener('input', (e) => {
+    fbSearchTerm = e.target.value.trim();
+    renderFeedbackList();
+  });
+
+  // Initial Feedback Hydration
+  refreshFeedbackDashboard();
 }
