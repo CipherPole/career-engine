@@ -6,6 +6,18 @@
 
 ## Session Log: September 28, 2026
 
+### Milestone 21.1: Production SEO Scan Cloud Persistence & Automatic Hydration
+- **Context:** Administrator noticed that after running an SEO Agent Scan, the SEO Intelligence Panel scores reverted to `—` upon page navigation or reload because scan results were kept only in ephemeral browser memory and not persisted to the database.
+- **Implementation:**
+  - Added `'seo_scan'` to `ALLOWED_STATE_KEYS` in `api/state.js`, enabling server-side persistence in Neon Postgres `user_states` table.
+  - Refactored `renderSeoResultsUI(data)` in `scripts/auth-engine.js` to dynamically render the 6 pillar score cards, traffic insights, and actionable findings from any stored scan payload.
+  - Implemented `saveSeoScanResults(data)`: automatically saves scan results to `localStorage` and commits them to Neon Postgres via `PUT /api/state?key=seo_scan`.
+  - Implemented `loadLastSeoScan()`: automatically checks `localStorage` for instant rendering and synchronizes with `/api/state?key=seo_scan` upon opening the Admin Console (`#settings`), eliminating empty states.
+  - Bumped cache busters to `?v=10` across `index.html`, `scripts/app.js`, and `scripts/auth-engine.js`.
+- **Validation:**
+  - `npm test` — PASS (0 vulnerabilities detected across 74 files)
+  - `npm audit` — PASS (0 vulnerabilities)
+
 ### Milestone 21: User Feedback Chatbot & Issue Intelligence Center (v2.8.0)
 - **Context:** User requested a two-part feedback and issue reporting system: a user-facing chatbot widget for questions and reporting feedback/bugs, plus an Admin Console section under System with live lifecycle management (Open → In Progress upon AI analysis → Reported upon prompt copy → Completed) so engineers and agents can keep track of work items.
 - **Implementation:**
