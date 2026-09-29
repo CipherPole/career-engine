@@ -32,27 +32,33 @@ const ROUTE_PERMISSIONS = {
   jobs:      ROLES.USER,
   cover:     ROLES.GUEST,
   training:  ROLES.GUEST,
-  certs:     ROLES.GUEST,
-  projects:  ROLES.GUEST,
-  settings:  ROLES.ADMIN, // Restricted exclusively to Creator / Owner
+  certs:          ROLES.GUEST,
+  projects:       ROLES.GUEST,
+  settings:       ROLES.ADMIN, // Restricted exclusively to Creator / Owner
+  backlog:        ROLES.ADMIN,
+  feedback:       ROLES.ADMIN,
+  seo:            ROLES.ADMIN,
 };
 
 // ── Router ────────────────────────────────────────────────────
 const PAGES = {
-  signin:     () => import('./signin-engine.js?v=8').then(m => m.renderSignInPage()),
-  terms:      () => import('./legal-engine.js?v=8').then(m => m.renderLegalPage('terms')),
-  agreement:  () => import('./legal-engine.js?v=8').then(m => m.renderLegalPage('agreement')),
-  dashboard:  () => import('./resume-engine.js?v=8').then(m => m.renderDashboard()),
-  resume:     () => import('./resume-engine.js?v=8').then(m => m.renderResumeStudio()),
-  linkedin:   () => import('./linkedin-engine.js?v=8').then(m => m.renderLinkedInOptimizer()),
-  jobs:       () => import('./tracker-engine.js?v=8').then(m => m.renderJobTracker()),
-  skills:     () => import('./resume-engine.js?v=8').then(m => m.renderSkillGap()),
-  training:   () => import('./training-engine.js?v=8').then(m => m.renderTrainingHub()),
-  certs:      () => import('./cert-engine.js?v=8').then(m => m.renderCertifications()),
-  projects:   () => import('./project-showcase.js?v=8').then(m => m.renderProjects()),
-  implementation: () => import('./implementation-engine.js?v=8').then(m => m.renderImplementationLab()),
-  settings:   () => import('./auth-engine.js?v=8').then(m => m.renderSettingsPage()),
-  cover:      () => renderCoverLetterPage(),
+  signin:         () => import('./signin-engine.js?v=11').then(m => m.renderSignInPage()),
+  terms:          () => import('./legal-engine.js?v=11').then(m => m.renderLegalPage('terms')),
+  agreement:      () => import('./legal-engine.js?v=11').then(m => m.renderLegalPage('agreement')),
+  dashboard:      () => import('./resume-engine.js?v=11').then(m => m.renderDashboard()),
+  resume:         () => import('./resume-engine.js?v=11').then(m => m.renderResumeStudio()),
+  linkedin:       () => import('./linkedin-engine.js?v=11').then(m => m.renderLinkedInOptimizer()),
+  jobs:           () => import('./tracker-engine.js?v=11').then(m => m.renderJobTracker()),
+  skills:         () => import('./resume-engine.js?v=11').then(m => m.renderSkillGap()),
+  training:       () => import('./training-engine.js?v=11').then(m => m.renderTrainingHub()),
+  certs:          () => import('./cert-engine.js?v=11').then(m => m.renderCertifications()),
+  projects:       () => import('./project-showcase.js?v=11').then(m => m.renderProjects()),
+  implementation: () => import('./implementation-engine.js?v=11').then(m => m.renderImplementationLab()),
+  settings:       () => import('./auth-engine.js?v=11').then(m => m.renderSettingsPage()),
+  backlog:        () => import('./auth-engine.js?v=11').then(m => m.renderBacklogPage()),
+  feedback:       () => import('./auth-engine.js?v=11').then(m => m.renderFeedbackPage()),
+  seo:            () => import('./auth-engine.js?v=11').then(m => m.renderSeoPage()),
+  cover:          () => renderCoverLetterPage(),
 };
 
 async function navigate(pageId) {

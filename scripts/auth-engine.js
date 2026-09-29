@@ -652,13 +652,16 @@ export function openAuthModal() {
           <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px;">
             ${admin ? `
               <button class="btn btn-gold w-full" id="btn-modal-open-settings" style="justify-content:center;padding:10px;font-weight:700;">
-                ⚙️ Open Administrator Console & Action Logs
+                ⚙️ Settings &amp; Security Console
+              </button>
+              <button class="btn btn-secondary w-full" id="btn-modal-open-backlog" style="justify-content:center;padding:10px;font-weight:700;display:flex;align-items:center;gap:6px;border-color:rgba(59,130,246,0.4);color:#60a5fa;">
+                🎯 Engineering Backlog &amp; Prompts
               </button>
               <button class="btn btn-secondary w-full" id="btn-modal-open-feedback" style="justify-content:center;padding:10px;font-weight:700;display:flex;align-items:center;gap:6px;border-color:rgba(245,158,11,0.4);color:var(--gold-light);">
                 📬 User Feedback &amp; Issues Tracker
               </button>
-              <button class="btn btn-secondary w-full" id="btn-modal-open-backlog" style="justify-content:center;padding:10px;font-weight:700;display:flex;align-items:center;gap:6px;border-color:rgba(59,130,246,0.4);color:#60a5fa;">
-                🎯 Engineering Backlog &amp; Prompts
+              <button class="btn btn-secondary w-full" id="btn-modal-open-seo" style="justify-content:center;padding:10px;font-weight:700;display:flex;align-items:center;gap:6px;border-color:rgba(34,197,94,0.4);color:#4ade80;">
+                🔍 SEO &amp; AI Discoverability
               </button>
             ` : ''}
             <button class="btn btn-secondary w-full" id="btn-modal-open-dashboard" style="justify-content:center;padding:10px;">
@@ -740,21 +743,19 @@ export function openAuthModal() {
     window.navigate?.('settings');
   });
 
-  document.getElementById('btn-modal-open-feedback')?.addEventListener('click', () => {
-    modal.classList.remove('open');
-    window.navigate?.('settings');
-    setTimeout(() => {
-      document.getElementById('admin-feedback-panel')?.scrollIntoView({ behavior: 'smooth' });
-    }, 250);
-  });
-
   document.getElementById('btn-modal-open-backlog')?.addEventListener('click', () => {
     modal.classList.remove('open');
-    window.navigate?.('settings');
-    setTimeout(() => {
-      document.querySelector('.roadmap-tab-btn[data-tab="roadmap-backlog"]')?.click();
-      document.getElementById('tab-roadmap-backlog')?.scrollIntoView({ behavior: 'smooth' });
-    }, 250);
+    window.navigate?.('backlog');
+  });
+
+  document.getElementById('btn-modal-open-feedback')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    window.navigate?.('feedback');
+  });
+
+  document.getElementById('btn-modal-open-seo')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    window.navigate?.('seo');
   });
 
   document.getElementById('btn-modal-open-dashboard')?.addEventListener('click', () => {
@@ -1032,6 +1033,26 @@ window.openAuthModal = openAuthModal;
 window.openDeleteAccountModal = openDeleteAccountModal;
 window.clearLocalProfileAndStartOver = clearLocalProfileAndStartOver;
 
+// ── Shared System Subsystem Navigation Toolbar ────────────────
+function renderSystemNavToolbar(activeTab) {
+  return `
+    <div style="display:flex;gap:10px;margin-bottom:24px;border-bottom:1px solid var(--border);padding-bottom:16px;flex-wrap:wrap;">
+      <button class="chip ${activeTab === 'settings' ? 'active' : ''}" onclick="window.navigate?.('settings')" style="cursor:pointer;font-size:12px;padding:8px 16px;display:flex;align-items:center;gap:6px;font-weight:600;">
+        <span>⚙️</span> Settings &amp; Security
+      </button>
+      <button class="chip ${activeTab === 'backlog' ? 'active' : ''}" onclick="window.navigate?.('backlog')" style="cursor:pointer;font-size:12px;padding:8px 16px;display:flex;align-items:center;gap:6px;font-weight:600;color:${activeTab === 'backlog' ? 'inherit' : '#60a5fa'};border-color:rgba(59,130,246,0.4);">
+        <span>🎯</span> Backlog &amp; Prompts
+      </button>
+      <button class="chip ${activeTab === 'feedback' ? 'active' : ''}" onclick="window.navigate?.('feedback')" style="cursor:pointer;font-size:12px;padding:8px 16px;display:flex;align-items:center;gap:6px;font-weight:600;color:${activeTab === 'feedback' ? 'inherit' : 'var(--gold-light)'};border-color:rgba(245,158,11,0.4);">
+        <span>📬</span> Feedback &amp; Issues
+      </button>
+      <button class="chip ${activeTab === 'seo' ? 'active' : ''}" onclick="window.navigate?.('seo')" style="cursor:pointer;font-size:12px;padding:8px 16px;display:flex;align-items:center;gap:6px;font-weight:600;color:${activeTab === 'seo' ? 'inherit' : '#4ade80'};border-color:rgba(34,197,94,0.4);">
+        <span>🔍</span> SEO &amp; Discoverability
+      </button>
+    </div>
+  `;
+}
+
 // ── Dedicated Settings & Google Auth Page ─────────────────────
 export function renderSettingsPage() {
   const content = document.getElementById('page-content');
@@ -1052,10 +1073,12 @@ export function renderSettingsPage() {
   content.innerHTML = `
     <div class="page-header">
       <div class="page-title" style="display:flex;align-items:center;gap:10px;">
-        <span>⚙️</span> Administrator Console & Action Logs
+        <span>⚙️</span> Administrator Console &amp; Security Diagnostics
       </div>
       <div class="page-subtitle">Zero-trust administrative console. Role: <strong style="color:var(--gold);">ROLE_ADMIN</strong>.</div>
     </div>
+
+    ${renderSystemNavToolbar('settings')}
 
     <!-- Main Settings Grid -->
     <div class="grid-2" style="gap:24px;margin-bottom:32px;">
@@ -1279,16 +1302,16 @@ export function renderSettingsPage() {
         </div>
       </div>
 
-      <!-- Tab Switcher for History vs Roadmap vs Security CLI -->
+      <!-- Tab Switcher for History vs Security CLI -->
       <div style="display:flex;gap:8px;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:18px;flex-wrap:wrap;">
         <button class="chip roadmap-tab-btn active" data-tab="roadmap-history" style="cursor:pointer;font-size:12px;padding:6px 14px;">
-          ⭐ Release History & Delivered Work (v1.0 – v2.4)
-        </button>
-        <button class="chip roadmap-tab-btn" data-tab="roadmap-backlog" style="cursor:pointer;font-size:12px;padding:6px 14px;">
-          🎯 Engineering Backlog &amp; Prompts (<span id="backlog-count-badge">8</span>)
+          ⭐ Release History &amp; Delivered Work (v1.0 – v2.4)
         </button>
         <button class="chip roadmap-tab-btn" data-tab="roadmap-security" style="cursor:pointer;font-size:12px;padding:6px 14px;">
-          🛡️ Security Commands & CLI Specs
+          🛡️ Security Commands &amp; CLI Specs
+        </button>
+        <button class="chip" onclick="window.navigate?.('backlog')" style="cursor:pointer;font-size:12px;padding:6px 14px;color:#60a5fa;border-color:rgba(59,130,246,0.4);display:flex;align-items:center;gap:6px;">
+          <span>🎯</span> Open Backlog &amp; Prompts Page &rarr;
         </button>
       </div>
 
@@ -1299,12 +1322,12 @@ export function renderSettingsPage() {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="chip gold" style="font-weight:700;">v2.4.0 (Latest)</span>
-              <strong style="color:var(--text-primary);">Legal Compliance & Security Baseline</strong>
+              <strong style="color:var(--text-primary);">Legal Compliance &amp; Security Baseline</strong>
             </div>
             <span class="chip green" style="font-size:10px;">Rating: 9.9 / 10</span>
           </div>
           <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">
-            • Terms of Service (<a href="#terms" style="color:var(--gold-light);">#terms</a>) & User Agreement (<a href="#agreement" style="color:var(--gold-light);">#agreement</a>) with full anti-scraping and intellectual property protection.<br>
+            • Terms of Service (<a href="#terms" style="color:var(--gold-light);">#terms</a>) &amp; User Agreement (<a href="#agreement" style="color:var(--gold-light);">#agreement</a>) with full anti-scraping and intellectual property protection.<br>
             • Streamlined single sign-out UX consolidated inside User Profile Modal.<br>
             • <code>package.json</code> zero-dependency manifest with automated <code>npm audit</code> and <code>npm run audit</code> verification across 45+ source files.
           </div>
@@ -1315,7 +1338,7 @@ export function renderSettingsPage() {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="chip blue" style="font-weight:700;">v2.3.0</span>
-              <strong style="color:var(--text-primary);">Telemetry & Diagnostic Trace Route Subsystem</strong>
+              <strong style="color:var(--text-primary);">Telemetry &amp; Diagnostic Trace Route Subsystem</strong>
             </div>
             <span class="chip green" style="font-size:10px;">Rating: 9.5 / 10</span>
           </div>
@@ -1330,13 +1353,13 @@ export function renderSettingsPage() {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="chip green" style="font-weight:700;">v2.2.0</span>
-              <strong style="color:var(--text-primary);">Google Identity Services (GIS) & Auth Modernization</strong>
+              <strong style="color:var(--text-primary);">Google Identity Services (GIS) &amp; Auth Modernization</strong>
             </div>
             <span class="chip green" style="font-size:10px;">Rating: 9.7 / 10</span>
           </div>
           <div style="font-size:12px;color:var(--text-secondary);line-height:1.5;">
-            • Google One-Tap & official GIS popup integration with automatic account provisioning.<br>
-            • Cross-platform PC & mobile Android compatibility with intermediate iframe dismissal handlers.
+            • Google One-Tap &amp; official GIS popup integration with automatic account provisioning.<br>
+            • Cross-platform PC &amp; mobile Android compatibility with intermediate iframe dismissal handlers.
           </div>
         </div>
 
@@ -1345,7 +1368,7 @@ export function renderSettingsPage() {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="chip purple" style="font-weight:700;">v2.1.0</span>
-              <strong style="color:var(--text-primary);">Role-Based Access Control (RBAC) & Route Interceptors</strong>
+              <strong style="color:var(--text-primary);">Role-Based Access Control (RBAC) &amp; Route Interceptors</strong>
             </div>
             <span class="chip green" style="font-size:10px;">Rating: 9.6 / 10</span>
           </div>
@@ -1360,7 +1383,7 @@ export function renderSettingsPage() {
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-wrap:wrap;gap:6px;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span class="chip" style="font-weight:700;">v1.0.0 – v2.0.0</span>
-              <strong style="color:var(--text-primary);">Motion Aurora UI & Core Career Intelligence Engine</strong>
+              <strong style="color:var(--text-primary);">Motion Aurora UI &amp; Core Career Intelligence Engine</strong>
             </div>
             <span class="chip green" style="font-size:10px;">Rating: 9.8 / 10</span>
           </div>
@@ -1371,84 +1394,13 @@ export function renderSettingsPage() {
         </div>
       </div>
 
-      <!-- Tab 2: Backlog & Ratings -->
-      <div id="tab-roadmap-backlog" class="roadmap-tab-pane" style="display:none;flex-direction:column;gap:14px;">
-
-        <!-- Backlog Header Bar -->
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
-          <div>
-            <div style="font-size:15px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
-              <span>🎯</span> Engineering Backlog &amp; AI Prompt Launcher
-            </div>
-            <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">
-              Prioritized enhancements, mock-data migrations, and feature specs. Click "📋 Copy Agent Work Prompt" to immediately hand off an item to an AI pair programmer.
-            </div>
-          </div>
-          <div style="display:flex;gap:8px;flex-wrap:wrap;">
-            <button class="btn btn-gold btn-sm" id="btn-show-add-backlog" style="font-size:11px;padding:6px 12px;font-weight:700;display:flex;align-items:center;gap:6px;">
-              <span>➕</span> Add Backlog Item
-            </button>
-            <button class="btn btn-secondary btn-sm" id="btn-refresh-backlog" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:6px;">
-              <span>🔄</span> Refresh Backlog
-            </button>
-          </div>
-        </div>
-
-        <!-- Add Custom Backlog Form (Collapsible) -->
-        <div id="form-add-backlog" style="display:none;background:var(--bg-base);border:1px solid var(--gold-border);border-radius:var(--radius-md);padding:16px;">
-          <div style="font-size:13px;font-weight:700;color:var(--gold-light);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
-            <span>➕</span> Add New Work Item to Backlog
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 140px;gap:10px;margin-bottom:10px;">
-            <div>
-              <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Task Title</label>
-              <input id="input-bl-title" class="input" style="font-size:11px;padding:6px 10px;width:100%;margin-top:2px;" placeholder="e.g. Implement Custom Dark Mode Palette" />
-            </div>
-            <div>
-              <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Priority</label>
-              <select id="input-bl-priority" class="select w-full" style="font-size:11px;padding:6px 10px;margin-top:2px;">
-                <option value="P0">P0 IMMEDIATE</option>
-                <option value="P1" selected>P1 NEXT UP</option>
-                <option value="P2">P2 FUTURE</option>
-              </select>
-            </div>
-          </div>
-          <div style="margin-bottom:10px;">
-            <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Target Files</label>
-            <input id="input-bl-target" class="input" style="font-size:11px;padding:6px 10px;width:100%;margin-top:2px;" placeholder="e.g. scripts/resume-engine.js, styles/main.css" />
-          </div>
-          <div style="margin-bottom:12px;">
-            <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Agent Instructions &amp; Description</label>
-            <textarea id="input-bl-desc" class="input" style="font-size:11px;padding:8px 10px;width:100%;min-height:75px;resize:vertical;margin-top:2px;" placeholder="Detailed requirements and context for the AI agent..."></textarea>
-          </div>
-          <div style="display:flex;gap:8px;">
-            <button class="btn btn-gold btn-sm" id="btn-save-new-backlog" style="font-size:11px;padding:6px 14px;font-weight:700;">💾 Save to Cloud Backlog</button>
-            <button class="btn btn-secondary btn-sm" id="btn-cancel-add-backlog" style="font-size:11px;padding:6px 12px;">Cancel</button>
-          </div>
-        </div>
-
-        <!-- Filter Chips -->
-        <div style="display:flex;gap:6px;flex-wrap:wrap;" id="backlog-filter-chips">
-          <button class="chip active bl-filter-btn" data-filter="ALL" style="cursor:pointer;font-size:11px;">All Backlog Items (<span id="count-bl-all">0</span>)</button>
-          <button class="chip bl-filter-btn" data-filter="P0" style="cursor:pointer;font-size:11px;">P0 Immediate (<span id="count-bl-p0">0</span>)</button>
-          <button class="chip bl-filter-btn" data-filter="P1" style="cursor:pointer;font-size:11px;">P1 Next Up (<span id="count-bl-p1">0</span>)</button>
-          <button class="chip bl-filter-btn" data-filter="P2" style="cursor:pointer;font-size:11px;">P2 Future (<span id="count-bl-p2">0</span>)</button>
-        </div>
-
-        <!-- Dynamic Backlog Items List -->
-        <div id="admin-backlog-list" style="display:flex;flex-direction:column;gap:12px;">
-          <!-- Dynamically populated from Neon Postgres -->
-        </div>
-
-      </div>
-
-      <!-- Tab 3: Security Commands & CLI -->
+      <!-- Tab 2: Security Commands & CLI -->
       <div id="tab-roadmap-security" class="roadmap-tab-pane" style="display:none;flex-direction:column;gap:12px;">
         <div style="background:#05070c;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-md);padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;">
           <div style="color:var(--green);font-weight:700;margin-bottom:8px;"># 1. Standard Dependency Audit (0 CVEs)</div>
           <div style="color:var(--text-primary);background:rgba(255,255,255,0.04);padding:8px 12px;border-radius:4px;margin-bottom:12px;">npm audit</div>
 
-          <div style="color:var(--green);font-weight:700;margin-bottom:8px;"># 2. Pre-Flight Paranoid Security & Hygiene Scanner</div>
+          <div style="color:var(--green);font-weight:700;margin-bottom:8px;"># 2. Pre-Flight Paranoid Security &amp; Hygiene Scanner</div>
           <div style="color:var(--text-primary);background:rgba(255,255,255,0.04);padding:8px 12px;border-radius:4px;margin-bottom:12px;">npm run audit</div>
 
           <div style="color:var(--green);font-weight:700;margin-bottom:8px;"># 3. Windows Batch One-Click Scanner</div>
@@ -1461,204 +1413,6 @@ export function renderSettingsPage() {
           Reference docs: <code>docs/SECURITY_AUDIT_GUIDE.md</code>, <code>docs/CODE_REVIEW.md</code>, and <code>docs/ROADMAP.md</code>
         </div>
       </div>
-    </div>
-
-    <!-- ════════════════════════════════════════════════════════════════
-         SEO INTELLIGENCE & TRAFFIC INSIGHTS PANEL
-    ════════════════════════════════════════════════════════════════════ -->
-    <div id="seo-intelligence-panel" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px;">
-
-      <!-- Panel Header -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
-        <div>
-          <div style="font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;color:var(--text-primary);">
-            <span>🔍</span> SEO Intelligence &amp; AI Discoverability
-          </div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-            Real-time site health analysis, AI-crawler visibility, and actionable optimization recommendations.
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-gold btn-sm" id="btn-run-seo-scan" style="font-size:11px;padding:7px 14px;font-weight:700;display:flex;align-items:center;gap:6px;">
-            <span>🤖</span> Run SEO Agent Scan
-          </button>
-          <button class="btn btn-secondary btn-sm" id="btn-copy-seo-report" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;">
-            <span>📋</span> Copy SEO Report
-          </button>
-        </div>
-      </div>
-
-      <!-- SEO Score Dashboard: 6 Pillars -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;margin-bottom:24px;" id="seo-score-grid">
-
-        <div class="seo-score-card" id="seo-card-meta" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-light));"></div>
-          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Meta &amp; Tags</div>
-          <div id="score-meta" style="font-size:26px;font-weight:900;color:var(--gold);">—</div>
-          <div id="score-meta-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
-        </div>
-
-        <div class="seo-score-card" id="seo-card-ai" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#a855f7,#c084fc);"></div>
-          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">AI Discoverability</div>
-          <div id="score-ai" style="font-size:26px;font-weight:900;color:#c084fc;">—</div>
-          <div id="score-ai-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
-        </div>
-
-        <div class="seo-score-card" id="seo-card-perf" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--cyan),#38bdf8);"></div>
-          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Performance</div>
-          <div id="score-perf" style="font-size:26px;font-weight:900;color:var(--cyan);">—</div>
-          <div id="score-perf-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
-        </div>
-
-        <div class="seo-score-card" id="seo-card-content" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),#4ade80);"></div>
-          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Content Quality</div>
-          <div id="score-content" style="font-size:26px;font-weight:900;color:var(--green);">—</div>
-          <div id="score-content-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
-        </div>
-
-        <div class="seo-score-card" id="seo-card-struct" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f97316,#fb923c);"></div>
-          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Structured Data</div>
-          <div id="score-struct" style="font-size:26px;font-weight:900;color:#fb923c;">—</div>
-          <div id="score-struct-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
-        </div>
-
-        <div class="seo-score-card" id="seo-card-overall" style="background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(56,189,248,0.08));border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
-          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--cyan),#a855f7);"></div>
-          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Overall SEO Score</div>
-          <div id="score-overall" style="font-size:26px;font-weight:900;color:var(--gold);">—</div>
-          <div id="score-overall-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
-        </div>
-      </div>
-
-      <!-- Scan Progress (hidden until scan runs) -->
-      <div id="seo-scan-progress" style="display:none;margin-bottom:20px;">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
-          <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:seo-pulse-anim 1s ease-in-out infinite;"></div>
-          <span id="seo-scan-status" style="font-size:12px;color:var(--gold);font-family:'JetBrains Mono',monospace;font-weight:600;">Initializing SEO Agent...</span>
-        </div>
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-sm);height:6px;overflow:hidden;">
-          <div id="seo-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--cyan));transition:width 0.4s ease;border-radius:var(--radius-sm);"></div>
-        </div>
-        <div id="seo-scan-log" style="margin-top:10px;background:#05070c;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary);max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
-      </div>
-
-      <!-- Two-Column: Traffic Insights + AI Discoverability Checklist -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;" class="seo-two-col">
-
-        <!-- Traffic Insights -->
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
-          <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-            <span>📊</span> Traffic Insights
-            <span class="chip blue" style="font-size:10px;margin-left:auto;">Live Analysis</span>
-          </div>
-          <div id="seo-traffic-insights" style="display:flex;flex-direction:column;gap:2px;">
-            <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px;">Run a scan to load traffic insights</div>
-          </div>
-        </div>
-
-        <!-- AI Discoverability Checklist -->
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
-          <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-            <span>🤖</span> AI Crawler Visibility
-            <span class="chip" id="ai-visibility-chip" style="font-size:10px;margin-left:auto;">Not Scanned</span>
-          </div>
-          <div id="seo-ai-checklist" style="display:flex;flex-direction:column;gap:4px;">
-            <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px;">Run a scan to check AI discoverability</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- SEO Findings & Recommendations -->
-      <div id="seo-findings-container" style="display:none;">
-        <div style="font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:14px;border-top:1px solid var(--border);padding-top:16px;">
-          <span>💡</span> Agent Findings &amp; Actionable Fixes
-          <span id="seo-issues-badge" class="chip gold" style="font-size:10px;margin-left:8px;">0 Issues</span>
-        </div>
-        <div id="seo-findings-list" style="display:flex;flex-direction:column;gap:12px;"></div>
-      </div>
-
-    </div>
-
-    <!-- ════════════════════════════════════════════════════════════════
-         USER FEEDBACK & ISSUE INTELLIGENCE CENTER
-    ════════════════════════════════════════════════════════════════════ -->
-    <div id="admin-feedback-panel" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px;">
-
-      <!-- Panel Header -->
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
-        <div>
-          <div style="font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;color:var(--text-primary);">
-            <span>📬</span> Feedback &amp; Issue Intelligence Center
-          </div>
-          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-            Real-time candidate reports, automated AI prompt generation for coding agents, and lifecycle tracking: Open → In Progress → Reported → Completed.
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          <button class="btn btn-gold btn-sm" id="btn-refresh-feedback" style="font-size:11px;padding:7px 14px;font-weight:700;display:flex;align-items:center;gap:6px;">
-            <span>🔄</span> Refresh Feedback
-          </button>
-          <button class="btn btn-secondary btn-sm" id="btn-create-sample-feedback" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;" title="Creates a sample bug report to test AI analysis and agent prompt workflow">
-            <span>🧪</span> Add Test Report
-          </button>
-        </div>
-      </div>
-
-      <!-- Lifecycle Metrics Bar -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:12px;margin-bottom:20px;">
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
-          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;">Total Reports</div>
-          <div id="fb-stat-total" style="font-size:22px;font-weight:900;color:var(--text-primary);margin-top:4px;">0</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">All-time submissions</div>
-        </div>
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
-          <div style="font-size:10px;color:var(--gold);text-transform:uppercase;font-weight:700;">🟡 Open For Work</div>
-          <div id="fb-stat-open" style="font-size:22px;font-weight:900;color:var(--gold);margin-top:4px;">0</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Awaiting AI triage</div>
-        </div>
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
-          <div style="font-size:10px;color:var(--cyan);text-transform:uppercase;font-weight:700;">⚡ In Progress</div>
-          <div id="fb-stat-progress" style="font-size:22px;font-weight:900;color:var(--cyan);margin-top:4px;">0</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">AI prompt generated</div>
-        </div>
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
-          <div style="font-size:10px;color:#c084fc;text-transform:uppercase;font-weight:700;">📋 Reported to Agent</div>
-          <div id="fb-stat-reported" style="font-size:22px;font-weight:900;color:#c084fc;margin-top:4px;">0</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Prompt copied for work</div>
-        </div>
-        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
-          <div style="font-size:10px;color:var(--green);text-transform:uppercase;font-weight:700;">✅ Completed</div>
-          <div id="fb-stat-completed" style="font-size:22px;font-weight:900;color:var(--green);margin-top:4px;">0</div>
-          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Resolved in release</div>
-        </div>
-      </div>
-
-      <!-- Filter Controls & Search -->
-      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;">
-        <div style="display:flex;gap:6px;flex-wrap:wrap;">
-          <button class="chip admin-fb-tab-btn active" data-tab="ALL" style="cursor:pointer;font-size:11px;">All Items</button>
-          <button class="chip admin-fb-tab-btn" data-tab="open" style="cursor:pointer;font-size:11px;">🟡 Open (<span id="fb-badge-open">0</span>)</button>
-          <button class="chip admin-fb-tab-btn" data-tab="in_progress" style="cursor:pointer;font-size:11px;">⚡ In Progress (<span id="fb-badge-progress">0</span>)</button>
-          <button class="chip admin-fb-tab-btn" data-tab="reported" style="cursor:pointer;font-size:11px;">📋 Reported (<span id="fb-badge-reported">0</span>)</button>
-          <button class="chip admin-fb-tab-btn" data-tab="completed" style="cursor:pointer;font-size:11px;">✅ Completed (<span id="fb-badge-completed">0</span>)</button>
-        </div>
-        <div style="min-width:200px;">
-          <input type="text" id="admin-fb-search" class="input" placeholder="🔍 Search reports..." style="font-size:11px;padding:6px 12px;width:100%;border-radius:var(--radius-sm);" />
-        </div>
-      </div>
-
-      <!-- Feedback Items Feed -->
-      <div id="admin-feedback-feed" style="display:flex;flex-direction:column;gap:12px;">
-        <div style="text-align:center;padding:32px;color:var(--text-dim);">
-          <div style="font-size:24px;margin-bottom:8px;">⏳</div>
-          <div>Loading user feedback and issue reports...</div>
-        </div>
-      </div>
-
     </div>
   `;
 
@@ -1924,10 +1678,149 @@ Documentation: docs/CODE_REVIEW.md, docs/ROADMAP.md, docs/SECURITY_AUDIT_GUIDE.m
       window.prompt('Copy Session Handoff Summary:', summary);
     }
   });
+}
 
-  // ══════════════════════════════════════════════════════════════
-  // SEO INTELLIGENCE AGENT — Scan Engine & Event Handlers
-  // ══════════════════════════════════════════════════════════════
+// ── Dedicated SEO Intelligence & AI Discoverability Page ───────
+export function renderSeoPage() {
+  const content = document.getElementById('page-content');
+  if (!content) return;
+
+  // RBAC Check
+  if (!isOwner()) {
+    renderAccessDenied('admin');
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="page-header">
+      <div class="page-title" style="display:flex;align-items:center;gap:10px;">
+        <span>🔍</span> SEO Intelligence &amp; AI Discoverability
+      </div>
+      <div class="page-subtitle">Real-time site health analysis, AI-crawler visibility, and actionable optimization recommendations.</div>
+    </div>
+
+    ${renderSystemNavToolbar('seo')}
+
+    <!-- ════════════════════════════════════════════════════════════════
+         SEO INTELLIGENCE & TRAFFIC INSIGHTS PANEL
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="seo-intelligence-panel" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px;">
+
+      <!-- Panel Header -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;color:var(--text-primary);">
+            <span>🔍</span> SEO Intelligence &amp; AI Discoverability
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+            Real-time site health analysis, AI-crawler visibility, and actionable optimization recommendations.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" id="btn-run-seo-scan" style="font-size:11px;padding:7px 14px;font-weight:700;display:flex;align-items:center;gap:6px;">
+            <span>🤖</span> Run SEO Agent Scan
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-copy-seo-report" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;">
+            <span>📋</span> Copy SEO Report
+          </button>
+        </div>
+      </div>
+
+      <!-- SEO Score Dashboard: 6 Pillars -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;margin-bottom:24px;" id="seo-score-grid">
+
+        <div class="seo-score-card" id="seo-card-meta" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-light));"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Meta &amp; Tags</div>
+          <div id="score-meta" style="font-size:26px;font-weight:900;color:var(--gold);">—</div>
+          <div id="score-meta-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-ai" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#a855f7,#c084fc);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">AI Discoverability</div>
+          <div id="score-ai" style="font-size:26px;font-weight:900;color:#c084fc;">—</div>
+          <div id="score-ai-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-perf" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--cyan),#38bdf8);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Performance</div>
+          <div id="score-perf" style="font-size:26px;font-weight:900;color:var(--cyan);">—</div>
+          <div id="score-perf-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-content" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--green),#4ade80);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Content Quality</div>
+          <div id="score-content" style="font-size:26px;font-weight:900;color:var(--green);">—</div>
+          <div id="score-content-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-struct" style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f97316,#fb923c);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Structured Data</div>
+          <div id="score-struct" style="font-size:26px;font-weight:900;color:#fb923c;">—</div>
+          <div id="score-struct-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+
+        <div class="seo-score-card" id="seo-card-overall" style="background:linear-gradient(135deg,rgba(245,158,11,0.12),rgba(56,189,248,0.08));border:1px solid rgba(245,158,11,0.3);border-radius:var(--radius-md);padding:14px;position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--cyan),#a855f7);"></div>
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;margin-bottom:4px;">Overall SEO Score</div>
+          <div id="score-overall" style="font-size:26px;font-weight:900;color:var(--gold);">—</div>
+          <div id="score-overall-label" style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Run scan to analyze</div>
+        </div>
+      </div>
+
+      <!-- Scan Progress (hidden until scan runs) -->
+      <div id="seo-scan-progress" style="display:none;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <div style="width:8px;height:8px;border-radius:50%;background:var(--gold);animation:seo-pulse-anim 1s ease-in-out infinite;"></div>
+          <span id="seo-scan-status" style="font-size:12px;color:var(--gold);font-family:'JetBrains Mono',monospace;font-weight:600;">Initializing SEO Agent...</span>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-sm);height:6px;overflow:hidden;">
+          <div id="seo-progress-bar" style="height:100%;width:0%;background:linear-gradient(90deg,var(--gold),var(--cyan));transition:width 0.4s ease;border-radius:var(--radius-sm);"></div>
+        </div>
+        <div id="seo-scan-log" style="margin-top:10px;background:#05070c;border:1px solid rgba(255,255,255,0.08);border-radius:var(--radius-sm);padding:10px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-secondary);max-height:120px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;"></div>
+      </div>
+
+      <!-- Two-Column: Traffic Insights + AI Discoverability Checklist -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px;" class="seo-two-col">
+
+        <!-- Traffic Insights -->
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+          <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <span>📊</span> Traffic Insights
+            <span class="chip blue" style="font-size:10px;margin-left:auto;">Live Analysis</span>
+          </div>
+          <div id="seo-traffic-insights" style="display:flex;flex-direction:column;gap:2px;">
+            <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px;">Run a scan to load traffic insights</div>
+          </div>
+        </div>
+
+        <!-- AI Discoverability Checklist -->
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:18px;">
+          <div style="font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+            <span>🤖</span> AI Crawler Visibility
+            <span class="chip" id="ai-visibility-chip" style="font-size:10px;margin-left:auto;">Not Scanned</span>
+          </div>
+          <div id="seo-ai-checklist" style="display:flex;flex-direction:column;gap:4px;">
+            <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:12px;">Run a scan to check AI discoverability</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEO Findings & Recommendations -->
+      <div id="seo-findings-container" style="display:none;">
+        <div style="font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;margin-bottom:14px;border-top:1px solid var(--border);padding-top:16px;">
+          <span>💡</span> Agent Findings &amp; Actionable Fixes
+          <span id="seo-issues-badge" class="chip gold" style="font-size:10px;margin-left:8px;">0 Issues</span>
+        </div>
+        <div id="seo-findings-list" style="display:flex;flex-direction:column;gap:12px;"></div>
+      </div>
+
+    </div>
+  `;
 
   // Inject keyframe animation for pulse indicator
   if (!document.getElementById('seo-pulse-style')) {
@@ -2577,20 +2470,112 @@ ${r.findings.length === 0
       window.prompt('SEO Report:', report);
     }
   });
+}
+
+// ── Dedicated User Feedback & Issue Intelligence Center Page ───
+export function renderFeedbackPage() {
+  const content = document.getElementById('page-content');
+  if (!content) return;
+
+  // RBAC Check
+  if (!isOwner()) {
+    renderAccessDenied('admin');
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="page-header">
+      <div class="page-title" style="display:flex;align-items:center;gap:10px;">
+        <span>📬</span> Feedback &amp; Issue Intelligence Center
+      </div>
+      <div class="page-subtitle">Real-time candidate reports, automated AI prompt generation for coding agents, and lifecycle tracking: Open → In Progress → Reported → Completed.</div>
+    </div>
+
+    ${renderSystemNavToolbar('feedback')}
+
+    <!-- ════════════════════════════════════════════════════════════════
+         USER FEEDBACK & ISSUE INTELLIGENCE CENTER
+    ════════════════════════════════════════════════════════════════════ -->
+    <div id="admin-feedback-panel" style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:24px;margin-bottom:32px;">
+
+      <!-- Panel Header -->
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:16px;margin-bottom:20px;">
+        <div>
+          <div style="font-weight:700;font-size:18px;display:flex;align-items:center;gap:10px;color:var(--text-primary);">
+            <span>📬</span> Feedback &amp; Issue Intelligence Center
+          </div>
+          <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+            Real-time candidate reports, automated AI prompt generation for coding agents, and lifecycle tracking: Open → In Progress → Reported → Completed.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" id="btn-refresh-feedback" style="font-size:11px;padding:7px 14px;font-weight:700;display:flex;align-items:center;gap:6px;">
+            <span>🔄</span> Refresh Feedback
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-create-sample-feedback" style="font-size:11px;padding:7px 12px;display:flex;align-items:center;gap:6px;" title="Creates a sample bug report to test AI analysis and agent prompt workflow">
+            <span>🧪</span> Add Test Report
+          </button>
+        </div>
+      </div>
+
+      <!-- Lifecycle Metrics Bar -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:12px;margin-bottom:20px;">
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--text-dim);text-transform:uppercase;font-weight:700;">Total Reports</div>
+          <div id="fb-stat-total" style="font-size:22px;font-weight:900;color:var(--text-primary);margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">All-time submissions</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--gold);text-transform:uppercase;font-weight:700;">🟡 Open For Work</div>
+          <div id="fb-stat-open" style="font-size:22px;font-weight:900;color:var(--gold);margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Awaiting AI triage</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--cyan);text-transform:uppercase;font-weight:700;">⚡ In Progress</div>
+          <div id="fb-stat-progress" style="font-size:22px;font-weight:900;color:var(--cyan);margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">AI prompt generated</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:#c084fc;text-transform:uppercase;font-weight:700;">📋 Reported to Agent</div>
+          <div id="fb-stat-reported" style="font-size:22px;font-weight:900;color:#c084fc;margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Prompt copied for work</div>
+        </div>
+        <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:12px 14px;">
+          <div style="font-size:10px;color:var(--green);text-transform:uppercase;font-weight:700;">✅ Completed</div>
+          <div id="fb-stat-completed" style="font-size:22px;font-weight:900;color:var(--green);margin-top:4px;">0</div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">Resolved in release</div>
+        </div>
+      </div>
+
+      <!-- Filter Controls & Search -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:16px;border-bottom:1px solid var(--border);padding-bottom:12px;">
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="chip admin-fb-tab-btn active" data-tab="ALL" style="cursor:pointer;font-size:11px;">All Items</button>
+          <button class="chip admin-fb-tab-btn" data-tab="open" style="cursor:pointer;font-size:11px;">🟡 Open (<span id="fb-badge-open">0</span>)</button>
+          <button class="chip admin-fb-tab-btn" data-tab="in_progress" style="cursor:pointer;font-size:11px;">⚡ In Progress (<span id="fb-badge-progress">0</span>)</button>
+          <button class="chip admin-fb-tab-btn" data-tab="reported" style="cursor:pointer;font-size:11px;">📋 Reported (<span id="fb-badge-reported">0</span>)</button>
+          <button class="chip admin-fb-tab-btn" data-tab="completed" style="cursor:pointer;font-size:11px;">✅ Completed (<span id="fb-badge-completed">0</span>)</button>
+        </div>
+        <div style="min-width:200px;">
+          <input type="text" id="admin-fb-search" class="input" placeholder="🔍 Search reports..." style="font-size:11px;padding:6px 12px;width:100%;border-radius:var(--radius-sm);" />
+        </div>
+      </div>
+
+      <!-- Feedback Items Feed -->
+      <div id="admin-feedback-feed" style="display:flex;flex-direction:column;gap:12px;">
+        <div style="text-align:center;padding:32px;color:var(--text-dim);">
+          <div style="font-size:24px;margin-bottom:8px;">⏳</div>
+          <div>Loading user feedback and issue reports...</div>
+        </div>
+      </div>
+
+    </div>
+  `;
 
   // ── USER FEEDBACK & ISSUE INTELLIGENCE LOGIC ──────────────────
   let adminFeedbackItems = [];
   let currentFbTab = 'ALL';
   let fbSearchTerm = '';
-
-  function escapeHtml(str) {
-    return String(str || '')
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;')
-      .replace(/"/g, '&quot;')
-      .replace(/'/g, '&#039;');
-  }
 
   async function refreshFeedbackDashboard() {
     const feed = document.getElementById('admin-feedback-feed');
@@ -2936,6 +2921,100 @@ ${r.findings.length === 0
 
   // Initial Feedback Hydration
   refreshFeedbackDashboard();
+}
+
+// ── Dedicated Engineering Backlog & Prompt Launcher Page ──────
+export function renderBacklogPage() {
+  const content = document.getElementById('page-content');
+  if (!content) return;
+
+  // RBAC Check
+  if (!isOwner()) {
+    renderAccessDenied('admin');
+    return;
+  }
+
+  content.innerHTML = `
+    <div class="page-header">
+      <div class="page-title" style="display:flex;align-items:center;gap:10px;">
+        <span>🎯</span> Engineering Backlog &amp; AI Prompt Launcher
+      </div>
+      <div class="page-subtitle">Prioritized enhancements, mock-data migrations, and feature specs. Click "📋 Copy Agent Work Prompt" to immediately hand off an item to an AI pair programmer.</div>
+    </div>
+
+    ${renderSystemNavToolbar('backlog')}
+
+    <!-- Backlog Container -->
+    <div id="tab-roadmap-backlog" style="display:flex;flex-direction:column;gap:14px;margin-bottom:32px;">
+
+      <!-- Backlog Header Bar -->
+      <div style="background:var(--bg-base);border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text-primary);display:flex;align-items:center;gap:8px;">
+            <span>🎯</span> Engineering Backlog &amp; AI Prompt Launcher
+          </div>
+          <div style="font-size:11px;color:var(--text-secondary);margin-top:2px;">
+            Prioritized enhancements, mock-data migrations, and feature specs. Click "📋 Copy Agent Work Prompt" to immediately hand off an item to an AI pair programmer.
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn btn-gold btn-sm" id="btn-show-add-backlog" style="font-size:11px;padding:6px 12px;font-weight:700;display:flex;align-items:center;gap:6px;">
+            <span>➕</span> Add Backlog Item
+          </button>
+          <button class="btn btn-secondary btn-sm" id="btn-refresh-backlog" style="font-size:11px;padding:6px 12px;display:flex;align-items:center;gap:6px;">
+            <span>🔄</span> Refresh Backlog
+          </button>
+        </div>
+      </div>
+
+      <!-- Add Custom Backlog Form (Collapsible) -->
+      <div id="form-add-backlog" style="display:none;background:var(--bg-base);border:1px solid var(--gold-border);border-radius:var(--radius-md);padding:16px;">
+        <div style="font-size:13px;font-weight:700;color:var(--gold-light);margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+          <span>➕</span> Add New Work Item to Backlog
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 140px;gap:10px;margin-bottom:10px;">
+          <div>
+            <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Task Title</label>
+            <input id="input-bl-title" class="input" style="font-size:11px;padding:6px 10px;width:100%;margin-top:2px;" placeholder="e.g. Implement Custom Dark Mode Palette" />
+          </div>
+          <div>
+            <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Priority</label>
+            <select id="input-bl-priority" class="select w-full" style="font-size:11px;padding:6px 10px;margin-top:2px;">
+              <option value="P0">P0 IMMEDIATE</option>
+              <option value="P1" selected>P1 NEXT UP</option>
+              <option value="P2">P2 FUTURE</option>
+            </select>
+          </div>
+        </div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Target Files</label>
+          <input id="input-bl-target" class="input" style="font-size:11px;padding:6px 10px;width:100%;margin-top:2px;" placeholder="e.g. scripts/resume-engine.js, styles/main.css" />
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:10px;text-transform:uppercase;color:var(--text-dim);font-weight:700;">Agent Instructions &amp; Description</label>
+          <textarea id="input-bl-desc" class="input" style="font-size:11px;padding:8px 10px;width:100%;min-height:75px;resize:vertical;margin-top:2px;" placeholder="Detailed requirements and context for the AI agent..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-gold btn-sm" id="btn-save-new-backlog" style="font-size:11px;padding:6px 14px;font-weight:700;">💾 Save to Cloud Backlog</button>
+          <button class="btn btn-secondary btn-sm" id="btn-cancel-add-backlog" style="font-size:11px;padding:6px 12px;">Cancel</button>
+        </div>
+      </div>
+
+      <!-- Filter Chips -->
+      <div style="display:flex;gap:6px;flex-wrap:wrap;" id="backlog-filter-chips">
+        <button class="chip active bl-filter-btn" data-filter="ALL" style="cursor:pointer;font-size:11px;">All Backlog Items (<span id="count-bl-all">0</span>)</button>
+        <button class="chip bl-filter-btn" data-filter="P0" style="cursor:pointer;font-size:11px;">P0 Immediate (<span id="count-bl-p0">0</span>)</button>
+        <button class="chip bl-filter-btn" data-filter="P1" style="cursor:pointer;font-size:11px;">P1 Next Up (<span id="count-bl-p1">0</span>)</button>
+        <button class="chip bl-filter-btn" data-filter="P2" style="cursor:pointer;font-size:11px;">P2 Future (<span id="count-bl-p2">0</span>)</button>
+      </div>
+
+      <!-- Dynamic Backlog Items List -->
+      <div id="admin-backlog-list" style="display:flex;flex-direction:column;gap:12px;">
+        <!-- Dynamically populated from Neon Postgres -->
+      </div>
+
+    </div>
+  `;
 
   // ── ENGINEERING BACKLOG & PROMPT LAUNCHER LOGIC ──────────────
   const DEFAULT_ENGINEERING_BACKLOG = [
@@ -3440,3 +3519,10 @@ ${desc}
   loadEngineeringBacklog();
 }
 
+// Global window exposure for console or direct dynamic dispatch
+if (typeof window !== 'undefined') {
+  window.renderSettingsPage = renderSettingsPage;
+  window.renderBacklogPage = renderBacklogPage;
+  window.renderFeedbackPage = renderFeedbackPage;
+  window.renderSeoPage = renderSeoPage;
+}
