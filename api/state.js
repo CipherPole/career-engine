@@ -4,7 +4,7 @@ const { getUserById, getUserStateByKey, upsertUserStateByKey } = require('./_lib
 const { getSessionFromRequest } = require('./_lib/session');
 const { json, methodNotAllowed, readJsonBody } = require('./_lib/http');
 
-const ALLOWED_STATE_KEYS = new Set(['jobs', 'training', 'certs']);
+const ALLOWED_STATE_KEYS = new Set(['jobs', 'training', 'certs', 'seo_scan']);
 
 async function requireUser(req, res) {
   const session = getSessionFromRequest(req);

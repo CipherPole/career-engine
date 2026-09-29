@@ -17,13 +17,13 @@ import {
   downloadLogsJson,
   LOG_LEVELS,
   LOG_CATEGORIES,
-} from './telemetry-engine.js?v=8';
+} from './telemetry-engine.js?v=10';
 import {
   fetchAdminFeedback,
   updateAdminFeedbackStatus,
   generateAgentWorkPrompt,
   submitFeedback,
-} from './feedback-engine.js?v=8';
+} from './feedback-engine.js?v=10';
 
 export const OWNER_EMAIL = 'jerexson3@gmail.com';
 const SESSION_STORAGE_KEY = 'careerEngine_session_v2';
@@ -2371,7 +2371,77 @@ https://career-engine-five.vercel.app/#terms` });
       `).join('');
     }
 
-    // Show findings
+    const scanPayload = { overall, metaScore, aiScore, perfScore, contentScore, structScore, findings, timestamp: new Date().toISOString() };
+    await saveSeoScanResults(scanPayload);
+    renderSeoResultsUI(scanPayload);
+
+    // Log to telemetry
+    logSecurity(`SEO Agent scan complete. Score: ${overall}/100 (Meta:${metaScore} AI:${aiScore} Perf:${perfScore} Content:${contentScore} Struct:${structScore}). Issues found: ${findings.length}`, 'SeoAgent', { overall, metaScore, aiScore, perfScore, contentScore, structScore, issueCount: findings.length });
+
+    // Reset button
+    setTimeout(() => {
+      progress.style.display = 'none';
+      if (scanBtn) { scanBtn.disabled = false; scanBtn.innerHTML = '<span>🔁</span> Re-run SEO Scan'; }
+      window.toast?.(`🔍 SEO Scan complete! Score: ${getGrade(overall)} (${overall}/100) — Saved to database.`, overall >= 70 ? 'green' : 'gold');
+      updateTelemetryView();
+    }, 1000);
+  }
+
+  function renderSeoResultsUI(data) {
+    if (!data || data.overall === undefined) return;
+    const { overall, metaScore, aiScore, perfScore, contentScore, structScore, findings = [], timestamp } = data;
+
+    const getGrade = s => s >= 90 ? 'A+' : s >= 80 ? 'A' : s >= 70 ? 'B+' : s >= 60 ? 'B' : s >= 50 ? 'C' : 'D';
+    const getColor = s => s >= 80 ? 'var(--green)' : s >= 60 ? 'var(--gold)' : 'var(--red)';
+    const getLetter = s => s >= 80 ? 'Excellent' : s >= 60 ? 'Needs Work' : 'Critical Issues';
+
+    const updateCard = (scoreId, labelId, val) => {
+      const el = document.getElementById(scoreId);
+      const lbl = document.getElementById(labelId);
+      if (el) { el.textContent = `${val}%`; el.style.color = getColor(val); }
+      if (lbl) lbl.textContent = getLetter(val);
+    };
+
+    updateCard('score-meta', 'score-meta-label', metaScore);
+    updateCard('score-ai', 'score-ai-label', aiScore);
+    updateCard('score-perf', 'score-perf-label', perfScore);
+    updateCard('score-content', 'score-content-label', contentScore);
+    updateCard('score-struct', 'score-struct-label', structScore);
+
+    const overallEl = document.getElementById('score-overall');
+    const overallLbl = document.getElementById('score-overall-label');
+    if (overallEl) { overallEl.textContent = `${getGrade(overall)} (${overall}/100)`; overallEl.style.color = getColor(overall); }
+    if (overallLbl) {
+      const timeStr = timestamp ? ` • ${new Date(timestamp).toLocaleDateString()} ${new Date(timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : '';
+      overallLbl.textContent = `${getLetter(overall)}${timeStr}`;
+    }
+
+    // Traffic insights
+    const trafficEl = document.getElementById('seo-traffic-insights');
+    if (trafficEl) {
+      const siteUrl = window.location.origin;
+      const protocol = window.location.protocol === 'https:' ? '✅ HTTPS' : '⚠️ HTTP (no SSL)';
+      const isProduction = !siteUrl.includes('localhost') && !siteUrl.includes('127.0.0.1');
+      trafficEl.innerHTML = [
+        { label: '🌐 Site URL', value: siteUrl, color: 'var(--cyan)' },
+        { label: '🔒 Protocol', value: protocol, color: protocol.includes('✅') ? 'var(--green)' : 'var(--gold)' },
+        { label: '🏭 Environment', value: isProduction ? '✅ Production' : '🔧 Local Dev', color: isProduction ? 'var(--green)' : 'var(--gold)' },
+        { label: '📊 SEO Overall Score', value: `${getGrade(overall)} (${overall}/100)`, color: getColor(overall) },
+        { label: '🕒 Last Saved Scan', value: timestamp ? new Date(timestamp).toLocaleString() : 'Just now', color: 'var(--gold-light)' },
+        { label: '💾 Cloud Persistence', value: '✅ Synced to Neon Postgres', color: 'var(--green)' },
+      ].map(row => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:12px;">
+          <span style="color:var(--text-secondary);">${row.label}</span>
+          <span style="font-weight:600;color:${row.color};text-align:right;max-width:55%;">${row.value}</span>
+        </div>
+      `).join('');
+    }
+
+    // Findings
+    const findingsContainer = document.getElementById('seo-findings-container');
+    const findingsList = document.getElementById('seo-findings-list');
+    const issuesBadge = document.getElementById('seo-issues-badge');
+
     if (findings.length > 0) {
       if (findingsContainer) findingsContainer.style.display = 'block';
       if (issuesBadge) {
@@ -2396,7 +2466,7 @@ https://career-engine-five.vercel.app/#terms` });
               <details style="margin-top:4px;">
                 <summary style="cursor:pointer;color:var(--gold-light);font-size:11px;font-weight:600;">🔧 View recommended fix snippet</summary>
                 <div style="position:relative;margin-top:8px;">
-                  <pre id="${fixId}" style="background:#05070c;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:10px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--green);overflow-x:auto;white-space:pre-wrap;word-break:break-all;">${f.fix.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
+                  <pre id="${fixId}" style="background:#05070c;border:1px solid rgba(255,255,255,0.08);border-radius:4px;padding:10px;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--green);overflow-x:auto;white-space:pre-wrap;word-break:break-all;">${(f.fix || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</pre>
                   <button class="btn btn-secondary btn-sm" style="margin-top:6px;font-size:11px;" onclick="navigator.clipboard.writeText(document.getElementById('${fixId}').textContent).then(()=>window.toast?.('Fix snippet copied!','green')).catch(()=>{})">📋 Copy Fix</button>
                 </div>
               </details>
@@ -2410,22 +2480,57 @@ https://career-engine-five.vercel.app/#terms` });
       if (findingsList) findingsList.innerHTML = `<div style="text-align:center;padding:20px;color:var(--green);font-size:14px;font-weight:700;">🎉 Perfect — No SEO issues detected!</div>`;
     }
 
-    // Log to telemetry
-    logSecurity(`SEO Agent scan complete. Score: ${overall}/100 (Meta:${metaScore} AI:${aiScore} Perf:${perfScore} Content:${contentScore} Struct:${structScore}). Issues found: ${findings.length}`, 'SeoAgent', { overall, metaScore, aiScore, perfScore, contentScore, structScore, issueCount: findings.length });
+    const scanBtn = document.getElementById('btn-run-seo-scan');
+    if (scanBtn) {
+      scanBtn.innerHTML = '<span>🔁</span> Re-run SEO Scan';
+    }
+  }
 
-    // Reset button
-    setTimeout(() => {
-      progress.style.display = 'none';
-      if (scanBtn) { scanBtn.disabled = false; scanBtn.innerHTML = '<span>🔁</span> Re-run SEO Scan'; }
-      window.toast?.(`🔍 SEO Scan complete! Score: ${getGrade(overall)} (${overall}/100)`, overall >= 70 ? 'green' : 'gold');
-      updateTelemetryView();
-    }, 1000);
+  async function saveSeoScanResults(scanData) {
+    window._lastSeoScanResults = scanData;
+    try {
+      localStorage.setItem('careerEngine_last_seo_scan', JSON.stringify(scanData));
+    } catch {}
+    try {
+      await fetch('/api/state?key=seo_scan', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ state: scanData }),
+      });
+    } catch (err) {
+      console.warn('Failed to save SEO scan to server state:', err);
+    }
+  }
 
-    // Store results for report export
-    window._lastSeoScanResults = { overall, metaScore, aiScore, perfScore, contentScore, structScore, findings, timestamp: new Date().toISOString() };
+  async function loadLastSeoScan() {
+    let scanData = null;
+    try {
+      const raw = localStorage.getItem('careerEngine_last_seo_scan');
+      if (raw) scanData = JSON.parse(raw);
+    } catch {}
+
+    try {
+      const res = await fetch('/api/state?key=seo_scan', { credentials: 'include' });
+      if (res.ok) {
+        const body = await res.json();
+        if (body?.state && typeof body.state === 'object' && body.state.overall !== undefined) {
+          scanData = body.state;
+          try {
+            localStorage.setItem('careerEngine_last_seo_scan', JSON.stringify(scanData));
+          } catch {}
+        }
+      }
+    } catch (err) {}
+
+    if (scanData && scanData.overall !== undefined) {
+      window._lastSeoScanResults = scanData;
+      renderSeoResultsUI(scanData);
+    }
   }
 
   document.getElementById('btn-run-seo-scan')?.addEventListener('click', runSeoScan);
+  loadLastSeoScan();
 
   document.getElementById('btn-copy-seo-report')?.addEventListener('click', async () => {
     const r = window._lastSeoScanResults;

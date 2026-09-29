@@ -4,9 +4,9 @@
 
 'use strict';
 
-import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig, IDLE_TIMEOUT_MS, signOut, hydrateSessionFromServer } from './auth-engine.js?v=8';
-import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=8';
-import { initFeedbackChatbot } from './feedback-engine.js?v=8';
+import { initGoogleAuth, renderAuthPill, getCurrentUser, isOwner, hasPermission, renderAccessDenied, getActiveSession, ROLES, fetchAuthConfig, IDLE_TIMEOUT_MS, signOut, hydrateSessionFromServer } from './auth-engine.js?v=10';
+import { logEvent, LOG_LEVELS, LOG_CATEGORIES } from './telemetry-engine.js?v=10';
+import { initFeedbackChatbot } from './feedback-engine.js?v=10';
 
 // ── Global State ─────────────────────────────────────────────
 const State = {
