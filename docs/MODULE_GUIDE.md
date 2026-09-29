@@ -115,28 +115,29 @@ All frontend code is written in pure Vanilla ES2022+ modules. When importing acr
     3. Cleans up all client `localStorage` and `sessionStorage` keys associated with the user's email.
     4. Removes `careerEngine_has_visited` so the user can re-register cleanly if desired.
     5. Redirects to `#signin` with a clean slate.
-  - `renderSettingsPage()`: Renders the Admin Console (`#settings`) for `jerexson3@gmail.com`. Contains major sub-sections:
-    1. **OAuth & Security Cards** — Google Client ID configuration and session diagnostics.
-    2. **Action Logs & Diagnostic Trace Route** — Live server auth events merged with client ring buffer, filterable by category and level.
-    3. **Project Evolution, Strategic Roadmap & Security Health** — Audited release history, CLI security scanner, and the interactive **Engineering Backlog & AI Prompt Launcher** with priority filters, copy-prompt generator, dispatch to issue tracker, and cloud state sync (`/api/state?key=engineering_backlog`).
-    4. **SEO Intelligence & AI Discoverability Panel** — Full on-demand SEO scan engine and traffic insights with cloud persistence (`/api/state?key=seo_scan`).
-    5. **User Feedback & Issues Intelligence Center** — Admin triage table for incoming bug reports, suggestions, questions, and AI analysis prompts.
+  - `renderSystemNavToolbar(activeTab)`: Shared top pill-bar component rendering 1-click navigation buttons between all 4 administrative pages (`settings`, `backlog`, `feedback`, `seo`).
+  - `renderSettingsPage()`: Renders the dedicated Administrator Console (`#settings`) for `jerexson3@gmail.com`. Contains:
+    1. **OAuth 2.0 Client ID Configuration** — Dynamic environment variable reflection and local admin override.
+    2. **Session Security Diagnostics** — Fingerprint verification, active origin, and idle session tracker.
+    3. **Action Logs & Diagnostic Trace Route** — Real-time 150-event ring buffer with live `/api/admin-auth-events` server polling every 10 seconds.
+    4. **Platform Evolution History** — Milestone release timeline and interactive security audit CLI.
+  - `renderBacklogPage()`: Dedicated engineering backlog view (`#backlog`). Features:
+    1. **Part 2 Work Orders** — Pre-seeded with 8 engineering tasks (Learning Paths, Certification Verifications, Projects Portfolio, Job Market Sync, ATS Scorer).
+    2. **"📋 Copy Agent Work Prompt"** — Formats full Markdown prompts with target files, acceptance criteria, and architecture rules for AI pair programmers.
+    3. **"🚀 Dispatch to Issue Tracker"** — Automatically creates active tickets in `#feedback`.
+    4. **"➕ Add Backlog Item" Form** — Saves custom engineering tasks to Neon Postgres (`/api/state?key=engineering_backlog`).
+  - `renderFeedbackPage()`: Dedicated user feedback dashboard (`#feedback`). Features:
+    1. **Live KPI Metric Cards** — Total, Open, In Progress, Reported, Completed.
+    2. **Ticket Cards** — Real-time candidate bug reports and suggestions submitted via the floating chatbot widget.
+    3. **"⚡ Analyse with AI"** — Generates troubleshooting prompt and marks ticket `In Progress`.
+    4. **"📋 Copy Prompt (Mark Reported)"** — Copies prompt to clipboard and marks ticket `Reported`.
+    5. **"✅ Mark as Completed"** — Archives resolved items.
+  - `renderSeoPage()`: Dedicated SEO Intelligence & AI Discoverability view (`#seo`). Features:
+    1. **6-Pillar Score Cards** — Meta & Tags, AI Discoverability, Performance, Content Quality, Structured Data, Overall.
+    2. **On-Demand SEO Agent Scan** — Probes DOM and sends HEAD requests to `/robots.txt`, `/sitemap.xml`, `/llms.txt`.
+    3. **SERP Simulator & Crawler Visibility** — Live desktop/mobile Google preview and crawler checklist.
+    4. **Cloud Persistence** — Commits scan results to Neon Postgres (`/api/state?key=seo_scan`) for persistent score display.
   - `loadAdminAuthEvents(container)`: Fetches recent server events from `/api/admin-auth-events` and renders color-coded badges (`USER_DELETED` = Red, `USER_CREATED` = Purple, `USER_SIGNIN` = Blue).
-  - **SEO Intelligence Panel** (rendered inside `renderSettingsPage`):
-    - **6-Pillar Score Cards:** Displays live scores for Meta & Tags (gold), AI Discoverability (purple), Performance (cyan), Content Quality (green), Structured Data (orange), and an Overall grade card. All start as `—` until a scan runs.
-    - **`runSeoScan()` — Agentic SEO Scan Engine:**
-      - *Phase 1 — Meta Tags:* Inspects `<title>`, `<meta name="description">`, Open Graph tags, canonical link, Twitter card via `document.querySelector`. Scores 0–100.
-      - *Phase 2 — AI Discoverability:* Sends `fetch HEAD` probes to `/robots.txt`, `/sitemap.xml`, `/llms.txt`. Inspects for `script[type="application/ld+json"]` and `noindex`/`noai` meta directives. Scores 0–100.
-      - *Phase 3 — Performance:* Uses `window.performance.timing` for load time and `getEntriesByType('resource')` for resource count, external scripts, and total transfer size. Scores 0–100.
-      - *Phase 4 — Content Quality:* Counts `h1`, `h2`, `img`, `img[alt]`, and `a[href]` elements in the live DOM. Scores 0–100.
-      - *Phase 5 — Structured Data:* Parses all `script[type="application/ld+json"]` blocks, checks for microdata `[itemscope]`, and probes security headers via a `fetch HEAD /`. Scores 0–100.
-      - Computes `overall = average of all 5 pillar scores`. Grades: A+ ≥90, A ≥80, B+ ≥70, B ≥60, C ≥50, D <50.
-      - Logs scan result to telemetry ring buffer via `logSecurity()`.
-      - Stores results in `window._lastSeoScanResults` for the "Copy SEO Report" export.
-    - **Traffic Insights Panel:** Post-scan table of site URL, HTTPS status, environment (production vs local), page weight, resource count, external scripts count, and indexability.
-    - **AI Crawler Visibility Checklist:** Pass/fail list for each AI discoverability check. Badge updates to green/gold/red based on pass rate.
-    - **Findings & Fix Cards:** Each issue rendered as an expandable card with severity badge (🔴 Critical / 🟡 Warning / 🔵 Info), pillar label, description, and a syntax-highlighted code snippet with a "Copy Fix" button.
-    - **Copy SEO Report:** Generates a complete markdown report with pillar scores, all findings, dynamically generated next steps from actual findings, and a "Completed Optimizations" section.
 
 
 ---

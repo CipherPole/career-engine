@@ -16,6 +16,7 @@ Essential Reference Documentation:
 - Session History & Changelog: [docs/SESSION_CHANGELOG.md](docs/SESSION_CHANGELOG.md)
 - Strategic Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
 - System Section & Admin Architecture Map: [docs/SYSTEM_SECTION_MAP.md](docs/SYSTEM_SECTION_MAP.md)
+- Agent Pair Programming Playbook: [docs/AGENT_PAIR_PROGRAMMING_PLAYBOOK.md](docs/AGENT_PAIR_PROGRAMMING_PLAYBOOK.md)
 - Local Startup & Release Runbook: [docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md](docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md)
 
 UI requirement:
