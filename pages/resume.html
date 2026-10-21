@@ -416,6 +416,17 @@
   </div>
 
   <script>
+    function fmtDate(v) {
+      if (!v) return '';
+      if (/^present$/i.test(v)) return 'Present';
+      const m = String(v).match(/^(\d{4})-(\d{2})$/);
+      return m ? new Date(Number(m[1]), Number(m[2]) - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : String(v);
+    }
+    function expDates(exp) {
+      const range = [fmtDate(exp.startDate), fmtDate(exp.endDate)].filter(Boolean).join(' – ');
+      return range || exp.duration || '';
+    }
+
     (function hydrateUserResume() {
       try {
         const showcase = sessionStorage.getItem('careerEngine_showcase_active') === 'true';
@@ -457,8 +468,10 @@
 
         // Update skills
         const skillsGrid = document.querySelector('.skills-grid');
-        if (skillsGrid && Array.isArray(profile.skills) && profile.skills.length > 0) {
-          skillsGrid.innerHTML = profile.skills.map(sk => `<div>&bull; ${escape(sk)}</div>`).join('');
+        const skillList = Array.isArray(profile.skills) ? profile.skills
+          : (profile.skills && typeof profile.skills === 'object' ? Object.values(profile.skills).flat() : []);
+        if (skillsGrid && skillList.length > 0) {
+          skillsGrid.innerHTML = skillList.map(sk => `<div>&bull; ${escape(sk)}</div>`).join('');
         }
 
         // Update experience
@@ -477,9 +490,9 @@
             expContainer.innerHTML = profile.experience.map(exp => `
               <div class="job-header" style="margin-top:14px;">
                 <div class="job-title">${escape(exp.title || 'Role')}</div>
-                <div class="job-dates">${escape(exp.duration || '')}</div>
+                <div class="job-dates">${escape(expDates(exp))}</div>
               </div>
-              <div class="job-company">${escape(exp.company || 'Organization')}${exp.teamSize ? ' &bull; Team: ' + escape(exp.teamSize) : ''}</div>
+              <div class="job-company">${escape(exp.company || 'Organization')}${exp.via ? ' (via ' + escape(exp.via) + ')' : ''}${exp.location ? ' &bull; ' + escape(exp.location) : ''}${exp.teamSize ? ' &bull; Team: ' + escape(exp.teamSize) : ''}</div>
               <ul>
                 ${(exp.highlights || []).map(h => `<li>${escape(h)}</li>`).join('')}
               </ul>
@@ -505,13 +518,34 @@
               <div class="edu-row" style="margin-top:6px;">
                 <div>
                   <div class="edu-degree">${escape(edu.degree || 'Degree')}</div>
-                  <div class="edu-school">${escape(edu.institution || 'University')}${edu.year ? ' &bull; ' + escape(edu.year) : ''}</div>
+                  <div class="edu-school">${escape(edu.school || edu.institution || 'University')}${edu.location ? ' &bull; ' + escape(edu.location) : ''}${edu.year ? ' &bull; ' + escape(edu.year) : ''}</div>
                 </div>
               </div>
             `).join('');
 
             eduHeading.parentNode.insertBefore(eduContainer, document.getElementById('ats-footer-note'));
           }
+        }
+
+        // Accomplishments + certifications are hand-formatted in this page for the original resume;
+        // replace them once the profile is user-owned (edited in Studio or created by import).
+        const userOwned = !!(profile.meta?.editedInStudio || profile.meta?.createdVia);
+        const hideSection = (heading, block) => {
+          [heading, block, block?.nextElementSibling?.tagName === 'HR' ? block.nextElementSibling : null]
+            .forEach(el => { if (el) el.style.display = 'none'; });
+        };
+        const headingFor = text => Array.from(document.querySelectorAll('.section-heading')).find(el => el.textContent.includes(text));
+        if (userOwned) {
+          const accList = document.querySelector('.accomplishments');
+          const accItems = Array.isArray(profile.accomplishments) ? profile.accomplishments : [];
+          if (accList && accItems.length) accList.innerHTML = accItems.map(a => `<li>${escape(a)}</li>`).join('');
+          else if (accList) hideSection(headingFor('Key Accomplishments'), accList);
+
+          const certBox = document.querySelector('.certs');
+          const certItems = (Array.isArray(profile.certifications) ? profile.certifications : [])
+            .map(c => (typeof c === 'string' ? c : c?.name)).filter(Boolean);
+          if (certBox && certItems.length) certBox.innerHTML = certItems.map(c => `<span class="cert-badge">${escape(c)}</span>`).join('');
+          else if (certBox) hideSection(headingFor('Certifications'), certBox);
         }
 
         // Update footer note

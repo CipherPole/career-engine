@@ -1999,3 +1999,41 @@ button.pipeline-card:focus-visible,
   .job-detail-actions { width: 100%; }
   .job-followup { flex-direction: column; align-items: flex-start; }
 }
+/* ── Resume Editor ─────────────────────────────────────────── */
+.resume-preview .resume-headline { font-size: 14px; font-weight: 600; color: #b45309; margin-top: 4px; }
+.re-savebar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background: var(--bg-panel);
+  border: 1px solid var(--gold-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+.re-savebar-title { font-size: 14px; font-weight: 700; color: var(--text-primary); }
+.re-section-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+.re-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.re-wide { grid-column: 1 / -1; }
+.re-help { font-size: 11px; color: var(--text-dim); margin-top: 4px; line-height: 1.5; }
+.re-item {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  margin-bottom: 12px;
+  background: var(--bg-panel);
+}
+.re-item-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.re-item-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+.re-item-controls { display: flex; gap: 6px; }
+.re-item-controls .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.re-remove:hover { color: var(--red); }
+@media (max-width: 600px) {
+  .re-grid { grid-template-columns: 1fr; }
+}
