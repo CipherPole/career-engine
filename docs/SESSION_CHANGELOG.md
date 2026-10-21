@@ -385,3 +385,14 @@
 - **UI standards applied:** one primary action per view, explicit empty states, keyboard-reachable buttons (cards are `<button>`s with focus rings), rating buttons use `aria-pressed`, mobile stacking at ≤600px, local-cache fallback when sync fails.
 - **Validation:** `npm test` (pass), `npm audit` (0 vulnerabilities), headless DOM smoke test covering add → analyze → research → rate → stage change → delete, legacy migration, and XSS escaping (16/16 pass).
 - **Follow-ups:** manual desktop + mobile check in browser via `launch.bat`; optional server-side AI research (Claude API with web search) to replace the copy-prompt step; consider a dashboard tile for follow-ups due.
+- **Release:** PR #7 merged to `main` (`d8b79fa`). Vercel production deploy succeeded; production smoke test returned 200 for `/`, `/api/auth-config`, and `/scripts/job-research-engine.js`.
+
+### Milestone 10: Scripted Release Workflow (2026-10-21)
+- **Context:** Make every future update ship the same way: branch → checks → PR → Vercel preview → merge → production verification.
+- **Implementation:**
+  - Added `scripts/release.js` (zero dependencies; uses `git` + `gh`) with `start`, `ship`, `prod`, `status` commands, plus `release:*` npm scripts and a `release.bat` wrapper.
+  - `ship` gates on `npm test` + `npm audit`, confirms the file list before committing, pushes, opens/reuses the PR, watches checks, and prints the preview URL.
+  - `prod` refuses red checks or a dirty tree, confirms before merging, waits for the Vercel commit status on `main`, smoke-tests `https://career-engine-five.vercel.app`, and prints the AGENTS.md release checklist.
+  - Documented in `docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md`, `AGENTS.md`, and the new `.agents/skills/release-workflow/SKILL.md`.
+- **Validation:** guardrail tests (invalid branch name, invalid commit message, ship from `main`) all blocked; `release:status`, Vercel status query, and production smoke checks verified against the live deploy. This change itself was shipped with the new script.
+

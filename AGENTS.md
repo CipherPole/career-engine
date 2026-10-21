@@ -76,6 +76,13 @@ Commit message examples:
 - docs: add workflow runbook and release checklist
 
 ## Push And CI Workflow
+Use the scripted release flow for every update (details: docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md):
+
+npm run release:start -- feature/short-name
+npm run release:ship -- "feat: what changed"
+npm run release:prod
+
+The manual steps it automates:
 1) Push feature branch
 2) Open pull request into main
 3) Wait for GitHub Actions to pass
