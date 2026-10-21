@@ -444,6 +444,10 @@
 - **Implementation:** `index.html` loads `/_vercel/insights/script.js` with `data-disable-auto-track="1"` plus the `window.va` queue stub; `navigate()` in `scripts/app.js` sends `va('pageview', { route: '/<pageId>', path: '/<pageId>' })` for each in-app page (page id only, no personal data). `pages/portfolio.html` uses normal auto-tracking. Web Analytics is cookieless. API verified against the live script.
 - **Validation:** `npm test`, `npm audit`; pageviews confirmed in the Vercel Analytics dashboard after deploy.
 
+### Milestone 16: Neon Agent Tooling Committed (2026-10-21)
+- Committed the Neon agent setup installed via the Neon skill: `.mcp.json` (Neon MCP server, OAuth — URL only, no key), `.claude/skills/{neon,neon-postgres,neon-postgres-branches}`, and `skills-lock.json` (pinned skill hashes). Update with `neon skills update -y`.
+- Neon CLI (`neon`, global npm) is signed in on the owner's machine; credentials live in the CLI profile, not the repo.
+
 ### Milestone 17: AI Providers — Bring Your Own Key (2026-10-21)
 - **Decision (user):** keep free built-in AI for everyone (AI Gateway, 25/day users, 100/day admins) with a **$5/month AI Gateway project budget** (`vercel ai-gateway budgets set project career-engine --limit 5 --refresh-period monthly`); let any user add their own key for Anthropic, OpenAI, Google Gemini, or a Vercel AI Gateway key. LangChain was considered and not used: it is a client library, not a model provider, and adds a dependency for a single structured request.
 - **Implementation:**
