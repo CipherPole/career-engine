@@ -120,6 +120,33 @@ async function navigate(pageId) {
   });
 }
 
+// ── Saved Profile Loader ──────────────────────────────────────
+/**
+ * Returns the signed-in user's saved resume profile, or null if they have none.
+ * The server is authoritative: when /api/profile answers, its answer wins. The user's own
+ * email-scoped cache is used only when the server can't be reached. The shared
+ * careerEngine_active_profile key is never used here, so one user's resume can't load for another.
+ */
+async function loadSavedProfile(user) {
+  const hasName = p => !!(p && typeof p === 'object' && p.contact?.name);
+  try {
+    const res = await fetch('/api/profile', { credentials: 'include' });
+    if (res.ok) {
+      const body = await res.json();
+      return hasName(body?.profile) ? body.profile : null;
+    }
+  } catch {}
+
+  const emailKey = (user?.email || '').toLowerCase();
+  if (!emailKey) return null;
+  try {
+    const cached = JSON.parse(localStorage.getItem(`careerEngine_profile_${emailKey}`) || 'null');
+    return hasName(cached) ? cached : null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Data Loaders ──────────────────────────────────────────────
 async function loadData() {
   try {
@@ -138,44 +165,10 @@ async function loadData() {
     if (showcaseActive) {
       State.resumeData = resume;
     } else if (isOwner()) {
-      // Owner starts from data/resume.json, but edits saved in Resume Studio (meta.editedInStudio) take over.
-      State.resumeData = resume;
-      let edited = null;
-      try {
-        const profileRes = await fetch('/api/profile', { credentials: 'include' });
-        if (profileRes.ok) {
-          const body = await profileRes.json();
-          if (body?.profile?.meta?.editedInStudio && body.profile.contact?.name) edited = body.profile;
-        }
-      } catch {}
-      if (!edited) {
-        try {
-          const local = JSON.parse(localStorage.getItem(`careerEngine_profile_${(user.email || '').toLowerCase()}`) || 'null');
-          if (local?.meta?.editedInStudio && local.contact?.name) edited = local;
-        } catch {}
-      }
-      if (edited) State.resumeData = edited;
+      // Owner starts from data/resume.json until they save their own resume (upload or Studio edit).
+      State.resumeData = (await loadSavedProfile(user)) || resume;
     } else {
-      let serverProfile = null;
-      try {
-        const profileRes = await fetch('/api/profile', { credentials: 'include' });
-        if (profileRes.ok) {
-          const body = await profileRes.json();
-          if (body?.profile && typeof body.profile === 'object' && body.profile.contact?.name) {
-            serverProfile = body.profile;
-          }
-        }
-      } catch {}
-
-      const emailKey = (user.email || '').toLowerCase();
-      const localProfileStr = localStorage.getItem(`careerEngine_profile_${emailKey}`) || localStorage.getItem('careerEngine_active_profile');
-      
-      let effectiveProfile = serverProfile;
-      if (!effectiveProfile && localProfileStr) {
-        try {
-          effectiveProfile = JSON.parse(localProfileStr);
-        } catch {}
-      }
+      const effectiveProfile = await loadSavedProfile(user);
 
       if (effectiveProfile && effectiveProfile.contact?.name) {
         // Use user's own profile without contaminating with Joseph's history
