@@ -447,3 +447,13 @@
 ### Milestone 16: Neon Agent Tooling Committed (2026-10-21)
 - Committed the Neon agent setup installed via the Neon skill: `.mcp.json` (Neon MCP server, OAuth — URL only, no key), `.claude/skills/{neon,neon-postgres,neon-postgres-branches}`, and `skills-lock.json` (pinned skill hashes). Update with `neon skills update -y`.
 - Neon CLI (`neon`, global npm) is signed in on the owner's machine; credentials live in the CLI profile, not the repo.
+
+### Milestone 17: AI Providers — Bring Your Own Key (2026-10-21)
+- **Decision (user):** keep free built-in AI for everyone (AI Gateway, 25/day users, 100/day admins) with a **$5/month AI Gateway project budget** (`vercel ai-gateway budgets set project career-engine --limit 5 --refresh-period monthly`); let any user add their own key for Anthropic, OpenAI, Google Gemini, or a Vercel AI Gateway key. LangChain was considered and not used: it is a client library, not a model provider, and adds a dependency for a single structured request.
+- **Implementation:**
+  - `api/_lib/secret-box.js`: AES-256-GCM sealing for user API keys; key derived with HKDF from `AI_KEYS_SECRET` or `SESSION_SECRET` (rotating it makes saved keys unreadable; users are told to re-add them).
+  - `api/_lib/ai-providers.js`: per-provider `listModels` (validates the key and returns models the account can use; Gateway keys are checked with a 1-token request) and `generateJson` (Anthropic tool-use, OpenAI/Gateway `json_schema`, Gemini `responseJsonSchema` with JSON-mode fallback). Clear errors for rejected keys, quota, rate limits, missing models.
+  - `api/ai-providers.js`: GET/POST (`save`, `model`, `preferred`, `remove`). Stored in `user_states.ai_providers` (not exposed by `/api/state`; deleted with the account via cascade). Responses never include key material, only the last 4 characters.
+  - `api/job-analyze.js`: uses the user's active provider when set (separate 200/day cap, no platform spend), otherwise the platform AI Gateway path. `meta.provider` reports which was used.
+  - UI: `scripts/ai-providers-engine.js` (route `#ai`, sidebar Account → 🤖 AI Providers): active-AI selector, per-provider key entry (password field), verify-on-save, model picker, remove. Job Tracker AI card links to it. Bumped `app.js?v=14`, `tracker-engine.js?v=14`, `main.css?v=14`.
+- **Validation:** secret-box round trip/tamper/rotation; settings + routing tests with all four providers mocked (17/17); original AI intake API (15/15); AI Providers page (9/9); AI intake UI (14/14); tracker (16/16). `npm test`, `npm audit` pass. No live provider calls were made (no keys available); first real BYOK use happens when a user adds a key.

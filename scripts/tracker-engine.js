@@ -431,6 +431,7 @@ function renderAddForm() {
         <button class="btn btn-gold" id="btn-ai-analyze" data-action="ai-analyze">✨ Analyze &amp; add to tracker</button>
         <span class="job-muted" id="ai-status" role="status" aria-live="polite"></span>
       </div>
+      <div class="job-muted mt-16">Uses the free built-in AI unless you connect your own. <button class="btn btn-ghost btn-sm" data-action="open-ai-settings">🤖 Use your own AI key</button></div>
     </div>
 
     <details class="job-manual" id="job-manual" style="max-width:760px;">
@@ -1090,6 +1091,9 @@ function onClick(event) {
       break;
     case 'ai-analyze':
       aiAnalyzeJob(el);
+      break;
+    case 'open-ai-settings':
+      window.navigate?.('ai');
       break;
     case 'set-stage':
       if (job) setStage(job, el.dataset.stage);

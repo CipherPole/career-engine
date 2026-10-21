@@ -664,6 +664,9 @@ export function openAuthModal() {
                 🔍 SEO &amp; AI Discoverability
               </button>
             ` : ''}
+            <button class="btn btn-secondary w-full" id="btn-modal-open-ai" style="justify-content:center;padding:10px;">
+              🤖 AI Providers &amp; API Keys
+            </button>
             <button class="btn btn-secondary w-full" id="btn-modal-open-dashboard" style="justify-content:center;padding:10px;">
               🏠 My Skills Dashboard & Radar
             </button>
@@ -756,6 +759,11 @@ export function openAuthModal() {
   document.getElementById('btn-modal-open-seo')?.addEventListener('click', () => {
     modal.classList.remove('open');
     window.navigate?.('seo');
+  });
+
+  document.getElementById('btn-modal-open-ai')?.addEventListener('click', () => {
+    modal.classList.remove('open');
+    window.navigate?.('ai');
   });
 
   document.getElementById('btn-modal-open-dashboard')?.addEventListener('click', () => {
