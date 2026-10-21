@@ -395,4 +395,17 @@
   - `prod` refuses red checks or a dirty tree, confirms before merging, waits for the Vercel commit status on `main`, smoke-tests `https://career-engine-five.vercel.app`, and prints the AGENTS.md release checklist.
   - Documented in `docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md`, `AGENTS.md`, and the new `.agents/skills/release-workflow/SKILL.md`.
 - **Validation:** guardrail tests (invalid branch name, invalid commit message, ship from `main`) all blocked; `release:status`, Vercel status query, and production smoke checks verified against the live deploy. This change itself was shipped with the new script.
+- **Release:** PR #8 merged (`da98f8a`) with `npm run release:prod`; Vercel production deploy + smoke test passed. Fixed during first run: `pull.rebase` incompatibility (now fetch + `merge --ff-only`) and early check-watch exit.
+
+### Milestone 11: Resume Studio Editor (2026-10-21)
+- **Context:** Resume Studio had re-import and delete actions but no way to edit the resume. The owner account also always loaded the static `data/resume.json`, so edits could never persist, and the Studio preview dropped categorized skills, start/end dates, and `school`.
+- **Implementation:**
+  - New `scripts/resume-editor.js`: full-section editor with sticky save bar, unsaved-changes guard, add/remove/reorder, Restore original (owner), escaped rendering.
+  - `scripts/resume-engine.js`: Edit tab + toolbar button, `flattenSkills`, `experienceDates` (`2019-03` → `Mar 2019`), school/location/via/headline in the preview.
+  - `scripts/app.js`: owner loads a server (or cached) profile when `meta.editedInStudio` is set; showcase mode still uses `data/resume.json`.
+  - `pages/resume.html`: print page handles the same data shapes and replaces hardcoded accomplishments/certifications for user-owned profiles.
+  - Styles added; bumped `main.css?v=12`, `app.js?v=11`, `resume-engine.js?v=12`.
+- **UI standards applied:** one primary Save action (duplicated top + bottom of a long form), explicit unsaved/saved status, confirm on destructive remove/discard/restore, labeled inputs, single-column layout ≤600px, local-cache fallback when sync fails.
+- **Validation:** `npm test`, `npm audit`, headless smoke test (19/19): edit tab visibility, preview fixes, edit → add/move → save → PUT payload, bullet parsing, local cache, escaping, name validation, restore, discard, hidden in showcase mode.
+- **Follow-ups:** manual check of Edit → Save → refresh on production; consider per-job tailored resume versions linked from the Job Tracker.
 

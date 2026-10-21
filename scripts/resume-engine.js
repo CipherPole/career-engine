@@ -7,6 +7,7 @@
 import { isOwner, getCurrentUser } from './auth-engine.js?v=8';
 import { extractTextFromFile, analyzeResumeText } from './resume-parser.js?v=8';
 import { openResumeReviewModal } from './onboarding-wizard.js?v=8';
+import { renderResumeEditor, canEditResume, hasUnsavedResumeChanges } from './resume-editor.js?v=1';
 
 function escapeHtml(str) {
   if (!str) return '';
@@ -363,6 +364,7 @@ export function renderResumeStudio() {
       <button class="tab-btn active" id="tab-optimized" onclick="switchResumeTab('optimized')">✅ Optimized Resume</button>
       <button class="tab-btn" id="tab-ats" onclick="switchResumeTab('ats')">🔍 ATS Keyword Analyzer</button>
       <button class="tab-btn" id="tab-original" onclick="switchResumeTab('original')">📁 Original (For Reference)</button>
+      ${canEditResume() ? `<button class="tab-btn" id="tab-edit" onclick="switchResumeTab('edit')">✏️ Edit Resume</button>` : ''}
     </div>
 
     <div id="resume-tab-content"></div>
@@ -415,12 +417,14 @@ export function renderResumeStudio() {
 }
 
 window.switchResumeTab = function(tab) {
+  if (tab !== 'edit' && hasUnsavedResumeChanges() && !confirm('You have unsaved resume changes. Leave without saving?')) return;
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.getElementById(`tab-${tab}`)?.classList.add('active');
   const tc = document.getElementById('resume-tab-content');
   if (tab === 'optimized') tc.innerHTML = optimizedResumeHTML();
   else if (tab === 'ats') tc.innerHTML = atsAnalyzerHTML();
   else if (tab === 'original') tc.innerHTML = originalResumeNote();
+  else if (tab === 'edit' && canEditResume()) renderResumeEditor(() => switchResumeTab('optimized'));
 };
 
 window.printResume = function() {
@@ -432,10 +436,29 @@ window.printResume = function() {
   window.toast('Opening print-optimized resume in new tab. Use Ctrl+P to save as PDF.', 'green');
 };
 
+function flattenSkills(skills) {
+  if (Array.isArray(skills)) return skills;
+  if (skills && typeof skills === 'object') return Object.values(skills).flat().filter(Boolean);
+  return [];
+}
+
+function formatResumeDate(value) {
+  if (!value) return '';
+  if (/^present$/i.test(value)) return 'Present';
+  const m = String(value).match(/^(\d{4})-(\d{2})$/);
+  if (!m) return String(value);
+  return new Date(Number(m[1]), Number(m[2]) - 1, 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+function experienceDates(exp) {
+  const range = [formatResumeDate(exp.startDate), formatResumeDate(exp.endDate)].filter(Boolean).join(' – ');
+  return range || exp.duration || '';
+}
+
 function optimizedResumeHTML() {
   const resume = window._state?.resumeData || {};
   const contact = resume.contact || {};
-  const skills = Array.isArray(resume.skills) ? resume.skills : [];
+  const skills = flattenSkills(resume.skills);
   const experience = Array.isArray(resume.experience) ? resume.experience : [];
   const education = Array.isArray(resume.education) ? resume.education : [];
   const certs = Array.isArray(resume.certifications) ? resume.certifications : [];
@@ -452,6 +475,7 @@ function optimizedResumeHTML() {
             🗑️ Delete Profile / Start Over
           </button>
         ` : ''}
+        ${canEditResume() ? `<button class="btn btn-outline btn-sm" onclick="switchResumeTab('edit')">✏️ Edit Resume</button>` : ''}
         <button class="btn btn-ghost btn-sm" onclick="copyToClipboard(document.getElementById('resume-text').innerText, this)">📋 Copy Plain Text</button>
         <button class="btn btn-gold" onclick="printResume()">🖨️ Print / Export PDF</button>
       </div>
@@ -459,6 +483,7 @@ function optimizedResumeHTML() {
 
     <div class="resume-preview" id="resume-text">
       <h1>${escapeHtml(contact.name || 'Your Name')}</h1>
+      ${resume.meta?.targetTitle ? `<div class="resume-headline">${escapeHtml(resume.meta.targetTitle)}</div>` : ''}
       <div class="resume-contact">
         ${contact.location ? `<span>📍 ${escapeHtml(contact.location)}</span>` : ''}
         ${contact.phone ? `<span>📞 ${escapeHtml(contact.phone)}</span>` : ''}
@@ -481,7 +506,12 @@ function optimizedResumeHTML() {
       <h2>Professional Experience</h2>
       ${experience.map(exp => `
         <h3>${escapeHtml(exp.title || 'Role')}</h3>
-        <div class="job-meta">${escapeHtml(exp.company || 'Company')} &nbsp;|&nbsp; ${escapeHtml(exp.duration || '')} ${exp.teamSize ? `&nbsp;|&nbsp; Team: ${escapeHtml(exp.teamSize)}` : ''}</div>
+        <div class="job-meta">${[
+          escapeHtml(exp.company || 'Company') + (exp.via ? ` (via ${escapeHtml(exp.via)})` : ''),
+          escapeHtml(exp.location || ''),
+          escapeHtml(experienceDates(exp)),
+          exp.teamSize ? `Team: ${escapeHtml(exp.teamSize)}` : '',
+        ].filter(Boolean).join(' &nbsp;|&nbsp; ')}</div>
         <ul>
           ${(exp.highlights || []).map(h => `<li>${escapeHtml(h)}</li>`).join('')}
         </ul>
@@ -499,7 +529,7 @@ function optimizedResumeHTML() {
       <h2>Education</h2>
       <ul>
         ${education.map(edu => `
-          <li><strong>${escapeHtml(edu.degree || 'Degree')}</strong>${edu.institution ? ` &nbsp;|&nbsp; ${escapeHtml(edu.institution)}` : ''}${edu.year ? ` (${escapeHtml(edu.year)})` : ''}</li>
+          <li><strong>${escapeHtml(edu.degree || 'Degree')}</strong>${(edu.school || edu.institution) ? ` &nbsp;|&nbsp; ${escapeHtml(edu.school || edu.institution)}` : ''}${edu.location ? `, ${escapeHtml(edu.location)}` : ''}${edu.year ? ` (${escapeHtml(edu.year)})` : ''}</li>
         `).join('')}
       </ul>
     </div>

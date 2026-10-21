@@ -45,11 +45,11 @@ const PAGES = {
   signin:         () => import('./signin-engine.js?v=11').then(m => m.renderSignInPage()),
   terms:          () => import('./legal-engine.js?v=11').then(m => m.renderLegalPage('terms')),
   agreement:      () => import('./legal-engine.js?v=11').then(m => m.renderLegalPage('agreement')),
-  dashboard:      () => import('./resume-engine.js?v=11').then(m => m.renderDashboard()),
-  resume:         () => import('./resume-engine.js?v=11').then(m => m.renderResumeStudio()),
+  dashboard:      () => import('./resume-engine.js?v=12').then(m => m.renderDashboard()),
+  resume:         () => import('./resume-engine.js?v=12').then(m => m.renderResumeStudio()),
   linkedin:       () => import('./linkedin-engine.js?v=11').then(m => m.renderLinkedInOptimizer()),
   jobs:           () => import('./tracker-engine.js?v=12').then(m => m.renderJobTracker()),
-  skills:         () => import('./resume-engine.js?v=11').then(m => m.renderSkillGap()),
+  skills:         () => import('./resume-engine.js?v=12').then(m => m.renderSkillGap()),
   training:       () => import('./training-engine.js?v=11').then(m => m.renderTrainingHub()),
   certs:          () => import('./cert-engine.js?v=11').then(m => m.renderCertifications()),
   projects:       () => import('./project-showcase.js?v=11').then(m => m.renderProjects()),
@@ -135,8 +135,26 @@ async function loadData() {
     const user = getCurrentUser();
     const showcaseActive = sessionStorage.getItem('careerEngine_showcase_active') === 'true';
 
-    if (isOwner() || showcaseActive) {
+    if (showcaseActive) {
       State.resumeData = resume;
+    } else if (isOwner()) {
+      // Owner starts from data/resume.json, but edits saved in Resume Studio (meta.editedInStudio) take over.
+      State.resumeData = resume;
+      let edited = null;
+      try {
+        const profileRes = await fetch('/api/profile', { credentials: 'include' });
+        if (profileRes.ok) {
+          const body = await profileRes.json();
+          if (body?.profile?.meta?.editedInStudio && body.profile.contact?.name) edited = body.profile;
+        }
+      } catch {}
+      if (!edited) {
+        try {
+          const local = JSON.parse(localStorage.getItem(`careerEngine_profile_${(user.email || '').toLowerCase()}`) || 'null');
+          if (local?.meta?.editedInStudio && local.contact?.name) edited = local;
+        } catch {}
+      }
+      if (edited) State.resumeData = edited;
     } else {
       let serverProfile = null;
       try {

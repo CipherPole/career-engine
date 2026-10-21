@@ -40,6 +40,7 @@ e:\resume/
 │   ├── onboarding-wizard.js    # 4-step resume review modal, safe profile synthesis, and account creation
 │   ├── resume-parser.js        # Client-side multi-format resume text parser and keyword extractor
 │   ├── resume-engine.js        # Resume Studio, ATS keyword match scoring, and skills radar
+│   ├── resume-editor.js        # Resume Studio editor (contact, summary, skills, experience, education, certs)
 │   ├── tracker-engine.js       # Job application tracker, pipeline, research & fit UI
 │   ├── job-research-engine.js  # Pure JD analysis, company research links, fit scorecard
 │   ├── training-engine.js      # Learning pathways, lab projects, and skill progress tracking
@@ -195,6 +196,14 @@ All frontend code is written in pure Vanilla ES2022+ modules. When importing acr
   - One-click print/export to PDF via printable template (`pages/resume.html`).
 
 ---
+
+### 2.6b `scripts/resume-editor.js` (Resume Studio Editor)
+- **Role:** "✏️ Edit Resume" tab in Resume Studio (`#resume`). Shown only to signed-in users outside showcase mode (`canEditResume()`).
+- **Key Features:**
+  - Edits a deep-cloned draft of `window._state.resumeData`: header/contact + headline (`meta.targetTitle`), summary, skills (per category when `skills` is an object, comma list when an array), experience (add / remove / reorder; bullets one per line; tech stack), education, certifications, accomplishments.
+  - Save writes `careerEngine_active_profile` + `careerEngine_profile_<email>` locally and `PUT /api/profile`, setting `meta.editedInStudio = true` and `meta.lastUpdated`. Discard leaves the saved profile untouched; leaving the tab with unsaved changes asks first.
+  - Owner accounts load `data/resume.json` unless an `editedInStudio` profile exists on the server (or local cache) — see `loadData()` in `scripts/app.js`. "↺ Restore original" (owner only) reloads `data/resume.json` into the editor.
+  - `pages/resume.html` (print/PDF) hydrates skills (object or array), start/end dates, school, and — for user-owned profiles — accomplishments and certifications.
 
 ### 2.7 `scripts/tracker-engine.js` + `scripts/job-research-engine.js` (Job Search CRM & Company Research)
 - **Role:** Route `#jobs` (requires `user` role). Tracks applications across 7 stages (Saved / Researching, Applied, Screening, Interview, Offer, Rejected, Withdrawn) and helps decide whether a job is worth applying to.
