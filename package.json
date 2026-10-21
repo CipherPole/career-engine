@@ -10,7 +10,11 @@
     "dev": "npx serve .",
     "audit": "node scripts/security-audit.js",
     "test": "node scripts/security-audit.js",
-    "security-check": "node scripts/security-audit.js"
+    "security-check": "node scripts/security-audit.js",
+    "release:start": "node scripts/release.js start",
+    "release:ship": "node scripts/release.js ship",
+    "release:prod": "node scripts/release.js prod",
+    "release:status": "node scripts/release.js status"
   },
   "keywords": [
     "career-engine",

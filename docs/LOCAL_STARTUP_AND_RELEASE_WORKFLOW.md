@@ -21,6 +21,28 @@ Current persistence model:
 Important boundary:
 - This repo does not currently rely on a separate Vercel data store (for example KV or Blob). If that becomes a requirement, it should be added as a separate tracked change.
 
+## Standard Release (Scripted) — Use This For Every Update
+`scripts/release.js` automates the whole branch → PR → preview → production path. Every step stops on failure, so nothing reaches production without passing checks.
+
+| Step | Command | What it does |
+|------|---------|--------------|
+| 1. Start | `npm run release:start -- feature/short-name` | Pulls latest `main`, creates the branch (uncommitted edits made on `main` come along) |
+| 2. Build | edit files, test with `launch.bat` | Local server at `http://localhost:8080` |
+| 3. Ship to preview | `npm run release:ship -- "feat: what changed"` | Runs `npm test` + `npm audit`, shows files and asks before committing, pushes, opens or reuses the PR, waits for GitHub Actions + Vercel, prints the preview URL |
+| 4. Test preview | open the preview URL | Uses `career_engine_dev`; production data is untouched |
+| 5. Release | `npm run release:prod` | Confirms checks are green, asks before merging, merges to `main`, waits for the Vercel production deploy, smoke-tests production, prints the release checklist |
+| Anytime | `npm run release:status` | Branch, uncommitted changes, PR, checks, and preview URL |
+
+`release.bat start|ship|prod|status ...` does the same from a double-click or `cmd`. Add `--yes` to skip prompts (agents use this only after reviewing the file list).
+
+Rules the script enforces:
+- Branch names: `feature/`, `hotfix/`, `fix/`, `docs/`, `chore/` + lowercase name.
+- Commit messages: conventional prefix (`feat:`, `fix:`, `docs:`, `chore:`, `refactor:`, ...).
+- Never ships from `main`, never merges with red checks or uncommitted changes.
+- Requires `gh auth status` to be signed in.
+
+Hotfix: same flow with `release:start -- hotfix/name`. Rollback: Vercel dashboard → Deployments → previous production deploy → **Instant Rollback**, then fix forward with a hotfix branch.
+
 ## Quick Path
 1. Run validated startup script:
 
