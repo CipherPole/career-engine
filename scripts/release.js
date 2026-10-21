@@ -31,9 +31,11 @@ function ok(msg) { console.log(`  ✅ ${msg}`); }
 function fail(msg) { console.error(`\n🛑 ${msg}`); process.exit(1); }
 
 function run(cmd, cmdArgs, { capture = false, allowFail = false } = {}) {
-  // npm is a .cmd shim on Windows and needs a shell; git/gh run without one so arguments are never shell-parsed.
-  const useShell = cmd === 'npm';
-  const res = spawnSync(cmd, cmdArgs, { encoding: 'utf8', shell: useShell, stdio: capture ? 'pipe' : 'inherit' });
+  // npm is a .cmd shim on Windows and needs a shell (only fixed args are passed); git/gh run without one so arguments are never shell-parsed.
+  const opts = { encoding: 'utf8', stdio: capture ? 'pipe' : 'inherit' };
+  const res = cmd === 'npm'
+    ? spawnSync(`npm ${cmdArgs.join(' ')}`, { ...opts, shell: true })
+    : spawnSync(cmd, cmdArgs, opts);
   if (res.error) fail(`Could not run ${cmd}: ${res.error.message}`);
   if (res.status !== 0 && !allowFail) {
     if (capture) console.error((res.stderr || res.stdout || '').trim());
