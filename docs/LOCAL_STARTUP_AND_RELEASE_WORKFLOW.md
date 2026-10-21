@@ -164,3 +164,9 @@ At the end of each session, record:
 - Remaining follow-up tasks
 
 This ensures future sessions can continue without context loss.
+
+## Troubleshooting Releases (learned 2026-10-21)
+The full table lives in `.agents/skills/release-workflow/SKILL.md` → "Known issues & diagnostics". The three that matter most:
+1. **Preview fails with "Resource provisioning failed" and no build logs** → the Neon dev project hit its 10-branch limit (one `preview/<branch>` DB branch per preview). Delete merged `preview/*` branches: `neon branches list --project-id super-cake-65094275`. Turning off per-preview branching in Vercel → Integrations → Neon prevents it.
+2. **No Vercel build after a push or merge** → GitHub→Vercel webhook delay. Check `vercel api "/v6/deployments?teamId=team_WlkHv2nkHG5AG4tqDqoTwp7G&limit=5"`; trigger a git-sourced deployment through the API if needed (production only with owner approval).
+3. **`EPERM` on `.claude` during `npm test` or checkout** → Claude Code is holding the folder; fully quit and reopen VS Code.

@@ -5,7 +5,7 @@
 [![Vercel Deployment](https://img.shields.io/badge/Vercel-Serverless%20Edge-black?logo=vercel)](https://career-engine-five.vercel.app)
 [![Database](https://img.shields.io/badge/Database-Neon%20PostgreSQL-00e599?logo=postgresql)](https://neon.tech)
 [![Zero Dependencies](https://img.shields.io/badge/Dependencies-Zero%20Runtime-blue.svg)](#technology-stack)
-[![Release Version](https://img.shields.io/badge/Release-v2.6.0-gold.svg)](docs/ROADMAP.md)
+[![Release Version](https://img.shields.io/badge/Release-v2.7.0-gold.svg)](docs/SESSION_CHANGELOG.md)
 
 > **Platform:** Career Engine — Universal AI Career & Skill Intelligence Platform  
 > **Repository:** `CipherPole/career-engine`  
@@ -43,15 +43,27 @@ Originally conceived as an executive career portfolio, Career Engine has evolved
 - Complete cascading deletion across Neon Postgres database tables (`users`, `user_profiles`, `user_states`).
 - Full purge of browser cache and cookies, allowing users to start fresh or re-register cleanly at any time.
 
-### 5. 🎯 Resume Studio & Real-Time ATS Gap Analyzer
-- Live ATS match score (0–100) calculated dynamically against target role requirements.
-- Real-time missing keyword highlights, skill radar charts, and instant ATS-compliant PDF generation.
+### 5. 🎯 Resume Studio, Editor & ATS Gap Analyzer
+- **✏️ Edit Resume:** edit contact, headline, summary, skills (by category), experience (add / remove / reorder roles, one bullet per line), education, certifications, and accomplishments. Saves to your account (`/api/profile`) and loads on every device.
+- **Your data stays yours:** each account loads only its own saved resume (upload or edit); the repo `data/resume.json` is just the owner's starting point and public showcase.
+- **🖨️ Print / Export PDF:** opens the browser print dialog in place (no pop-up) — choose **Save as PDF** for a text-based, ATS-readable PDF.
+- Live ATS keyword match score and missing-keyword highlights.
 
-### 6. 📊 Job Application CRM Pipeline
-- Interactive 5-stage tracking pipeline: Wishlist, Applied, Interviewing, Offer, Rejected.
-- Scoped cloud synchronization via `/api/state?key=jobs`.
+### 6. 💼 Job Tracker, Company Research & AI Intake
+- **✨ Paste & analyze with AI:** paste a whole job page (Ctrl+A, Ctrl+C on Indeed/LinkedIn) and AI extracts company, title, pay, location, and requirements, then writes a fit review (strengths, gaps, questions to ask). Manual entry is still available.
+- **🧠 Fit Analysis:** skills you have / are learning / are missing, plus green-flag and red-flag phrases in the posting.
+- **🔎 Company Research:** 14 one-click sources (Glassdoor, Indeed, Blind, Reddit, Levels.fyi, LinkedIn, news, layoffs, Crunchbase, interview prep), a research log, and a copyable AI research prompt.
+- **⚖️ Decision scorecard:** weighted 1–5 ratings (enjoyment and growth count most) → fit score, verdict, and interview questions.
+- **What happened?** One-click outcomes (applied → interview → offer → **Hired**, rejected, withdrew), follow-up reminders, and outcome notes.
 
-### 7. 🛰️ Admin Console, Telemetry & Server Action Logs
+### 7. 🤖 AI Providers — Bring Your Own Key
+- Free built-in AI for everyone via Vercel AI Gateway (25 analyses/day per user, 100 for admins, $5/month project budget).
+- Users can add their own **Anthropic, OpenAI, Google Gemini, or Vercel AI Gateway** key in **Settings → 🤖 AI Providers**. Keys are verified with the provider, encrypted at rest (AES-256-GCM), never shown again (last 4 characters only), and deleted with the account.
+
+### 8. 📈 Vercel Web Analytics
+- Cookieless page analytics; the SPA reports one pageview per in-app page (page name only, no personal data).
+
+### 9. 🛰️ Admin Console, Telemetry & Server Action Logs
 - 150-event circular ring-buffer telemetry engine (`scripts/telemetry-engine.js`).
 - Live-updating Admin Action Log with color-coded event badges (Red for `USER_DELETED`, Purple for `USER_CREATED`, Blue for `USER_SIGNIN`).
 - 1-click clipboard diagnostic export for rapid issue triaging.
@@ -91,7 +103,11 @@ e:\resume/
 ├── vercel.json                 # Serverless routing, headers, rewrites, and security config
 ├── launch.bat                  # Local quick-launch helper
 ├── audit.bat                   # Local security audit execution script
+├── release.bat                 # Windows wrapper for scripts/release.js
 ├── AGENTS.md                   # Strict Agent Operating Guide and CI/CD workflow rules
+├── .mcp.json                   # Neon MCP server for AI coding agents (OAuth, no key stored)
+├── .agents/skills/             # Project skills for AI agents (release, admin, work orders, AI features)
+├── .claude/skills/             # Neon agent skills (neon, neon-postgres, neon-postgres-branches)
 │
 ├── api/                        # Vercel Serverless Functions (Node.js runtime)
 │   ├── auth-config.js          # Serves GOOGLE_CLIENT_ID from environment
@@ -99,11 +115,15 @@ e:\resume/
 │   ├── me.js                   # Authenticated user identity endpoint (GET)
 │   ├── profile.js              # User profile CRUD & account deletion (GET/PUT/DELETE)
 │   ├── state.js                # Scoped user state persistence (jobs, training, certs) (GET/PUT)
+│   ├── job-analyze.js          # AI job-posting intake + fit review (POST) — AI Gateway or the user's own key
+│   ├── ai-providers.js         # Per-user AI provider keys / bring-your-own-key settings (GET/POST)
 │   ├── admin-auth-events.js    # Admin-only audit log reader (GET)
 │   └── _lib/                   # Shared serverless utilities
 │       ├── db.js               # Neon Postgres pool, schema migration, and data queries
 │       ├── session.js          # Cryptographic session cookie sealing, parsing, and clearing
-│       └── http.js             # Standardized HTTP JSON responses, errors, and body parsing
+│       ├── http.js             # Standardized HTTP JSON responses, errors, and body parsing
+│       ├── ai-providers.js     # Anthropic / OpenAI / Gemini / AI Gateway adapters (list models, structured JSON)
+│       └── secret-box.js       # AES-256-GCM encryption for user API keys
 │
 ├── scripts/                    # Frontend ES Modules (Vanilla JS)
 │   ├── app.js                  # Master application router, navigation, and page dispatcher
@@ -112,7 +132,11 @@ e:\resume/
 │   ├── onboarding-wizard.js    # 4-step resume review modal, safe profile synthesis, and account creation
 │   ├── resume-parser.js        # Client-side multi-format resume text parser and keyword extractor
 │   ├── resume-engine.js        # Resume Studio, ATS keyword match scoring, and skills radar
-│   ├── tracker-engine.js       # Job application tracker, pipeline stages, and company notes
+│   ├── resume-editor.js        # Resume Studio editor (all resume sections, save to profile)
+│   ├── tracker-engine.js       # Job tracker: AI intake, pipeline, research, decision, outcomes
+│   ├── job-research-engine.js  # Pure job-description analysis, research links, fit scorecard
+│   ├── ai-providers-engine.js  # Settings → AI Providers page (bring your own key)
+│   ├── release.js              # Guided release CLI: start → ship (PR + preview) → prod
 │   ├── training-engine.js      # Learning pathways, lab projects, and skill progress tracking
 │   ├── cert-engine.js          # Certification registry, credential verification, and expiry tracking
 │   ├── implementation-engine.js# Antigravity Implementation Lab (prompt evaluation & coaching)
@@ -175,7 +199,19 @@ Navigate to `http://localhost:8080` in Chrome or Edge when using `launch.bat`.
 
 ---
 
-### 2. Pre-Commit Verification (Mandatory)
+### 2. Shipping an Update (Scripted Release)
+Every change ships the same way (details and troubleshooting: [docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md](docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md)):
+
+```powershell
+npm run release:start -- feature/short-name     # fresh branch from latest main
+npm run release:ship  -- "feat: what changed"   # checks → commit → push → PR → Vercel preview
+npm run release:prod                            # merge → wait for Vercel → production smoke test
+npm run release:status                          # where things stand
+```
+
+---
+
+### 3. Pre-Commit Verification (Mandatory)
 In accordance with [AGENTS.md](AGENTS.md), always run pre-commit checks before pushing any branch:
 
 ```powershell
@@ -190,14 +226,17 @@ If any check fails, do not commit.
 
 ---
 
-### 3. Environment Variables
+### 4. Environment Variables
 To enable full cloud persistence in development or preview environments, configure these variables in Vercel or your local `.env`:
 
 | Variable | Description | Scope |
 | :--- | :--- | :--- |
 | `GOOGLE_CLIENT_ID` | Google Identity Services OAuth 2.0 Client ID | Production & Preview |
 | `SESSION_SECRET` | 32+ character secret for HMAC-SHA256 session cookie sealing | Production & Preview |
-| `POSTGRES_URL` | Neon Serverless PostgreSQL connection URI | Production & Preview |
+| `POSTGRES_URL` / `DATABASE_URL` | Neon Serverless PostgreSQL connection URI (set by the Vercel ↔ Neon integration) | Production & Preview |
+| `AI_GATEWAY_MODEL` | *Optional.* Built-in AI model (default `anthropic/claude-haiku-5.5`) | Any |
+| `AI_GATEWAY_API_KEY` | *Optional.* Only needed off Vercel; on Vercel the built-in AI uses the deployment's OIDC token | Local / external |
+| `AI_KEYS_SECRET` | *Optional.* Secret for encrypting user AI keys; defaults to a key derived from `SESSION_SECRET` (rotating it means users re-add keys) | Production & Preview |
 
 ---
 
@@ -209,6 +248,7 @@ To enable full cloud persistence in development or preview environments, configu
 - **[docs/SESSION_CHANGELOG.md](docs/SESSION_CHANGELOG.md):** Chronological log of development milestones, bugfixes, and architectural decisions.
 - **[docs/ROADMAP.md](docs/ROADMAP.md):** RICE-scored strategic backlog and upcoming feature priorities.
 - **[AGENTS.md](AGENTS.md):** Required operational rules for AI agents and human contributors.
+- **[docs/AI_LEARNING_NOTES.md](docs/AI_LEARNING_NOTES.md):** Plain-English notes on the AI concepts used in this project (structured output, AI Gateway, OIDC, BYOK, prompt injection, cost controls).
 - **[docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md](docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md):** Single runbook for validated local startup, UI smoke checks, and production push sequence.
 - **[docs/UI_PROGRAMMING_STANDARDS.md](docs/UI_PROGRAMMING_STANDARDS.md):** Visual excellence, animation principles, and CSS design tokens.
 - **[docs/CODE_REVIEW_SECURITY_POLICY.md](docs/CODE_REVIEW_SECURITY_POLICY.md):** Zero-credential git hygiene and security scanning rules.

@@ -18,6 +18,8 @@ Essential Reference Documentation:
 - System Section & Admin Architecture Map: [docs/SYSTEM_SECTION_MAP.md](docs/SYSTEM_SECTION_MAP.md)
 - Agent Pair Programming Playbook: [docs/AGENT_PAIR_PROGRAMMING_PLAYBOOK.md](docs/AGENT_PAIR_PROGRAMMING_PLAYBOOK.md)
 - Local Startup & Release Runbook: [docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md](docs/LOCAL_STARTUP_AND_RELEASE_WORKFLOW.md)
+- AI Features (job intake, bring-your-own-key): [.agents/skills/ai-features/SKILL.md](.agents/skills/ai-features/SKILL.md)
+- AI Learning Notes (concepts used in this project): [docs/AI_LEARNING_NOTES.md](docs/AI_LEARNING_NOTES.md)
 
 UI requirement:
 - Before making UI changes, read docs/UI_PROGRAMMING_STANDARDS.md.

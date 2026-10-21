@@ -457,3 +457,36 @@
   - `api/job-analyze.js`: uses the user's active provider when set (separate 200/day cap, no platform spend), otherwise the platform AI Gateway path. `meta.provider` reports which was used.
   - UI: `scripts/ai-providers-engine.js` (route `#ai`, sidebar Account → 🤖 AI Providers): active-AI selector, per-provider key entry (password field), verify-on-save, model picker, remove. Job Tracker AI card links to it. Bumped `app.js?v=14`, `tracker-engine.js?v=14`, `main.css?v=14`.
 - **Validation:** secret-box round trip/tamper/rotation; settings + routing tests with all four providers mocked (17/17); original AI intake API (15/15); AI Providers page (9/9); AI intake UI (14/14); tracker (16/16). `npm test`, `npm audit` pass. No live provider calls were made (no keys available); first real BYOK use happens when a user adds a key.
+
+---
+
+## Session Handoff — 2026-10-21
+
+**Shipped to production today (PRs #7–#15):**
+
+| PR | Change |
+|---|---|
+| #7 | Job Tracker rebuild: company research links, fit analysis, decision scorecard |
+| #8 | Scripted release workflow (`release:start/ship/prod/status`) |
+| #9 | Resume Studio editor; owner edits persist; studio/print rendering fixes |
+| #10 | Print / Export PDF opens the print dialog in place; print-page summary fix |
+| #11 | Each account loads its own saved resume; removed shared-cache cross-user fallback |
+| #12 | AI job intake (paste a job page) + "What happened?" outcomes + Hired stage |
+| #13 | Vercel Web Analytics (per-page SPA tracking) |
+| #14 | Neon MCP config + Neon agent skills committed |
+| #15 | AI Providers — bring your own key (Anthropic, OpenAI, Gemini, AI Gateway) |
+| docs | This handoff: README refresh, `docs/AI_LEARNING_NOTES.md`, new `ai-features` skill, release troubleshooting |
+
+**Infrastructure changes (outside the repo):**
+- AI Gateway budget: **$5/month** on project `career-engine` (`vercel ai-gateway budgets list`).
+- Neon: deleted 13 merged `preview/*` branches in `career_engine_dev` over the day; production project untouched.
+- Neon CLI (`neon` 8.10.1) and Vercel CLI (65.0.0) installed and signed in on the owner's machine.
+
+**Validation used:** `npm test`, `npm audit`, mocked API suites (AI intake 15, BYOK 17), UI suites (AI Providers 9, AI intake 14, tracker 16, resume editor 19), headless Chrome print test, production smoke tests after each deploy, read-only production DB check of the owner profile.
+
+**Open follow-ups for next session:**
+1. **Owner:** turn off per-preview database branches in Vercel → Integrations → Neon (prevents the 10-branch limit).
+2. **Owner:** run a first real AI analysis on production (built-in AI) and, optionally, add a provider key to verify BYOK live. Watch AI Gateway logs/spend.
+3. **Local repo:** after the next VS Code restart, run `git checkout main && git merge --ff-only origin/main`, then `git worktree remove ../resume-handoff` (with `-c safe.directory=E:/resume-handoff` if needed).
+4. **Release script:** have `release:prod` read Vercel deployments via the API (instead of only the GitHub status) and report "no deployment created" distinctly from "still building"; consider a longer timeout.
+5. Ideas: dashboard tile for follow-ups due; tailored resume versions per job from the AI review; Speed Insights.
