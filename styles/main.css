@@ -2037,3 +2037,19 @@ button.pipeline-card:focus-visible,
 @media (max-width: 600px) {
   .re-grid { grid-template-columns: 1fr; }
 }
+/* ── AI Job Intake & Outcomes ──────────────────────────────── */
+.job-ai-card { border-color: var(--gold-border); }
+.job-manual > summary {
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 8px 0;
+}
+.job-manual > summary:hover { color: var(--text-primary); }
+.job-manual > summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+.job-ai-review { border-color: rgba(59,130,246,.3); }
+.job-ai-summary { font-size: 14px; line-height: 1.6; color: var(--text-primary); margin: 12px 0; }
+.job-outcome-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.job-outcome-final { font-size: 15px; font-weight: 700; color: var(--text-primary); }
+.job-outcome.is-hired { border-color: rgba(16,185,129,.45); background: rgba(16,185,129,.06); }
