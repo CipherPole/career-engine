@@ -443,3 +443,7 @@
 - **Context:** Web Analytics was enabled in the Vercel dashboard, which suggested the Next.js package (`@vercel/analytics/next`). This app is a static SPA, so no npm package is needed.
 - **Implementation:** `index.html` loads `/_vercel/insights/script.js` with `data-disable-auto-track="1"` plus the `window.va` queue stub; `navigate()` in `scripts/app.js` sends `va('pageview', { route: '/<pageId>', path: '/<pageId>' })` for each in-app page (page id only, no personal data). `pages/portfolio.html` uses normal auto-tracking. Web Analytics is cookieless. API verified against the live script.
 - **Validation:** `npm test`, `npm audit`; pageviews confirmed in the Vercel Analytics dashboard after deploy.
+
+### Milestone 16: Neon Agent Tooling Committed (2026-10-21)
+- Committed the Neon agent setup installed via the Neon skill: `.mcp.json` (Neon MCP server, OAuth — URL only, no key), `.claude/skills/{neon,neon-postgres,neon-postgres-branches}`, and `skills-lock.json` (pinned skill hashes). Update with `neon skills update -y`.
+- Neon CLI (`neon`, global npm) is signed in on the owner's machine; credentials live in the CLI profile, not the repo.
