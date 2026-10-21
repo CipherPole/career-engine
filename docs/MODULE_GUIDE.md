@@ -400,3 +400,15 @@ All backend functions run on the Vercel Serverless Node.js runtime and reside in
   - `json(res, statusCode, data)`: Sets `Content-Type: application/json` and sends JSON payload.
   - `methodNotAllowed(res, allowedMethods)`: Sends standard HTTP 405 error with `Allow` header.
   - `readJsonBody(req)`: Buffers incoming request chunks and safely parses JSON.
+
+---
+
+### 2.11 AI modules (added 2026-10-21)
+- **`api/job-analyze.js`** — `POST`, signed-in only. Pasted job page → strict-JSON job fields + fit review. Routes to the user's active bring-your-own-key provider, otherwise Vercel AI Gateway (`anthropic/claude-haiku-5.5`, OIDC auth). Daily caps in `user_states` (`ai_usage`, `ai_usage_byok`).
+- **`api/ai-providers.js`** — `GET` settings; `POST` actions `save` / `model` / `preferred` / `remove`. Keys verified with the provider, sealed with `secret-box`, stored in `user_states.ai_providers`, never returned (last 4 only).
+- **`api/_lib/ai-providers.js`** — provider registry (Anthropic, OpenAI, Google Gemini, Vercel AI Gateway), `listModels`, `pickDefaultModel`, `generateJson`, `ProviderError`.
+- **`api/_lib/secret-box.js`** — AES-256-GCM `seal` / `open`, key via HKDF from `AI_KEYS_SECRET` or `SESSION_SECRET`.
+- **`scripts/ai-providers-engine.js`** — Settings → 🤖 AI Providers page (route `#ai`, `ROLES.USER`): active-AI selector, key entry, model picker, remove.
+- **`scripts/resume-editor.js`** — Resume Studio editor; see section 2.6b.
+- **`scripts/release.js`** — guided release CLI (`release:start`, `release:ship`, `release:prod`, `release:status`).
+- Agent guidance: `.agents/skills/ai-features/SKILL.md`; concepts: `docs/AI_LEARNING_NOTES.md`.
