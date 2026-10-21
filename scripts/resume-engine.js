@@ -427,13 +427,66 @@ window.switchResumeTab = function(tab) {
   else if (tab === 'edit' && canEditResume()) renderResumeEditor(() => switchResumeTab('optimized'));
 };
 
-window.printResume = function() {
+let printInProgress = false;
+
+/**
+ * Opens the browser print dialog for the print-optimized resume without leaving the page.
+ * The page is loaded into a hidden same-origin srcdoc frame (X-Frame-Options: DENY blocks a normal
+ * framed URL) so pop-up blockers can't interfere. Choosing "Save as PDF" produces a text-based,
+ * ATS-readable PDF — unlike canvas/image PDF generators.
+ */
+window.printResume = async function() {
+  if (printInProgress) return;
   const profile = window._state?.resumeData;
   if (profile) {
-    localStorage.setItem('careerEngine_active_profile', JSON.stringify(profile));
+    try { localStorage.setItem('careerEngine_active_profile', JSON.stringify(profile)); } catch {}
   }
-  window.open('./pages/resume.html', '_blank');
-  window.toast('Opening print-optimized resume in new tab. Use Ctrl+P to save as PDF.', 'green');
+
+  printInProgress = true;
+  const originalTitle = document.title;
+  let frame = null;
+  const cleanup = () => {
+    document.title = originalTitle;
+    frame?.remove();
+    printInProgress = false;
+  };
+
+  try {
+    const res = await fetch('./pages/resume.html', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const html = (await res.text()).replace(/<head>/i, `<head><base href="${location.origin}/pages/">`);
+
+    frame = document.createElement('iframe');
+    frame.setAttribute('aria-hidden', 'true');
+    frame.tabIndex = -1;
+    frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:850px;height:1100px;border:0;';
+    document.body.appendChild(frame);
+
+    await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('Print page timed out')), 15000);
+      frame.onload = () => { clearTimeout(timer); resolve(); };
+      frame.srcdoc = html;
+    });
+
+    const win = frame.contentWindow;
+    await Promise.race([win.document.fonts?.ready, new Promise(r => setTimeout(r, 2000))]);
+
+    // The parent title becomes the suggested PDF file name in most browsers.
+    const name = profile?.contact?.name || 'Resume';
+    document.title = `${name} - Resume`;
+    win.addEventListener('afterprint', () => setTimeout(cleanup, 500), { once: true });
+    setTimeout(() => { if (printInProgress) cleanup(); }, 120000);
+
+    window.toast('Print dialog opened — choose "Save as PDF" as the destination', 'green');
+    win.focus();
+    win.print();
+  } catch (error) {
+    console.error('Resume print failed', error);
+    cleanup();
+    const tab = window.open('./pages/resume?print=1', '_blank');
+    if (tab) window.toast('Opened the resume in a new tab — the print dialog will appear there', 'gold');
+    else window.toast('Could not open the print view. Allow pop-ups for this site, or visit /resume and press Ctrl+P.', 'red');
+  }
 };
 
 function flattenSkills(skills) {

@@ -427,6 +427,11 @@
       return range || exp.duration || '';
     }
 
+    // Opened via the fallback path (/pages/resume?print=1): show the print dialog automatically.
+    if (new URLSearchParams(location.search).get('print') === '1') {
+      window.addEventListener('load', () => setTimeout(() => window.print(), 300));
+    }
+
     (function hydrateUserResume() {
       try {
         const showcase = sessionStorage.getItem('careerEngine_showcase_active') === 'true';
@@ -461,7 +466,7 @@
         }
 
         // Update summary
-        const summaryP = document.querySelector('.resume-summary');
+        const summaryP = document.querySelector('.summary');
         if (summaryP && profile.summary) {
           summaryP.textContent = profile.summary;
         }
@@ -535,6 +540,15 @@
             .forEach(el => { if (el) el.style.display = 'none'; });
         };
         const headingFor = text => Array.from(document.querySelectorAll('.section-heading')).find(el => el.textContent.includes(text));
+        // Ventures are specific to the original resume; hide them for other users' imported profiles.
+        if (profile.meta?.createdVia) {
+          const venturesHeading = headingFor('Entrepreneurial Ventures');
+          let el = venturesHeading;
+          while (el && !(el !== venturesHeading && el.classList?.contains('section-heading'))) {
+            el.style.display = 'none';
+            el = el.nextElementSibling;
+          }
+        }
         if (userOwned) {
           const accList = document.querySelector('.accomplishments');
           const accItems = Array.isArray(profile.accomplishments) ? profile.accomplishments : [];

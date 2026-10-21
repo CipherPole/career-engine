@@ -408,4 +408,14 @@
 - **UI standards applied:** one primary Save action (duplicated top + bottom of a long form), explicit unsaved/saved status, confirm on destructive remove/discard/restore, labeled inputs, single-column layout ≤600px, local-cache fallback when sync fails.
 - **Validation:** `npm test`, `npm audit`, headless smoke test (19/19): edit tab visibility, preview fixes, edit → add/move → save → PUT payload, bullet parsing, local cache, escaping, name validation, restore, discard, hidden in showcase mode.
 - **Follow-ups:** manual check of Edit → Save → refresh on production; consider per-job tailored resume versions linked from the Job Tracker.
+- **Release:** PR #9 merged (`52ebdaa`). Vercel took >10 min to start the production build (GitHub Actions were queued too); `release:prod` timed out waiting, then the deploy succeeded and the production smoke test passed. User confirmed editing works in production.
+
+### Milestone 12: Resume Print / Export PDF Fix (2026-10-21)
+- **Context:** "Print / Export PDF" showed a toast but nothing happened: it relied on `window.open()` (blocked by pop-up blockers, and the toast showed regardless) and never triggered printing.
+- **Implementation:**
+  - `window.printResume` (`scripts/resume-engine.js`) now fetches `pages/resume.html`, loads it into a hidden same-origin `srcdoc` iframe (a framed URL is blocked by `X-Frame-Options: DENY`), waits for fonts, and calls `print()` in place. Parent title is set to "<Name> - Resume" for the suggested PDF file name and restored afterwards. Fallback: opens `/pages/resume?print=1` (auto-prints), or tells the user to allow pop-ups.
+  - `pages/resume.html`: fixed the summary selector (`.resume-summary` → `.summary`; edited summaries never reached the PDF), hides the hardcoded Entrepreneurial Ventures section for imported (`createdVia`) profiles, and auto-prints on `?print=1`.
+  - Bumped `resume-engine.js?v=13`, `app.js?v=12`.
+- **Why print-to-PDF instead of a JS PDF library:** browser "Save as PDF" output is real selectable text that ATS parsers read; canvas-based generators produce image PDFs that ATS cannot parse, and would add a dependency.
+- **Validation:** headless Chrome against a local server sending `X-Frame-Options: DENY`: print invoked in place with edited summary, skills, dates, school, certs, and accomplishments present; ventures shown for owner and hidden for imported profiles; fetch-failure fallback path and `?print=1` page verified. `npm test`, `npm audit` pass.
 
