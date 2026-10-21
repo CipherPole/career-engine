@@ -90,6 +90,25 @@ function repoSlug() {
   return gh(['repo', 'view', '--json', 'nameWithOwner', '--jq', '.nameWithOwner'], { capture: true }).out;
 }
 
+async function waitForChecks(prNumber) {
+  // Right after a push GitHub may not have registered the new runs yet, so `gh pr checks --watch`
+  // can exit early. Only a check that actually reports `fail` counts as a failure.
+  const started = Date.now();
+  await sleep(POLL_MS);
+  while (Date.now() - started < DEPLOY_TIMEOUT_MS) {
+    const watch = gh(['pr', 'checks', String(prNumber), '--watch', '--interval', '15'], { allowFail: true });
+    if (watch.status === 0) return;
+    const snapshot = gh(['pr', 'checks', String(prNumber)], { capture: true, allowFail: true });
+    if (snapshot.status === 0) return;
+    if (/	fail	/.test(snapshot.out)) {
+      console.log(snapshot.out);
+      fail(`Checks failed on PR #${prNumber}. Fix, then rerun release:ship.`);
+    }
+    await sleep(POLL_MS);
+  }
+  fail('Timed out waiting for checks. Run npm run release:status to see where they are.');
+}
+
 async function waitForVercel(sha) {
   const repo = repoSlug();
   const started = Date.now();
@@ -203,8 +222,7 @@ async function ship() {
   ok(`PR #${pr.number}: ${pr.url}`);
 
   step('Waiting for GitHub Actions and Vercel preview');
-  const checks = gh(['pr', 'checks', String(pr.number), '--watch', '--interval', '15'], { allowFail: true });
-  if (checks.status !== 0) fail(`Checks failed on PR #${pr.number}. Fix, then rerun release:ship.`);
+  await waitForChecks(pr.number);
   ok('All checks passed');
 
   const preview = previewUrl(pr.number);
