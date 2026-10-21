@@ -191,7 +191,7 @@
 </div>
 
 <script type="module">
-  import './scripts/app.js?v=11';
+  import './scripts/app.js?v=12';
 
   // Expose State globally so modules can share it
   window._state = window._state || {};
@@ -206,7 +206,7 @@
 
   // Expose navigate globally
   window.navigate = async (pageId) => {
-    const { default: AppModule } = await import('./scripts/app.js?v=11').catch(() => ({}));
+    const { default: AppModule } = await import('./scripts/app.js?v=12').catch(() => ({}));
     // Fallback — trigger nav item click
     const navItem = document.querySelector(`.nav-item[data-page="${pageId}"]`);
     if (navItem) navItem.click();
