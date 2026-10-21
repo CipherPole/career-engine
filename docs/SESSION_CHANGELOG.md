@@ -438,3 +438,8 @@
 - **Validation:** API tests with mocked session/DB/gateway (15/15): method/auth/length guards, missing token, gateway URL + OIDC header, strict schema + default model, no contact data sent, non-job 422, bad output 502, out-of-credits message, truncation, per-user and admin caps. UI tests (14/14): AI-first add tab, short-paste guard, job creation from AI fields, escaped AI review, local analysis still runs, question copy, outcome panel through Hired with history + notes, Hired pipeline column, failure fallback keeps the paste. Original tracker tests 16/16. `npm test`, `npm audit` pass.
 - **Follow-ups:** first live AI request happens on the preview; confirm AI Gateway credits/OIDC in the Vercel dashboard and consider an AI Gateway budget.
 
+
+### Milestone 15: Vercel Web Analytics (2026-10-21)
+- **Context:** Web Analytics was enabled in the Vercel dashboard, which suggested the Next.js package (`@vercel/analytics/next`). This app is a static SPA, so no npm package is needed.
+- **Implementation:** `index.html` loads `/_vercel/insights/script.js` with `data-disable-auto-track="1"` plus the `window.va` queue stub; `navigate()` in `scripts/app.js` sends `va('pageview', { route: '/<pageId>', path: '/<pageId>' })` for each in-app page (page id only, no personal data). `pages/portfolio.html` uses normal auto-tracking. Web Analytics is cookieless. API verified against the live script.
+- **Validation:** `npm test`, `npm audit`; pageviews confirmed in the Vercel Analytics dashboard after deploy.
