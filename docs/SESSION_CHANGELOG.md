@@ -375,3 +375,13 @@
     - **1-Click Session Handoff Summary**: Quick-copy button (`#btn-copy-roadmap`) to export current repository status to clipboard for incoming agents.
   - Established `package.json` zero-dependency manifest with `npm audit` and `npm run audit` verification. All 45+ source files verified with 0 vulnerabilities.
 
+### Milestone 9: Job Tracker Rebuild — Company Research & Fit Scorecard (2026-10-21)
+- **Context:** The existing Job Tracker only stored company/title/salary and advanced stages via `confirm()`. The user wanted to paste an Indeed job description, research the company (reviews, growth, stability) and decide whether it is a good fit before applying, then track the application.
+- **Implementation:**
+  - New `scripts/job-research-engine.js` (pure functions): JD keyword/skills match, seniority / years / work mode / salary extraction, green & red flag phrase scan, weighted fit scorecard (interest 20, growth 20, skills 15, culture 15, WLB 10, comp 10, leadership 5, stability 5), research link builder, AI research prompt builder.
+  - Rewrote `scripts/tracker-engine.js`: pipeline stats + follow-up reminders, full add/edit/delete, job detail tabs (Overview, Fit Analysis, Company Research, Decision), `Withdrawn` stage, stage history, escaped rendering, delegated events. Removed the old `+ Track It` quick-add (it created placeholder jobs from board names).
+  - Added `Job Tracker & Research` styles to `styles/main.css`; bumped `main.css?v=11` and `tracker-engine.js?v=12`.
+  - Data stays in the existing `jobs` state key — no API or schema changes. Old job records are migrated on load.
+- **UI standards applied:** one primary action per view, explicit empty states, keyboard-reachable buttons (cards are `<button>`s with focus rings), rating buttons use `aria-pressed`, mobile stacking at ≤600px, local-cache fallback when sync fails.
+- **Validation:** `npm test` (pass), `npm audit` (0 vulnerabilities), headless DOM smoke test covering add → analyze → research → rate → stage change → delete, legacy migration, and XSS escaping (16/16 pass).
+- **Follow-ups:** manual desktop + mobile check in browser via `launch.bat`; optional server-side AI research (Claude API with web search) to replace the copy-prompt step; consider a dashboard tile for follow-ups due.
