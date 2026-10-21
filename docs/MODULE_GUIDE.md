@@ -40,7 +40,8 @@ e:\resume/
 │   ├── onboarding-wizard.js    # 4-step resume review modal, safe profile synthesis, and account creation
 │   ├── resume-parser.js        # Client-side multi-format resume text parser and keyword extractor
 │   ├── resume-engine.js        # Resume Studio, ATS keyword match scoring, and skills radar
-│   ├── tracker-engine.js       # Job application tracker, pipeline stages, and company notes
+│   ├── tracker-engine.js       # Job application tracker, pipeline, research & fit UI
+│   ├── job-research-engine.js  # Pure JD analysis, company research links, fit scorecard
 │   ├── training-engine.js      # Learning pathways, lab projects, and skill progress tracking
 │   ├── cert-engine.js          # Certification registry, credential verification, and expiry tracking
 │   ├── implementation-engine.js# Antigravity Implementation Lab (prompt evaluation & coaching)
@@ -195,12 +196,15 @@ All frontend code is written in pure Vanilla ES2022+ modules. When importing acr
 
 ---
 
-### 2.7 `scripts/tracker-engine.js` (Job Search CRM)
-- **Role:** Powers the application tracking pipeline across 5 stages: Wishlist, Applied, Interviewing, Offer, Rejected.
+### 2.7 `scripts/tracker-engine.js` + `scripts/job-research-engine.js` (Job Search CRM & Company Research)
+- **Role:** Route `#jobs` (requires `user` role). Tracks applications across 7 stages (Saved / Researching, Applied, Screening, Interview, Offer, Rejected, Withdrawn) and helps decide whether a job is worth applying to.
 - **Key Features:**
-  - Scoped persistence in `careerEngine_jobs_<email>` and cloud sync via `GET /api/state?key=jobs` and `PUT /api/state?key=jobs`.
-  - Add / Edit / Move / Archive job cards with salary ranges, application links, interview notes, and contact recruiters.
-  - Conversion metrics (Application $\rightarrow$ Interview rate, Interview $\rightarrow$ Offer rate).
+  - Scoped persistence in `career_jobs_<email>` (localStorage) with cloud sync via `GET/PUT /api/state?key=jobs`; shows a one-time toast if cloud sync fails. Legacy job records are normalized on load (`normalizeJob`).
+  - **Add Job:** company, title, location, work mode, salary, source, URL, stage, and the pasted job description (capped at 20k chars). Salary and work mode are auto-detected from the description when left blank.
+  - **Pipeline:** stat tiles (researching, active, interviews, follow-ups due), follow-up reminders (default +7 days after applying), and kanban cards showing fit score.
+  - **Job detail tabs:** Overview (editable fields, dates, contact, notes, stage history, delete) · Fit Analysis (skills matched / still learning / missing vs. `resume.json` + `skills.json`, green and red flag phrases) · Company Research (14 one-click sources for reviews, growth/comp, stability/news, interview prep, with visited tracking, a research log, and a copyable AI research prompt) · Decision (weighted 1–5 scorecard, fit score + confidence, verdict, auto-generated interview questions).
+  - `job-research-engine.js` is pure (no DOM): `analyzeJobDescription`, `collectUserSkills`, `computeFitScore`, `buildResearchLinks`, `buildResearchPrompt`, `CRITERIA`. Edit weights/criteria there.
+  - All user-entered text is HTML-escaped (`esc`), and posting URLs are restricted to http(s) (`safeUrl`). Events use delegation on `#job-root` via `data-action` / `data-field` attributes (no `window.*` globals).
 
 ---
 
