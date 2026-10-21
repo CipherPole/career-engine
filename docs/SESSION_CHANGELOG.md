@@ -419,3 +419,8 @@
 - **Why print-to-PDF instead of a JS PDF library:** browser "Save as PDF" output is real selectable text that ATS parsers read; canvas-based generators produce image PDFs that ATS cannot parse, and would add a dependency.
 - **Validation:** headless Chrome against a local server sending `X-Frame-Options: DENY`: print invoked in place with edited summary, skills, dates, school, certs, and accomplishments present; ventures shown for owner and hidden for imported profiles; fetch-failure fallback path and `?print=1` page verified. `npm test`, `npm audit` pass.
 
+
+### Milestone 15: Vercel Web Analytics (2026-10-21)
+- **Context:** Web Analytics was enabled in the Vercel dashboard, which suggested the Next.js package (`@vercel/analytics/next`). This app is a static SPA, so no npm package is needed.
+- **Implementation:** `index.html` loads `/_vercel/insights/script.js` with `data-disable-auto-track="1"` plus the `window.va` queue stub; `navigate()` in `scripts/app.js` sends `va('pageview', { route: '/<pageId>', path: '/<pageId>' })` for each in-app page (page id only, no personal data). `pages/portfolio.html` uses normal auto-tracking. Web Analytics is cookieless. API verified against the live script.
+- **Validation:** `npm test`, `npm audit`; pageviews confirmed in the Vercel Analytics dashboard after deploy.

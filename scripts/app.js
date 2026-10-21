@@ -98,6 +98,9 @@ async function navigate(pageId) {
 
   State.currentPage = pageId;
 
+  // Vercel Web Analytics: one pageview per in-app page (page id only, no personal data).
+  window.va?.('pageview', { route: `/${pageId}`, path: `/${pageId}` });
+
   // Auto-close mobile sidebar if open
   document.getElementById('sidebar')?.classList.remove('open');
 
