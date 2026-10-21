@@ -9,13 +9,17 @@
 const { getUserById, getUserStateByKey, upsertUserStateByKey } = require('./_lib/db');
 const { getSessionFromRequest } = require('./_lib/session');
 const { json, methodNotAllowed, readJsonBody } = require('./_lib/http');
+const { open } = require('./_lib/secret-box');
+const { PROVIDERS, ProviderError, generateJson } = require('./_lib/ai-providers');
 
 const GATEWAY_URL = 'https://ai-gateway.vercel.sh/v1/chat/completions';
 const DEFAULT_MODEL = 'anthropic/claude-haiku-5.5';
 const MAX_INPUT_CHARS = 30000;
 const MIN_INPUT_CHARS = 200;
 const DAILY_LIMIT = { admin: 100, user: 25 };
+const BYOK_DAILY_LIMIT = 200;
 const USAGE_STATE_KEY = 'ai_usage';
+const BYOK_USAGE_STATE_KEY = 'ai_usage_byok';
 
 const str = { type: 'string' };
 const strList = { type: 'array', items: str };
@@ -75,15 +79,24 @@ async function requireUser(req, res) {
   return user;
 }
 
-/** Per-user daily cap so a signed-in account can't run up AI Gateway spend. */
-async function reserveUsage(user) {
+/** Per-user daily cap: protects the platform's AI Gateway budget (and runaway use of a user's own key). */
+async function reserveUsage(user, stateKey, limit) {
   const today = new Date().toISOString().slice(0, 10);
-  const limit = user.role === 'admin' ? DAILY_LIMIT.admin : DAILY_LIMIT.user;
-  const current = (await getUserStateByKey(user.id, USAGE_STATE_KEY)) || {};
+  const current = (await getUserStateByKey(user.id, stateKey)) || {};
   const count = current.date === today ? Number(current.count) || 0 : 0;
   if (count >= limit) return { allowed: false, limit };
-  await upsertUserStateByKey(user.id, USAGE_STATE_KEY, { date: today, count: count + 1 });
+  await upsertUserStateByKey(user.id, stateKey, { date: today, count: count + 1 });
   return { allowed: true, remaining: limit - count - 1 };
+}
+
+/** The user's chosen bring-your-own-key provider, or null to use the platform's AI Gateway account. */
+async function userProvider(user) {
+  const settings = (await getUserStateByKey(user.id, 'ai_providers')) || {};
+  const saved = settings.preferred && settings.preferred !== 'platform' ? settings.providers?.[settings.preferred] : null;
+  if (!saved) return null;
+  const apiKey = open(saved.box);
+  if (!apiKey) return { error: `Your saved ${PROVIDERS[settings.preferred]?.label || 'AI'} key can no longer be read. Re-add it in AI Providers.` };
+  return { provider: settings.preferred, apiKey, model: saved.model };
 }
 
 function gatewayToken(req) {
@@ -120,14 +133,39 @@ module.exports = async (req, res) => {
     }
     const truncated = text.length > MAX_INPUT_CHARS;
 
+    const userContent = `Candidate profile:\n${profileContext(body?.profile)}\n\nPasted job page${truncated ? ' (truncated)' : ''}:\n"""\n${text.slice(0, MAX_INPUT_CHARS)}\n"""`;
+
+    // Bring-your-own-key path: the user's provider, model, and bill.
+    const byok = await userProvider(user);
+    if (byok?.error) return json(res, 400, { ok: false, error: byok.error });
+    if (byok) {
+      const usage = await reserveUsage(user, BYOK_USAGE_STATE_KEY, BYOK_DAILY_LIMIT);
+      if (!usage.allowed) return json(res, 429, { ok: false, error: `Daily AI analysis limit reached (${usage.limit}).` });
+      let generated;
+      try {
+        generated = await generateJson({ ...byok, system: SYSTEM_PROMPT, user: userContent, schema: JOB_SCHEMA, schemaName: 'job_posting' });
+      } catch (error) {
+        if (error instanceof ProviderError) return json(res, 502, { ok: false, error: error.message });
+        throw error;
+      }
+      if (!generated.result?.isJobPosting) {
+        return json(res, 422, { ok: false, error: "That doesn't look like a job posting. Copy the full job page and try again." });
+      }
+      return json(res, 200, {
+        ok: true,
+        job: generated.result,
+        meta: { model: generated.model, provider: byok.provider, analyzedAt: new Date().toISOString(), truncated, remainingToday: usage.remaining },
+      });
+    }
+
     const token = gatewayToken(req);
     if (!token) {
       return json(res, 503, { ok: false, error: 'AI analysis is not configured on this deployment.' });
     }
 
-    const usage = await reserveUsage(user);
+    const usage = await reserveUsage(user, USAGE_STATE_KEY, user.role === 'admin' ? DAILY_LIMIT.admin : DAILY_LIMIT.user);
     if (!usage.allowed) {
-      return json(res, 429, { ok: false, error: `Daily AI analysis limit reached (${usage.limit}). Try again tomorrow or add the job manually.` });
+      return json(res, 429, { ok: false, error: `Daily free AI analysis limit reached (${usage.limit}). Add your own AI key in AI Providers, try again tomorrow, or add the job manually.` });
     }
 
     const model = process.env.AI_GATEWAY_MODEL || DEFAULT_MODEL;
@@ -141,10 +179,7 @@ module.exports = async (req, res) => {
         response_format: { type: 'json_schema', json_schema: { name: 'job_posting', strict: true, schema: JOB_SCHEMA } },
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          {
-            role: 'user',
-            content: `Candidate profile:\n${profileContext(body?.profile)}\n\nPasted job page${truncated ? ' (truncated)' : ''}:\n"""\n${text.slice(0, MAX_INPUT_CHARS)}\n"""`,
-          },
+          { role: 'user', content: userContent },
         ],
       }),
     });
@@ -177,7 +212,7 @@ module.exports = async (req, res) => {
     return json(res, 200, {
       ok: true,
       job,
-      meta: { model: data.model || model, analyzedAt: new Date().toISOString(), truncated, remainingToday: usage.remaining },
+      meta: { model: data.model || model, provider: 'platform', analyzedAt: new Date().toISOString(), truncated, remainingToday: usage.remaining },
     });
   } catch (error) {
     console.error('job-analyze error', error);

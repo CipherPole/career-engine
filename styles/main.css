@@ -2053,3 +2053,19 @@ button.pipeline-card:focus-visible,
 .job-outcome-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .job-outcome-final { font-size: 15px; font-weight: 700; color: var(--text-primary); }
 .job-outcome.is-hired { border-color: rgba(16,185,129,.45); background: rgba(16,185,129,.06); }
+/* ── AI Providers (BYOK) ───────────────────────────────────── */
+.aip-options { display: grid; gap: 8px; }
+.aip-option {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--bg-panel);
+  cursor: pointer;
+}
+.aip-option.active { border-color: var(--gold-border); }
+.aip-option input { margin-top: 3px; accent-color: var(--gold); }
+.aip-option-label { display: block; font-size: 13px; font-weight: 600; color: var(--text-primary); }
+.aip-provider-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
