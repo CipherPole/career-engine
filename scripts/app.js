@@ -48,7 +48,7 @@ const PAGES = {
   dashboard:      () => import('./resume-engine.js?v=13').then(m => m.renderDashboard()),
   resume:         () => import('./resume-engine.js?v=13').then(m => m.renderResumeStudio()),
   linkedin:       () => import('./linkedin-engine.js?v=11').then(m => m.renderLinkedInOptimizer()),
-  jobs:           () => import('./tracker-engine.js?v=12').then(m => m.renderJobTracker()),
+  jobs:           () => import('./tracker-engine.js?v=13').then(m => m.renderJobTracker()),
   skills:         () => import('./resume-engine.js?v=13').then(m => m.renderSkillGap()),
   training:       () => import('./training-engine.js?v=11').then(m => m.renderTrainingHub()),
   certs:          () => import('./cert-engine.js?v=11').then(m => m.renderCertifications()),

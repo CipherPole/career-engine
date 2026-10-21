@@ -130,8 +130,8 @@ const JOB_BOARDS = [
   }
 ];
 
-const STAGES = ['Saved', 'Applied', 'Screening', 'Interview', 'Offer', 'Rejected', 'Withdrawn'];
-const STAGE_COLORS = { Saved:'var(--text-dim)', Applied:'var(--blue)', Screening:'var(--gold)', Interview:'var(--purple)', Offer:'var(--green)', Rejected:'var(--red)', Withdrawn:'var(--text-dim)' };
+const STAGES = ['Saved', 'Applied', 'Screening', 'Interview', 'Offer', 'Hired', 'Rejected', 'Withdrawn'];
+const STAGE_COLORS = { Saved:'var(--text-dim)', Applied:'var(--blue)', Screening:'var(--gold)', Interview:'var(--purple)', Offer:'var(--green)', Hired:'var(--green)', Rejected:'var(--red)', Withdrawn:'var(--text-dim)' };
 const ACTIVE_STAGES = new Set(['Applied', 'Screening', 'Interview', 'Offer']);
 const FOLLOW_UP_STAGES = new Set(['Applied', 'Screening', 'Interview']);
 const WORK_MODES = ['Remote', 'Hybrid', 'On-site'];
@@ -197,7 +197,7 @@ function normalizeJob(raw) {
   job.company = String(job.company || '');
   job.title = String(job.title || '');
   job.stage = STAGES.includes(job.stage) ? job.stage : 'Saved';
-  ['location', 'workMode', 'salary', 'url', 'source', 'notes', 'contact', 'description', 'appliedDate', 'followUpDate', 'dateAdded']
+  ['location', 'workMode', 'salary', 'url', 'source', 'notes', 'contact', 'description', 'appliedDate', 'followUpDate', 'dateAdded', 'outcomeNote']
     .forEach(k => { job[k] = String(job[k] || ''); });
   const r = job.research && typeof job.research === 'object' ? job.research : {};
   job.research = {
@@ -208,6 +208,7 @@ function normalizeJob(raw) {
     cons: String(r.cons || ''),
     notes: String(r.notes || ''),
   };
+  job.ai = job.ai && typeof job.ai === 'object' ? job.ai : null;
   job.history = Array.isArray(job.history) ? job.history : [];
   return job;
 }
@@ -409,8 +410,33 @@ function renderPipelineCard(job) {
 // ── Add Job ───────────────────────────────────────────────────
 function renderAddForm() {
   return `
-    <div class="card" style="max-width:760px;">
-      <div class="card-title"><span class="dot"></span>Add a Job</div>
+    <div class="card mb-16 job-ai-card" style="max-width:760px;">
+      <div class="card-title"><span class="dot"></span>✨ Paste &amp; analyze with AI</div>
+      <div class="job-muted mb-16">Open the job posting, press <strong>Ctrl+A</strong> then <strong>Ctrl+C</strong>, and paste it below. AI pulls out the company, title, pay, and requirements, reviews how well it fits you, and adds it to your tracker. You can edit anything afterwards.</div>
+      <label class="field-label" for="ai-text">Job page text</label>
+      <textarea id="ai-text" class="field" rows="10" maxlength="60000" placeholder="Paste the whole job page here — extra menus and ads are fine."></textarea>
+      <div class="grid-2 mt-16">
+        <div>
+          <label class="field-label" for="ai-url">Job posting URL (optional)</label>
+          <input id="ai-url" class="field" type="url" placeholder="https://www.indeed.com/viewjob?jk=...">
+        </div>
+        <div>
+          <label class="field-label" for="ai-stage">Stage</label>
+          <select id="ai-stage" class="select w-full">
+            ${STAGES.map(s => `<option value="${s}">${stageLabel(s)}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-8 mt-16 items-center" style="flex-wrap:wrap;">
+        <button class="btn btn-gold" id="btn-ai-analyze" data-action="ai-analyze">✨ Analyze &amp; add to tracker</button>
+        <span class="job-muted" id="ai-status" role="status" aria-live="polite"></span>
+      </div>
+    </div>
+
+    <details class="job-manual" id="job-manual" style="max-width:760px;">
+      <summary>Or enter the details manually</summary>
+    <div class="card mt-16">
+      <div class="card-title"><span class="dot"></span>Add a Job Manually</div>
       <div class="job-form">
         <div class="grid-2">
           <div>
@@ -462,12 +488,129 @@ function renderAddForm() {
           <button class="btn btn-ghost" data-action="tab" data-tab="pipeline">Cancel</button>
         </div>
       </div>
-    </div>`;
+    </div>
+    </details>`;
 }
 
 function applyStageDefaults(job) {
   if (job.stage === 'Applied' && !job.appliedDate) job.appliedDate = todayISO();
   if (FOLLOW_UP_STAGES.has(job.stage) && !job.followUpDate) job.followUpDate = addDaysISO(todayISO(), FOLLOW_UP_DAYS);
+}
+
+function fieldVal(id) {
+  return document.getElementById(id)?.value?.trim() || '';
+}
+
+function sourceFromUrl(url) {
+  const host = (() => { try { return new URL(url).hostname; } catch { return ''; } })();
+  if (/indeed\./.test(host)) return 'Indeed';
+  if (/linkedin\./.test(host)) return 'LinkedIn';
+  if (/glassdoor\./.test(host)) return 'Glassdoor';
+  return host ? 'Company website' : '';
+}
+
+/** Only the parts of the resume the AI needs for a fit review — no contact details. */
+function profileForAi() {
+  const r = window._state?.resumeData || {};
+  return {
+    targetTitle: r.meta?.targetTitle || '',
+    workPreference: r.meta?.workPreference || '',
+    targetComp: r.meta?.targetComp || null,
+    summary: r.summary || '',
+    skills: r.skills || [],
+    experience: (r.experience || []).slice(0, 4).map(e => ({ title: e.title || '', company: e.company || '' })),
+  };
+}
+
+async function aiAnalyzeJob(btn) {
+  const text = fieldVal('ai-text');
+  const status = document.getElementById('ai-status');
+  const setStatus = msg => { if (status) status.textContent = msg; };
+  if (text.length < 200) {
+    window.toast?.('Paste the full job page first — that looks too short', 'red');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Analyzing…';
+  setStatus('Reading the posting — this usually takes 10–20 seconds.');
+  try {
+    const res = await fetch('/api/job-analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ text, profile: profileForAi() }),
+    });
+    const body = await res.json().catch(() => ({}));
+    if (!res.ok || !body.ok) throw new Error(body.error || `Request failed (${res.status})`);
+
+    const a = body.job || {};
+    const url = safeUrl(fieldVal('ai-url')) || safeUrl(a.applyUrl);
+    const description = String(a.description || text).slice(0, MAX_DESCRIPTION);
+    const detected = analyzeJobDescription(description, getUserSkills());
+    const stage = fieldVal('ai-stage') || 'Saved';
+    const now = todayISO();
+    const list = v => (Array.isArray(v) ? v.map(String).filter(Boolean).slice(0, 12) : []);
+
+    const job = normalizeJob({
+      id: `${Date.now()}`,
+      company: a.company || 'Unknown company',
+      title: a.title || 'Untitled role',
+      location: a.location || '',
+      workMode: a.workMode || detected.workMode,
+      salary: a.salary || detected.salary,
+      url,
+      source: sourceFromUrl(url),
+      stage,
+      description,
+      dateAdded: now,
+      history: [{ stage, at: now }],
+      ai: {
+        summary: String(a.summary || ''),
+        fitSummary: String(a.fitSummary || ''),
+        strengths: list(a.strengths),
+        gaps: list(a.gaps),
+        questionsToAsk: list(a.questionsToAsk),
+        requirements: list(a.requirements),
+        niceToHave: list(a.niceToHave),
+        benefits: list(a.benefits),
+        employmentType: String(a.employmentType || ''),
+        seniority: String(a.seniority || ''),
+        yearsRequired: String(a.yearsRequired || ''),
+        postedDate: String(a.postedDate || ''),
+        model: body.meta?.model || '',
+        analyzedAt: body.meta?.analyzedAt || new Date().toISOString(),
+        truncated: !!body.meta?.truncated,
+      },
+    });
+    applyStageDefaults(job);
+    jobsData.push(job);
+    saveJobs();
+    window.toast?.(`${esc(job.company)} added — here's the AI review`, 'green');
+    view.tab = 'detail';
+    view.jobId = job.id;
+    view.section = 'fit';
+    render();
+  } catch (error) {
+    setStatus('');
+    window.toast?.(esc(error.message || 'AI analysis failed'), 'red');
+    // Keep the paste: move it into the manual form so nothing is lost.
+    const manual = document.getElementById('job-manual');
+    const desc = document.getElementById('j-description');
+    if (manual && desc && !desc.value) { desc.value = text.slice(0, MAX_DESCRIPTION); manual.open = true; }
+    btn.disabled = false;
+    btn.textContent = '✨ Analyze & add to tracker';
+  }
+}
+
+function setStage(job, stage) {
+  if (!STAGES.includes(stage) || stage === job.stage) return;
+  job.stage = stage;
+  job.history.push({ stage, at: todayISO() });
+  applyStageDefaults(job);
+  saveJobs();
+  window.toast?.(stage === 'Hired' ? '🎉 Congratulations on the new job!' : `Moved to ${esc(stageLabel(stage))}`, 'green');
+  render();
 }
 
 function saveNewJob() {
@@ -591,8 +734,45 @@ function selectField(job, field, label, options, emptyLabel) {
     </div>`;
 }
 
+const NEXT_STEPS = {
+  Saved: [['Applied', '📨 I applied']],
+  Applied: [['Screening', '📞 Got a screening call'], ['Interview', '🗓️ Got an interview'], ['Rejected', '❌ Rejected']],
+  Screening: [['Interview', '🗓️ Moving to interviews'], ['Rejected', '❌ Rejected']],
+  Interview: [['Offer', '🎉 Got an offer'], ['Rejected', '❌ Rejected']],
+  Offer: [['Hired', '✅ I accepted — I got the job!'], ['Withdrawn', 'Declined the offer']],
+};
+const FINAL_MESSAGES = {
+  Hired: '🎉 You got this job!',
+  Rejected: "This one didn't work out — note what you learned for next time.",
+  Withdrawn: 'You withdrew from this one.',
+};
+
+function renderOutcomePanel(job) {
+  const steps = NEXT_STEPS[job.stage] || [];
+  const withdraw = ACTIVE_STAGES.has(job.stage) && job.stage !== 'Offer' ? [['Withdrawn', 'I withdrew']] : [];
+  const lastChange = job.history[job.history.length - 1];
+  const final = FINAL_MESSAGES[job.stage];
+  return `
+    <div class="card mb-16 job-outcome ${job.stage === 'Hired' ? 'is-hired' : ''}">
+      <div class="card-title"><span class="dot"></span>What happened?</div>
+      ${final
+        ? `<div class="job-outcome-final">${final}${lastChange ? ` <span class="job-muted">(${esc(formatDate(lastChange.at))})</span>` : ''}</div>`
+        : `<div class="job-muted mb-16">Currently <strong>${esc(stageLabel(job.stage))}</strong>. Update it when you hear back.</div>`}
+      ${steps.length || withdraw.length ? `
+        <div class="job-outcome-actions">
+          ${[...steps, ...withdraw].map(([stage, label]) => `<button class="btn ${stage === 'Rejected' || stage === 'Withdrawn' ? 'btn-ghost' : 'btn-outline'} btn-sm" data-action="set-stage" data-stage="${stage}">${label}</button>`).join('')}
+        </div>` : ''}
+      ${final ? `
+        <div class="mt-16">
+          <label class="field-label" for="d-outcomeNote">Outcome notes</label>
+          <textarea id="d-outcomeNote" class="field" rows="3" data-field="outcomeNote" placeholder="${job.stage === 'Hired' ? 'Start date, final offer, what made the difference…' : 'Feedback you got, what you would do differently…'}">${esc(job.outcomeNote)}</textarea>
+        </div>` : ''}
+    </div>`;
+}
+
 function renderOverviewSection(job) {
   return `
+    ${renderOutcomePanel(job)}
     <div class="card">
       <div class="card-title"><span class="dot"></span>Application details</div>
       <div class="grid-2 mb-16">
@@ -626,6 +806,39 @@ function chipList(items, tone, empty) {
   return `<div class="job-chip-list">${items.map(i => `<span class="chip ${tone}">${esc(i)}</span>`).join('')}</div>`;
 }
 
+function bulletList(items, icon) {
+  return `<ul class="job-flag-list">${items.map(i => `<li>${icon} ${esc(i)}</li>`).join('')}</ul>`;
+}
+
+function renderAiReview(job) {
+  const ai = job.ai;
+  if (!ai) return '';
+  const lists = k => (Array.isArray(ai[k]) ? ai[k] : []);
+  const facts = [ai.seniority, ai.employmentType, ai.yearsRequired && `Experience: ${ai.yearsRequired}`, ai.postedDate && `Posted: ${ai.postedDate}`].filter(Boolean);
+  return `
+    <div class="card mb-16 job-ai-review">
+      <div class="job-research-head">
+        <div class="card-title" style="margin-bottom:0;"><span class="dot"></span>✨ AI review</div>
+        ${lists('questionsToAsk').length ? '<button class="btn btn-outline btn-sm" data-action="copy-ai-questions">📋 Copy questions</button>' : ''}
+      </div>
+      ${ai.fitSummary ? `<p class="job-ai-summary">${esc(ai.fitSummary)}</p>` : ''}
+      ${facts.length ? `<div class="job-chip-list mb-16">${facts.map(f => `<span class="chip blue">${esc(f)}</span>`).join('')}</div>` : ''}
+      <div class="grid-2">
+        <div>
+          <div class="field-label">Why you're a good fit</div>
+          ${lists('strengths').length ? bulletList(lists('strengths'), '✅') : '<div class="job-muted">None identified.</div>'}
+        </div>
+        <div>
+          <div class="field-label">Gaps to address</div>
+          ${lists('gaps').length ? bulletList(lists('gaps'), '⚠️') : '<div class="job-muted">No major gaps identified.</div>'}
+        </div>
+      </div>
+      ${lists('questionsToAsk').length ? `<div class="field-label mt-16">Ask the recruiter</div>${bulletList(lists('questionsToAsk'), '❓')}` : ''}
+      ${lists('requirements').length ? `<div class="field-label mt-16">Key requirements</div>${bulletList(lists('requirements'), '•')}` : ''}
+      <div class="job-muted mt-16">Analyzed ${esc(formatDate(String(ai.analyzedAt || '').slice(0, 10)))}${ai.truncated ? ' · long page, only the first part was read' : ''} · AI can make mistakes, so double-check details against the posting.</div>
+    </div>`;
+}
+
 function renderFitSection(job, { analysis }) {
   const descriptionEditor = `
     <div class="card mt-16">
@@ -656,6 +869,7 @@ function renderFitSection(job, { analysis }) {
   const termCount = analysis.matched.length + analysis.developing.length + analysis.missing.length;
 
   return `
+    ${renderAiReview(job)}
     <div class="grid-2 mb-16">
       <div class="card">
         <div class="card-title"><span class="dot"></span>Skills match</div>
@@ -874,6 +1088,15 @@ function onClick(event) {
     case 'save-new':
       saveNewJob();
       break;
+    case 'ai-analyze':
+      aiAnalyzeJob(el);
+      break;
+    case 'set-stage':
+      if (job) setStage(job, el.dataset.stage);
+      break;
+    case 'copy-ai-questions':
+      if (job?.ai) copyText(`Questions for ${job.company} — ${job.title}\n\n${(job.ai.questionsToAsk || []).map(q => `• ${q}`).join('\n')}`, 'Questions copied');
+      break;
     case 'analyze': {
       if (!job) return;
       job.description = (document.getElementById('d-description')?.value || '').trim().slice(0, MAX_DESCRIPTION);
@@ -943,13 +1166,7 @@ function onChange(event) {
   }
 
   if (field === 'stage') {
-    if (value === job.stage) return;
-    job.stage = value;
-    job.history.push({ stage: value, at: todayISO() });
-    applyStageDefaults(job);
-    saveJobs();
-    window.toast?.(`Moved to ${esc(value)}`, 'green');
-    render();
+    setStage(job, value);
     return;
   }
 
